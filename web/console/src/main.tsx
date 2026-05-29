@@ -48,11 +48,18 @@ function App() {
 
   useEffect(() => {
     void loadServices();
+    const timer = window.setInterval(() => {
+      void loadServices({ quiet: true });
+    }, 5000);
+
+    return () => window.clearInterval(timer);
   }, []);
 
-  async function loadServices() {
-    setLoading(true);
-    setError("");
+  async function loadServices(options?: { quiet?: boolean }) {
+    if (!options?.quiet) {
+      setLoading(true);
+      setError("");
+    }
     try {
       const response = await fetch("/api/v1/services");
       const data = (await response.json()) as PlatformResponse | { error?: string };
@@ -64,9 +71,13 @@ function App() {
         setServices(data.services ?? []);
       }
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "failed to load services");
+      if (!options?.quiet) {
+        setError(loadError instanceof Error ? loadError.message : "failed to load services");
+      }
     } finally {
-      setLoading(false);
+      if (!options?.quiet) {
+        setLoading(false);
+      }
     }
   }
 
@@ -209,9 +220,6 @@ function App() {
           <div className="actions">
             <button className="pill primary button" type="submit" disabled={submitting}>
               {submitting ? "Deploying..." : "Deploy container"}
-            </button>
-            <button className="pill secondary button" type="button" onClick={loadServices} disabled={loading}>
-              Refresh
             </button>
           </div>
 
