@@ -1,7 +1,7 @@
 image:
   registry: ghcr.io
   repositoryOwner: daigo-suhara
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   tag: latest
 
 controlPlane:
