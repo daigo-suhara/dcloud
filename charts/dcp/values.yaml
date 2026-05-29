@@ -1,0 +1,26 @@
+image:
+  registry: ghcr.io
+  repositoryOwner: daigo-suhara
+  pullPolicy: IfNotPresent
+  tag: latest
+
+controlPlane:
+  replicaCount: 1
+  image:
+    repository: dcp-control-plane
+  service:
+    port: 8080
+
+console:
+  replicaCount: 1
+  image:
+    repository: dcp-console
+  service:
+    port: 8080
+
+cloudrun:
+  replicaCount: 1
+  image:
+    repository: dcp-cloudrun
+  service:
+    port: 8080
