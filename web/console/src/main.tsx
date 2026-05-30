@@ -169,26 +169,6 @@ function App() {
       </aside>
 
       <section className="content">
-        <section className="hero-card" id="home">
-          <p className="eyebrow">Distributed Cloud Platform</p>
-          <h1>コンテナを送ると、Knative Service まで一気に展開する。</h1>
-          <p className="lead">
-            dcp は Kubernetes 上で、console から image を指定して Knative Service を作成する
-            開発者向けプラットフォームです。デプロイ先は namespace <code>{namespace}</code> に揃えています。
-          </p>
-          <div className="actions">
-            <a className="pill primary" href="/api/v1/platform">
-              Platform API
-            </a>
-            <a className="pill tertiary" href="/api/v1/services">
-              Deploy API
-            </a>
-            <a className="pill secondary" href="https://github.com/daigo-suhara/dcp/actions">
-              GitHub Actions
-            </a>
-          </div>
-        </section>
-
         <section className="dashboard-grid" aria-label="deployment-console">
           <form className="deploy-card" id="deploy" onSubmit={handleSubmit}>
             <div className="panel-header">
