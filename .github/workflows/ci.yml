@@ -43,6 +43,8 @@ jobs:
             dockerfile: services/cloudrun/Dockerfile
           - name: dcp-console
             dockerfile: web/console/Dockerfile
+          - name: hello-world
+            dockerfile: services/hello-world/Dockerfile
     steps:
       - uses: actions/checkout@v4
       - uses: docker/login-action@v3
