@@ -5,10 +5,133 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f5f3ef" />
     <title>hello-world</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;800&display=swap");
+
+      :root {
+        color: #66615e;
+        background:
+          radial-gradient(circle at 16% 18%, rgba(139, 208, 221, 0.3), transparent 22rem),
+          radial-gradient(circle at 82% 18%, rgba(227, 131, 168, 0.22), transparent 20rem),
+          radial-gradient(circle at 50% 84%, rgba(145, 222, 169, 0.18), transparent 22rem),
+          linear-gradient(180deg, #ffffff 0%, #f7f6f2 100%);
+        font-family: "Noto Sans JP", sans-serif;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+      }
+
+      .page {
+        position: relative;
+        min-height: 100vh;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .page::before,
+      .page::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        filter: blur(6px);
+        pointer-events: none;
+      }
+
+      .page::before {
+        width: 14rem;
+        height: 14rem;
+        left: 4%;
+        top: 8%;
+        background: rgba(139, 208, 221, 0.14);
+      }
+
+      .page::after {
+        width: 18rem;
+        height: 18rem;
+        right: 4%;
+        bottom: 6%;
+        background: rgba(227, 131, 168, 0.12);
+      }
+
+      .card {
+        position: relative;
+        z-index: 1;
+        width: min(560px, 100%);
+        display: grid;
+        justify-items: center;
+        gap: 16px;
+        padding: 28px 24px 30px;
+        border: 1px solid rgba(119, 119, 119, 0.08);
+        border-radius: 32px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow:
+          0 24px 70px rgba(185, 175, 165, 0.18),
+          0 1px 0 rgba(255, 255, 255, 0.9) inset;
+        backdrop-filter: blur(14px);
+      }
+
+      .illustration {
+        width: min(250px, 68vw);
+        height: auto;
+        display: block;
+        user-select: none;
+      }
+
+      .status {
+        margin: 0;
+        font-size: clamp(22px, 4vw, 34px);
+        line-height: 1.2;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-align: center;
+        color: #66615e;
+      }
+
+      @media (max-width: 640px) {
+        .page {
+          padding: 16px;
+        }
+
+        .card {
+          gap: 14px;
+          padding: 22px 18px 24px;
+          border-radius: 26px;
+        }
+
+        .illustration {
+          width: min(220px, 74vw);
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script src="./bundle.js"></script>
+    <main class="page">
+      <section class="card" aria-label="hello-world">
+        <img
+          class="illustration"
+          src="__CELEBRATION_DATA_URI__"
+          alt="Celebration illustration"
+        />
+        <h1 class="status">正常に動作しています</h1>
+      </section>
+    </main>
   </body>
 </html>
