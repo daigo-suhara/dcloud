@@ -176,7 +176,6 @@ function App() {
                 <p className="panel-kicker">Deploy</p>
                 <h2>コンテナをデプロイ</h2>
               </div>
-              <span className="pill mini">namespace: {namespace}</span>
             </div>
 
             <div className="field-grid">
