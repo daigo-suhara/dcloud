@@ -1,5 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import celebrationSvg from "../.generated/celebrationSvg.js";
 
 function App() {
   return (
@@ -16,7 +17,7 @@ function App() {
       <section className="relative z-10 grid w-full max-w-3xl justify-items-center gap-5 rounded-[32px] border border-[rgba(119,119,119,0.08)] bg-white/90 px-5 py-8 text-center shadow-soft backdrop-blur-md sm:px-8 sm:py-10">
         <img
           className="w-full max-w-[260px] select-none"
-          src="./assets/celebration.svg"
+          src={celebrationSvg}
           alt="Celebration illustration"
         />
 

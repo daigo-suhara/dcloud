@@ -143,7 +143,7 @@ function App() {
       }
 
       if ("name" in data && "namespace" in data) {
-        setMessage(`Deployed ${data.name} to ${data.namespace}`);
+        setMessage(`${data.name} を作成しました`);
       }
       setForm((current) => ({ ...current, name: "hello-dcp" }));
       await loadServices();

@@ -1,8 +1,15 @@
 import * as esbuild from "esbuild";
-import { copyFile, mkdir } from "node:fs/promises";
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 
 await mkdir("dist", { recursive: true });
+await mkdir(".generated", { recursive: true });
+const celebrationSvg = await readFile("assets/celebration.svg", "utf8");
+await writeFile(
+  ".generated/celebrationSvg.js",
+  `export default "data:image/svg+xml;base64,${Buffer.from(celebrationSvg).toString("base64")}";\n`
+);
+
 await esbuild.build({
   entryPoints: ["src/main.jsx"],
   bundle: true,
@@ -26,5 +33,3 @@ execFileSync(
 );
 
 await copyFile("index.html", "dist/index.html");
-await mkdir("dist/assets", { recursive: true });
-await copyFile("assets/celebration.svg", "dist/assets/celebration.svg");
