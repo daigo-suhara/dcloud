@@ -27,8 +27,13 @@ cloudrun:
     port: 8080
 
 keycloak:
+  image:
+    repository: quay.io/keycloak/keycloak
+    tag: "26.6.1"
   baseUrl: ""
-  realm: ""
-  clientId: ""
+  realm: dcp
+  clientId: dcp-core
   clientSecret: ""
-  sessionSecret: ""
+  sessionSecret: dcp-session-secret
+  adminUsername: admin
+  adminPassword: admin

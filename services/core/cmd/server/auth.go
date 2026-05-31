@@ -125,7 +125,7 @@ func newKeycloakAuthFromEnv() (*keycloakAuth, error) {
 	baseURL := strings.TrimRight(strings.TrimSpace(os.Getenv("DCP_KEYCLOAK_BASE_URL")), "/")
 	realm := strings.TrimSpace(os.Getenv("DCP_KEYCLOAK_REALM"))
 	clientID := strings.TrimSpace(os.Getenv("DCP_KEYCLOAK_CLIENT_ID"))
-	if baseURL == "" || realm == "" || clientID == "" {
+	if realm == "" || clientID == "" {
 		return nil, errAuthUnavailable
 	}
 
@@ -189,7 +189,7 @@ func (a *keycloakAuth) Callback(w http.ResponseWriter, r *http.Request) error {
 		return errStateMismatch
 	}
 
-	discovery, err := a.discoveryDocument(r.Context())
+	discovery, err := a.discoveryDocument(r.Context(), a.keycloakBaseURL(r))
 	if err != nil {
 		return err
 	}
@@ -224,7 +224,7 @@ func (a *keycloakAuth) Logout(w http.ResponseWriter, r *http.Request) error {
 	http.SetCookie(w, clearAuthCookie(isSecureRequest(r)))
 	http.SetCookie(w, clearAuthStateCookie(isSecureRequest(r)))
 
-	discovery, err := a.discoveryDocument(r.Context())
+	discovery, err := a.discoveryDocument(r.Context(), a.keycloakBaseURL(r))
 	if err != nil {
 		http.Redirect(w, r, a.returnToURL(r, defaultLogoutPath), http.StatusSeeOther)
 		return nil
@@ -264,7 +264,7 @@ func (a *keycloakAuth) beginAuth(w http.ResponseWriter, r *http.Request, mode st
 	if a == nil {
 		return errAuthUnavailable
 	}
-	discovery, err := a.discoveryDocument(r.Context())
+	discovery, err := a.discoveryDocument(r.Context(), a.keycloakBaseURL(r))
 	if err != nil {
 		return err
 	}
@@ -428,14 +428,14 @@ func (a *keycloakAuth) jwkForKid(jwksURI, kid string) (jwk, error) {
 	return jwk{}, fmt.Errorf("該当する公開鍵がありません")
 }
 
-func (a *keycloakAuth) discoveryDocument(ctx context.Context) (*oidcDiscovery, error) {
+func (a *keycloakAuth) discoveryDocument(ctx context.Context, baseURL string) (*oidcDiscovery, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	if a.discovery != nil {
 		return a.discovery, nil
 	}
-	discoveryURL := fmt.Sprintf("%s/realms/%s/.well-known/openid-configuration", a.baseURL, a.realm)
+	discoveryURL := fmt.Sprintf("%s/realms/%s/.well-known/openid-configuration", strings.TrimRight(baseURL, "/"), a.realm)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, discoveryURL, nil)
 	if err != nil {
 		return nil, err
@@ -591,6 +591,13 @@ func (a *keycloakAuth) returnToURL(r *http.Request, path string) string {
 		path = "/" + path
 	}
 	return publicBaseURL(r) + path
+}
+
+func (a *keycloakAuth) keycloakBaseURL(r *http.Request) string {
+	if strings.TrimSpace(a.baseURL) != "" {
+		return strings.TrimRight(strings.TrimSpace(a.baseURL), "/")
+	}
+	return publicBaseURL(r) + "/keycloak"
 }
 
 func splitJWT(token string) (idTokenHeader, []byte, []byte, string, error) {
