@@ -34,7 +34,10 @@ spec:
             - name: DCP_KEYCLOAK_CLIENT_SECRET
               value: {{ .Values.keycloak.clientSecret | quote }}
             - name: DCP_SESSION_SECRET
-              value: {{ .Values.keycloak.sessionSecret | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "dcp.fullname" . }}-keycloak
+                  key: session-secret
           image: {{ include "dcp.image" (dict "root" . "repository" .Values.core.image.repository) }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:

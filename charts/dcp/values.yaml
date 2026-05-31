@@ -4,6 +4,9 @@ image:
   pullPolicy: Always
   tag: latest
 
+storage:
+  className: rook-ceph-block
+
 core:
   replicaCount: 1
   image:
@@ -30,10 +33,18 @@ keycloak:
   image:
     repository: quay.io/keycloak/keycloak
     tag: "26.6.1"
+  database:
+    image:
+      repository: postgres
+      tag: "16-alpine"
+    name: keycloak
+    username: keycloak
+    password: dcp-keycloak-db-change-me
+    storageSize: 10Gi
   baseUrl: ""
   realm: dcp
   clientId: dcp-core
   clientSecret: ""
-  sessionSecret: dcp-session-secret
+  sessionSecret: dcp-session-secret-change-me
   adminUsername: admin
-  adminPassword: admin
+  adminPassword: dcp-keycloak-admin-change-me
