@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import {
-  HiOutlineHome,
-  HiOutlineCloud,
-} from "react-icons/hi2";
+import { HiOutlineHome, HiOutlineCloud } from "react-icons/hi2";
 import { HiOutlineServerStack } from "react-icons/hi2";
+import { LuContainer } from "react-icons/lu";
 import { SiGithub, SiDocker } from "react-icons/si";
 import "./styles.css";
 
@@ -536,7 +534,7 @@ function App() {
                 {item.id === "home" ? (
                   <HiOutlineHome />
                 ) : item.id === "container" ? (
-                  <HiOutlineCloud />
+                  <LuContainer />
                 ) : (
                   <HiOutlineServerStack />
                 )}
