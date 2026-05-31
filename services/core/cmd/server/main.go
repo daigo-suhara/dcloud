@@ -118,6 +118,7 @@ func main() {
 	mux.HandleFunc("GET /api/v1/projects", api.listProjects)
 	mux.HandleFunc("POST /api/v1/projects", api.createProject)
 	mux.HandleFunc("DELETE /api/v1/projects/{projectID}", api.deleteProject)
+	mux.HandleFunc("/api/v1/projects/", api.projectsByPath)
 	mux.HandleFunc("GET /api/v1/services", api.listServices)
 	mux.HandleFunc("POST /api/v1/services", api.deployService)
 	mux.HandleFunc("DELETE /api/v1/services/", api.deleteService)
@@ -318,6 +319,9 @@ func (a *apiServer) deleteProject(w http.ResponseWriter, r *http.Request) {
 	}
 	projectID := strings.TrimSpace(r.PathValue("projectID"))
 	if projectID == "" {
+		projectID = strings.TrimSpace(strings.TrimPrefix(r.URL.Path, "/api/v1/projects/"))
+	}
+	if projectID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "プロジェクトIDが不正です"})
 		return
 	}
@@ -334,6 +338,14 @@ func (a *apiServer) deleteProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (a *apiServer) projectsByPath(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	a.deleteProject(w, r)
 }
 
 func (a *apiServer) listServices(w http.ResponseWriter, r *http.Request) {
