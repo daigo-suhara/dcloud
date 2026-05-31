@@ -454,8 +454,10 @@ function App() {
                 <div className="service-list-table">
                   <div className="service-list-head" aria-hidden="true">
                     <span className="service-list-head-status" />
-                    <span className="service-list-head-name">名前</span>
-                    <span className="service-list-head-updated">更新日時</span>
+                    <span className="service-list-head-main">
+                      <span className="service-list-head-name">名前</span>
+                      <span className="service-list-head-updated">更新日時</span>
+                    </span>
                   </div>
 
                   <div className="service-list">

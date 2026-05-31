@@ -553,7 +553,7 @@ h1 {
 
 .service-list {
   display: grid;
-  margin-top: 16px;
+  margin-top: 4px;
   border-top: 1px solid rgba(119, 119, 119, 0.32);
 }
 
@@ -564,7 +564,7 @@ h1 {
 
 .service-list-head {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
+  grid-template-columns: 42px minmax(0, 1fr);
   align-items: center;
   min-height: 34px;
   padding: 0 8px 0 0;
@@ -579,12 +579,21 @@ h1 {
   display: block;
 }
 
-.service-list-head-name {
+.service-list-head-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
   padding-left: 2px;
 }
 
+.service-list-head-name {
+  font-size: inherit;
+}
+
 .service-list-head-updated {
-  padding-left: 12px;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .deploy-launch-card {
