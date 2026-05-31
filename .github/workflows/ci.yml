@@ -37,8 +37,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: dcp-control-plane
-            dockerfile: services/control-plane/Dockerfile
+          - name: dcp-core
+            dockerfile: services/core/Dockerfile
           - name: dcp-cloudrun
             dockerfile: services/cloudrun/Dockerfile
           - name: dcp-console
