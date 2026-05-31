@@ -317,7 +317,7 @@ func (a *apiServer) deleteProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	projectID := strings.TrimSpace(r.PathValue("projectID"))
-	if projectID == "" || !isDNSLabel(projectID) {
+	if projectID == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "プロジェクトIDが不正です"})
 		return
 	}

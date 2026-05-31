@@ -56,7 +56,7 @@ func (m *memoryProjectManager) Delete(_ context.Context, userID string, projectI
 	defer m.mu.Unlock()
 
 	for i, p := range m.projects {
-		if p.Owner != userID || p.ID != projectID {
+		if p.Owner != userID || (p.ID != projectID && p.Name != projectID) {
 			continue
 		}
 		if p.Name == "default" {
@@ -174,7 +174,7 @@ func (m *kubeProjectManager) Delete(ctx context.Context, userID string, projectI
 	next := make([]project, 0, len(projects))
 	removed := false
 	for _, p := range projects {
-		if p.Owner == userID && p.ID == projectID {
+		if p.Owner == userID && (p.ID == projectID || p.Name == projectID) {
 			if p.Name == "default" {
 				return errDefaultProjectProtected
 			}

@@ -307,6 +307,41 @@ func TestDeleteProject(t *testing.T) {
 	}
 }
 
+func TestDeleteProjectByName(t *testing.T) {
+	withTestUUID(t)
+	auth := testAuth()
+	api := &apiServer{
+		logger:    slog.New(slog.NewTextHandler(io.Discard, nil)),
+		auth:      auth,
+		projects:  newMemoryProjectManager(),
+		namespace: "dcp-system",
+	}
+
+	createReq := httptest.NewRequest(http.MethodPost, "http://172.16.100.11:8080/api/v1/projects", strings.NewReader(`{"name":"alphateam"}`))
+	createReq.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	createRec := httptest.NewRecorder()
+	api.createProject(createRec, createReq)
+
+	if createRec.Code != http.StatusCreated {
+		t.Fatalf("expected status %d, got %d", http.StatusCreated, createRec.Code)
+	}
+
+	var created project
+	if err := json.NewDecoder(createRec.Body).Decode(&created); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	deleteReq := httptest.NewRequest(http.MethodDelete, "http://172.16.100.11:8080/api/v1/projects/"+created.Name, nil)
+	deleteReq.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	deleteReq.SetPathValue("projectID", created.Name)
+	deleteRec := httptest.NewRecorder()
+	api.deleteProject(deleteRec, deleteReq)
+
+	if deleteRec.Code != http.StatusNoContent {
+		t.Fatalf("expected status %d, got %d", http.StatusNoContent, deleteRec.Code)
+	}
+}
+
 func TestDeleteDefaultProjectRejected(t *testing.T) {
 	withTestUUID(t)
 	auth := testAuth()
