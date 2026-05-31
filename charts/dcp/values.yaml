@@ -5,7 +5,10 @@ image:
   tag: latest
 
 storage:
-  className: general
+  createClass: true
+  className: dcp-ceph-rbd
+  clusterID: rook-ceph
+  pool: rbd
 
 core:
   replicaCount: 1
