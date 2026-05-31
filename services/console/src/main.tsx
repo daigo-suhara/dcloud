@@ -21,6 +21,7 @@ type DeployedService = {
   ready: boolean;
   reason?: string;
   createdAt?: string;
+  updatedAt?: string;
   namespace: string;
   generation?: number;
 };
@@ -29,12 +30,14 @@ type DeployForm = {
   name: string;
   image: string;
   port: string;
+  scale: string;
 };
 
 const initialForm: DeployForm = {
   name: "",
   image: "",
-  port: ""
+  port: "",
+  scale: "0"
 };
 
 const navItems = [
@@ -141,12 +144,13 @@ function App() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          image: form.image.trim(),
-          port: Number(form.port || "8080")
-        })
-      });
+          body: JSON.stringify({
+            name: form.name.trim(),
+            image: form.image.trim(),
+            port: Number(form.port || "8080"),
+            scale: Number(form.scale || "0")
+          })
+        });
 
       const data = (await response.json()) as DeployedService | { error?: string };
       if (!response.ok) {
@@ -156,7 +160,7 @@ function App() {
       if ("name" in data) {
         setMessage(`${data.name} を作成しました`);
       }
-      setForm((current) => ({ ...current, name: "hello-dcp" }));
+      setForm((current) => ({ ...current, name: "hello-dcp", scale: "0" }));
       await loadServices();
     } catch (deployError) {
       setError(deployError instanceof Error ? deployError.message : "failed to deploy service");
@@ -308,6 +312,19 @@ function App() {
                   placeholder="8080"
                 />
               </label>
+
+              <label className="field">
+                <span className="field-label">スケール数</span>
+                <input
+                  className="text-input"
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={form.scale}
+                  onChange={(event) => setForm((current) => ({ ...current, scale: event.target.value }))}
+                  placeholder="0"
+                />
+              </label>
             </div>
 
             <div className="actions">
@@ -369,6 +386,12 @@ function App() {
                         <dd>{selectedService.createdAt ?? "-"}</dd>
                       </div>
                     </div>
+
+                    <div className="delete-actions detail-actions">
+                      <button className="pill danger button" type="button" onClick={() => requestDelete(selectedService.name)}>
+                        削除
+                      </button>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -397,21 +420,26 @@ function App() {
                 {services.length > 0 ? (
                   services.map((service) => {
                     const status = getServiceStatus(service);
-                    return (
-                      <article className="service-row" key={service.name}>
-                        <span className="service-cell service-cell-status" aria-hidden="true">
-                          <span className={`status-icon ${status}`}>
-                            {status === "ready" ? <CheckIcon /> : status === "loading" ? <LoadingIcon /> : <ErrorIcon />}
+                      return (
+                        <article className="service-row" key={service.name}>
+                          <span className="service-cell service-cell-status" aria-hidden="true">
+                            <span className={`status-icon ${status}`}>
+                              {status === "ready" ? <CheckIcon /> : status === "loading" ? <LoadingIcon /> : <ErrorIcon />}
+                            </span>
                           </span>
-                        </span>
-                        <span className="service-cell service-cell-name">
-                        <a className="service-name-link" href={`#services/${encodeURIComponent(service.name)}`}>
-                          <span className="service-name-text">{service.name}</span>
-                        </a>
-                        </span>
-                      </article>
-                    );
-                  })
+                          <span className="service-cell service-cell-name">
+                            <a className="service-name-link" href={`#services/${encodeURIComponent(service.name)}`}>
+                              <span className="service-name-text">{service.name}</span>
+                            </a>
+                          </span>
+                          <span className="service-cell service-cell-updated">
+                            <span className="service-updated-text">
+                              更新 {service.updatedAt ? formatServiceTimestamp(service.updatedAt) : "-"}
+                            </span>
+                          </span>
+                        </article>
+                      );
+                    })
                   ) : (
                     <div className="empty-state">
                       <p>{loading ? "Loading..." : "まだサービスはありません。"}</p>
@@ -507,6 +535,21 @@ function formatServiceStatus(service: DeployedService) {
   }
 
   return service.reason ?? "Pending";
+}
+
+function formatServiceTimestamp(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
 }
 
 function HamburgerIcon() {

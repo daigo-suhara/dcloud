@@ -591,7 +591,7 @@ h1 {
 
 .service-row {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-columns: 42px minmax(0, 1fr) 110px;
   align-items: center;
   min-height: 40px;
   border-bottom: 1px solid rgba(119, 119, 119, 0.32);
@@ -610,6 +610,11 @@ h1 {
 
 .service-cell-name {
   padding-left: 2px;
+}
+
+.service-cell-updated {
+  justify-content: flex-end;
+  padding-left: 8px;
 }
 
 .service-name-link {
@@ -635,6 +640,14 @@ h1 {
   line-height: 1.35;
   letter-spacing: 0.04em;
   word-break: break-all;
+}
+
+.service-updated-text {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--c-primary-dark);
 }
 
 .status-icon {
@@ -738,6 +751,10 @@ h1 {
   justify-content: flex-end;
   gap: 12px;
   margin-top: 20px;
+}
+
+.detail-actions {
+  margin-top: 4px;
 }
 
 .delete-cancel {

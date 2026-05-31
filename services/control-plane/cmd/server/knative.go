@@ -88,10 +88,11 @@ func (m *knativeServiceManager) List(ctx context.Context) ([]deployedService, er
 			Status struct {
 				URL        string `json:"url"`
 				Conditions []struct {
-					Type    string `json:"type"`
-					Status  string `json:"status"`
-					Reason  string `json:"reason"`
-					Message string `json:"message"`
+					Type               string    `json:"type"`
+					Status             string    `json:"status"`
+					Reason             string    `json:"reason"`
+					Message            string    `json:"message"`
+					LastTransitionTime time.Time `json:"lastTransitionTime"`
 				} `json:"conditions"`
 			} `json:"status"`
 		} `json:"items"`
@@ -117,8 +118,14 @@ func (m *knativeServiceManager) List(ctx context.Context) ([]deployedService, er
 			if cond.Type == "Ready" {
 				service.Ready = cond.Status == "True"
 				service.Reason = cond.Reason
+				if !cond.LastTransitionTime.IsZero() {
+					service.UpdatedAt = cond.LastTransitionTime.UTC().Format(time.RFC3339)
+				}
 				break
 			}
+		}
+		if service.UpdatedAt == "" {
+			service.UpdatedAt = service.CreatedAt
 		}
 		out = append(out, service)
 	}
@@ -183,6 +190,9 @@ func (m *knativeServiceManager) Deploy(ctx context.Context, req deployRequest) (
 			},
 		},
 	}
+	if req.Scale > 0 {
+		manifest.Spec.Template.Spec.Replicas = &req.Scale
+	}
 
 	body, err := json.Marshal(manifest)
 	if err != nil {
@@ -218,6 +228,7 @@ func (m *knativeServiceManager) Deploy(ctx context.Context, req deployRequest) (
 		Spec struct {
 			Template struct {
 				Spec struct {
+					Replicas *int `json:"replicas,omitempty"`
 					Containers []struct {
 						Image string `json:"image"`
 					} `json:"containers"`
@@ -227,9 +238,10 @@ func (m *knativeServiceManager) Deploy(ctx context.Context, req deployRequest) (
 		Status struct {
 			URL        string `json:"url"`
 			Conditions []struct {
-				Type   string `json:"type"`
-				Status string `json:"status"`
-				Reason string `json:"reason"`
+				Type               string    `json:"type"`
+				Status             string    `json:"status"`
+				Reason             string    `json:"reason"`
+				LastTransitionTime time.Time `json:"lastTransitionTime"`
 			} `json:"conditions"`
 		} `json:"status"`
 	}
@@ -252,8 +264,14 @@ func (m *knativeServiceManager) Deploy(ctx context.Context, req deployRequest) (
 		if cond.Type == "Ready" {
 			service.Ready = cond.Status == "True"
 			service.Reason = cond.Reason
+			if !cond.LastTransitionTime.IsZero() {
+				service.UpdatedAt = cond.LastTransitionTime.UTC().Format(time.RFC3339)
+			}
 			break
 		}
+	}
+	if service.UpdatedAt == "" {
+		service.UpdatedAt = service.CreatedAt
 	}
 
 	return service, nil
@@ -313,15 +331,16 @@ type knativeServiceManifest struct {
 		Labels    map[string]string `json:"labels,omitempty"`
 	} `json:"metadata"`
 	Spec struct {
-		Template struct {
-			Metadata struct {
-				Labels map[string]string `json:"labels,omitempty"`
-			} `json:"metadata"`
-			Spec struct {
-				Containers []knativeContainer `json:"containers"`
-			} `json:"spec"`
-		} `json:"template"`
-	} `json:"spec"`
+			Template struct {
+				Metadata struct {
+					Labels map[string]string `json:"labels,omitempty"`
+				} `json:"metadata"`
+				Spec struct {
+					Replicas *int `json:"replicas,omitempty"`
+					Containers []knativeContainer `json:"containers"`
+				} `json:"spec"`
+			} `json:"template"`
+		} `json:"spec"`
 }
 
 type knativeContainer struct {

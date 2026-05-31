@@ -32,6 +32,7 @@ type deployRequest struct {
 	Name  string `json:"name"`
 	Image string `json:"image"`
 	Port  int    `json:"port"`
+	Scale int    `json:"scale"`
 }
 
 type deployedService struct {
@@ -41,6 +42,7 @@ type deployedService struct {
 	Ready      bool   `json:"ready"`
 	Reason     string `json:"reason,omitempty"`
 	CreatedAt  string `json:"createdAt,omitempty"`
+	UpdatedAt  string `json:"updatedAt,omitempty"`
 	Namespace  string `json:"namespace"`
 	Generation int64  `json:"generation,omitempty"`
 }

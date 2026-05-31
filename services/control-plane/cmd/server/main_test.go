@@ -62,6 +62,7 @@ func TestListServices(t *testing.T) {
 					Image:     "ghcr.io/example/hello-dcp:latest",
 					Namespace: "dcp-system",
 					Ready:     true,
+					UpdatedAt: "2026-05-31T00:00:00Z",
 				},
 			},
 		},
@@ -93,6 +94,9 @@ func TestListServices(t *testing.T) {
 	if got.Services[0].URL != "https://172.16.100.11:8080/cloudrun/hello-dcp/" {
 		t.Fatalf("expected public service url, got %q", got.Services[0].URL)
 	}
+	if got.Services[0].UpdatedAt == "" {
+		t.Fatalf("expected updatedAt to be populated")
+	}
 }
 
 func TestDeployService(t *testing.T) {
@@ -102,7 +106,7 @@ func TestDeployService(t *testing.T) {
 		namespace: "dcp-system",
 	}
 
-	req := httptest.NewRequest(http.MethodPost, "http://172.16.100.11:8080/api/v1/services", strings.NewReader(`{"name":"hello-dcp","image":"ghcr.io/example/hello-dcp:latest","port":8080}`))
+	req := httptest.NewRequest(http.MethodPost, "http://172.16.100.11:8080/api/v1/services", strings.NewReader(`{"name":"hello-dcp","image":"ghcr.io/example/hello-dcp:latest","port":8080,"scale":2}`))
 	rec := httptest.NewRecorder()
 
 	api.deployService(rec, req)
@@ -123,6 +127,12 @@ func TestDeployService(t *testing.T) {
 	}
 	if got.URL != "https://172.16.100.11:8080/cloudrun/hello-dcp/" {
 		t.Fatalf("expected public service url, got %q", got.URL)
+	}
+	if got.UpdatedAt == "" {
+		t.Fatalf("expected updatedAt to be populated")
+	}
+	if len(manager.deployed) != 1 || manager.deployed[0].Scale != 2 {
+		t.Fatalf("expected scale 2, got %+v", manager.deployed)
 	}
 }
 
@@ -170,6 +180,7 @@ func (f *fakeServiceManager) Deploy(_ context.Context, req deployRequest) (deplo
 		Namespace: "dcp-system",
 		Ready:     true,
 		URL:       "/cloudrun/" + req.Name + "/",
+		UpdatedAt: "2026-05-31T00:00:00Z",
 	}, nil
 }
 
