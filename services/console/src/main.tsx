@@ -571,7 +571,6 @@ function App() {
               <div className="panel-header">
                 <div>
                   <p className="panel-kicker">プロジェクト</p>
-                  <h2>切り替えと管理</h2>
                 </div>
                 <button
                   className="project-create-button project-create-toggle"
@@ -602,6 +601,7 @@ function App() {
                 </form>
               ) : null}
 
+              <div className="project-list-section">
               <div className="project-list-table">
                 <div className="project-list-head" aria-hidden="true">
                   <span className="project-list-head-main">
@@ -641,6 +641,7 @@ function App() {
                     );
                   })}
                 </div>
+              </div>
               </div>
             </section>
 

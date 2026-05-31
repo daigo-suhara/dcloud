@@ -356,6 +356,11 @@ a {
   justify-content: flex-end;
 }
 
+.project-list-section {
+  display: grid;
+  gap: 12px;
+}
+
 .project-list-table {
   display: grid;
   gap: 10px;
