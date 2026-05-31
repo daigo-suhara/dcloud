@@ -75,6 +75,7 @@ type serviceManager interface {
 type projectManager interface {
 	List(context.Context, string) ([]project, error)
 	Create(context.Context, string, string) (project, error)
+	Delete(context.Context, string, string) error
 	Ensure(context.Context, string, string) (project, error)
 	Default(context.Context, string) (project, error)
 }
@@ -116,6 +117,7 @@ func main() {
 	mux.HandleFunc("POST /api/v1/auth/logout", api.logout)
 	mux.HandleFunc("GET /api/v1/projects", api.listProjects)
 	mux.HandleFunc("POST /api/v1/projects", api.createProject)
+	mux.HandleFunc("DELETE /api/v1/projects/{projectID}", api.deleteProject)
 	mux.HandleFunc("GET /api/v1/services", api.listServices)
 	mux.HandleFunc("POST /api/v1/services", api.deployService)
 	mux.HandleFunc("DELETE /api/v1/services/", api.deleteService)
@@ -306,6 +308,32 @@ func (a *apiServer) createProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusCreated, project)
+}
+
+func (a *apiServer) deleteProject(w http.ResponseWriter, r *http.Request) {
+	userID, err := a.currentUserID(r)
+	if err != nil {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "ログインしてください"})
+		return
+	}
+	projectID := strings.TrimSpace(r.PathValue("projectID"))
+	if projectID == "" || !isDNSLabel(projectID) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "プロジェクトIDが不正です"})
+		return
+	}
+	if err := a.projects.Delete(r.Context(), userID, projectID); err != nil {
+		a.logger.Error("delete project failed", "error", err, "user", userID, "project", projectID)
+		switch {
+		case errors.Is(err, errProjectNotFound):
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "プロジェクトが見つかりません"})
+		case errors.Is(err, errDefaultProjectProtected):
+			writeJSON(w, http.StatusConflict, map[string]string{"error": "デフォルトプロジェクトは削除できません"})
+		default:
+			writeJSON(w, http.StatusBadGateway, map[string]string{"error": "プロジェクトの削除に失敗しました"})
+		}
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (a *apiServer) listServices(w http.ResponseWriter, r *http.Request) {

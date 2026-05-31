@@ -20,6 +20,7 @@ const projectsConfigMapName = "dcp-projects"
 var uuidGenerator = uuid.NewString
 
 var errProjectAlreadyExists = errors.New("project already exists")
+var errDefaultProjectProtected = errors.New("default project is protected")
 
 type memoryProjectManager struct {
 	mu       sync.Mutex
@@ -48,6 +49,23 @@ func (m *memoryProjectManager) Create(_ context.Context, userID string, name str
 	p := newProject(userID, name, m.projects)
 	m.projects = append(m.projects, p)
 	return p, nil
+}
+
+func (m *memoryProjectManager) Delete(_ context.Context, userID string, projectID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for i, p := range m.projects {
+		if p.Owner != userID || p.ID != projectID {
+			continue
+		}
+		if p.Name == "default" {
+			return errDefaultProjectProtected
+		}
+		m.projects = append(m.projects[:i], m.projects[i+1:]...)
+		return nil
+	}
+	return errProjectNotFound
 }
 
 func (m *memoryProjectManager) Ensure(_ context.Context, userID string, projectID string) (project, error) {
@@ -143,6 +161,35 @@ func (m *kubeProjectManager) Create(ctx context.Context, userID string, name str
 		return project{}, err
 	}
 	return p, nil
+}
+
+func (m *kubeProjectManager) Delete(ctx context.Context, userID string, projectID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	projects, resourceVersion, err := m.load(ctx)
+	if err != nil {
+		return err
+	}
+	next := make([]project, 0, len(projects))
+	removed := false
+	for _, p := range projects {
+		if p.Owner == userID && p.ID == projectID {
+			if p.Name == "default" {
+				return errDefaultProjectProtected
+			}
+			removed = true
+			continue
+		}
+		next = append(next, p)
+	}
+	if !removed {
+		return errProjectNotFound
+	}
+	if err := m.save(ctx, next, resourceVersion); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *kubeProjectManager) Ensure(ctx context.Context, userID string, projectID string) (project, error) {

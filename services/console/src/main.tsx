@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
+  HiOutlineHome,
   HiOutlineCloud,
-  HiOutlineCube,
   HiOutlineGlobeAlt
 } from "react-icons/hi2";
 import { HiOutlineServerStack } from "react-icons/hi2";
@@ -66,7 +66,7 @@ const initialForm: DeployForm = {
 };
 
 const navItems = [
-  { id: "home", label: "コンテナ" },
+  { id: "home", label: "ホーム" },
   { id: "deploy", label: "仮想マシン" },
   { id: "services", label: "ネットワーク" }
 ] as const;
@@ -105,6 +105,8 @@ function App() {
   const [activeProjectId, setActiveProjectId] = useState("");
   const [projectName, setProjectName] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
+  const [deletingProjectId, setDeletingProjectId] = useState("");
+  const [pendingProjectDeleteId, setPendingProjectDeleteId] = useState("");
   const [authLoading, setAuthLoading] = useState(true);
   const [route, setRoute] = useState<RouteState>(() => parseRoute(window.location.hash));
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -230,6 +232,13 @@ function App() {
     return `dcp-active-project:${userId}`;
   }
 
+  function handleProjectSelect(projectId: string) {
+    setActiveProjectId(projectId);
+    if (currentUser) {
+      localStorage.setItem(projectStorageKey(currentUser.id), projectId);
+    }
+  }
+
   async function loadProjects() {
     if (!currentUser) {
       return;
@@ -247,8 +256,7 @@ function App() {
         setProjects(data.projects);
         const saved = localStorage.getItem(projectStorageKey(currentUser.id));
         const nextProject = data.projects.find((project) => project.id === saved)?.id ?? data.defaultProjectId;
-        setActiveProjectId(nextProject);
-        localStorage.setItem(projectStorageKey(currentUser.id), nextProject);
+        handleProjectSelect(nextProject);
       }
     } catch (projectError) {
       setError(projectError instanceof Error ? projectError.message : "プロジェクト一覧を読み込めませんでした");
@@ -307,8 +315,7 @@ function App() {
       }
       if ("id" in data) {
         setProjects((current) => [...current, data]);
-        setActiveProjectId(data.id);
-        localStorage.setItem(projectStorageKey(currentUser!.id), data.id);
+        handleProjectSelect(data.id);
         setProjectName("");
         setMessage(`${data.name} を作成しました`);
       }
@@ -366,6 +373,14 @@ function App() {
     setPendingDeleteName("");
   }
 
+  function requestDeleteProject(projectId: string) {
+    setPendingProjectDeleteId(projectId);
+  }
+
+  function cancelProjectDelete() {
+    setPendingProjectDeleteId("");
+  }
+
   async function confirmDelete(name: string) {
     setPendingDeleteName("");
     setDeletingName(name);
@@ -393,6 +408,31 @@ function App() {
       setError(deleteError instanceof Error ? deleteError.message : "サービスの削除に失敗しました");
     } finally {
       setDeletingName("");
+    }
+  }
+
+  async function confirmDeleteProject(projectId: string) {
+    setPendingProjectDeleteId("");
+    setDeletingProjectId(projectId);
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await fetch(`/api/v1/projects/${projectId}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: apiHeaders()
+      });
+      if (!response.ok && response.status !== 204) {
+        const data = (await response.json()) as { error?: string };
+        throw new Error(data.error ?? "プロジェクトの削除に失敗しました");
+      }
+      setMessage("プロジェクトを削除しました");
+      await loadProjects();
+    } catch (projectError) {
+      setError(projectError instanceof Error ? projectError.message : "プロジェクトの削除に失敗しました");
+    } finally {
+      setDeletingProjectId("");
     }
   }
 
@@ -457,37 +497,9 @@ function App() {
         <div className="brand-slot">
           <BrandLogo />
         </div>
-        <div className="project-switcher" aria-label="project-switcher">
-          <select
-            className="project-select"
-              value={activeProjectId}
-              onChange={(event) => {
-                setActiveProjectId(event.target.value);
-            localStorage.setItem(projectStorageKey(currentUser!.id), event.target.value);
-                }}
-            >
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
-          <form className="project-create" onSubmit={handleCreateProject}>
-            <input
-              className="project-input"
-              value={projectName}
-              onChange={(event) => setProjectName(event.target.value)}
-              placeholder="新しいプロジェクト"
-              aria-label="新しいプロジェクト"
-            />
-            <button className="project-create-button" type="submit" disabled={creatingProject || !projectName.trim()}>
-              作成
-            </button>
-          </form>
-          <button className="project-create-button logout-button" type="button" onClick={startLogout}>
-            ログアウト
-          </button>
-        </div>
+        <button className="project-create-button logout-button header-logout" type="button" onClick={startLogout}>
+          ログアウト
+        </button>
       </header>
       {sidebarOpen ? <div className="sidebar-backdrop" role="presentation" onClick={() => setSidebarOpen(false)} /> : null}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`} aria-label="navigation">
@@ -520,7 +532,13 @@ function App() {
               }}
             >
               <span className="nav-icon" aria-hidden="true">
-                {item.id === "home" ? <HiOutlineCube /> : item.id === "deploy" ? <HiOutlineServerStack /> : <HiOutlineGlobeAlt />}
+                {item.id === "home" ? (
+                  <HiOutlineHome />
+                ) : item.id === "deploy" ? (
+                  <HiOutlineServerStack />
+                ) : (
+                  <HiOutlineGlobeAlt />
+                )}
               </span>
               <span className="nav-copy">
                 <strong>{item.label}</strong>
@@ -531,7 +549,169 @@ function App() {
       </aside>
 
       <section className="content">
-        {route.section === "deploy" ? (
+        {route.section === "home" ? (
+          <section className="home-stack">
+            <section className="panel project-panel" id="projects" aria-label="project-management">
+              <div className="panel-header">
+                <div>
+                  <p className="panel-kicker">プロジェクト</p>
+                  <h2>切り替えと管理</h2>
+                </div>
+              </div>
+
+              <div className="project-panel-body">
+                <label className="field project-select-field">
+                  <span className="field-label">プロジェクトを切り替え</span>
+                  <select
+                    className="project-select project-select-inline"
+                    value={activeProjectId}
+                    onChange={(event) => handleProjectSelect(event.target.value)}
+                  >
+                    {projects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <form className="project-create project-create-inline" onSubmit={handleCreateProject}>
+                  <label className="field project-create-field">
+                    <span className="field-label">プロジェクトを作成</span>
+                    <input
+                      className="text-input project-input"
+                      value={projectName}
+                      onChange={(event) => setProjectName(event.target.value)}
+                      placeholder="新しいプロジェクト"
+                      aria-label="新しいプロジェクト"
+                    />
+                  </label>
+                  <div className="project-create-actions">
+                    <button className="project-create-button" type="submit" disabled={creatingProject || !projectName.trim()}>
+                      作成
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <div className="project-list">
+                {projects.map((project) => {
+                  const isActive = project.id === activeProjectId;
+                  const canDelete = project.name !== "default";
+                  return (
+                    <article className={`project-row ${isActive ? "active" : ""}`} key={project.id}>
+                      <button
+                        className="project-row-main"
+                        type="button"
+                        onClick={() => handleProjectSelect(project.id)}
+                        aria-pressed={isActive}
+                      >
+                        <span className="project-row-title">
+                          <strong>{project.name}</strong>
+                          {isActive ? <span className="project-badge">現在使用中</span> : null}
+                        </span>
+                        <span className="project-row-meta">{formatServiceTimestamp(project.createdAt)}</span>
+                      </button>
+                      <button
+                        className="project-row-delete"
+                        type="button"
+                        disabled={!canDelete || deletingProjectId === project.id}
+                        onClick={() => requestDeleteProject(project.id)}
+                      >
+                        {deletingProjectId === project.id ? "削除中..." : "削除"}
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="panel dashboard-note">
+              <p className="panel-kicker">ホーム</p>
+              <h2>コンテナ管理へ進む前の入口です</h2>
+              <p>プロジェクトを切り替えてから、下のコンテナ一覧やサービス作成を行ってください。</p>
+            </section>
+
+            <section className="service-rail-wrap">
+              <section className="service-rail" aria-label="container-services">
+                <section className="service-card panel service-list-card" id="services">
+                  <div className="panel-header">
+                    <div>
+                      <p className="panel-kicker">サービス</p>
+                      <h2>デプロイ済みサービス</h2>
+                    </div>
+                  </div>
+
+                  <div className="service-list-table">
+                    <div className="service-list-head" aria-hidden="true">
+                      <span className="service-list-head-status" />
+                      <span className="service-list-head-main">
+                        <span className="service-list-head-name">名前</span>
+                        <span className="service-list-head-updated">更新日時</span>
+                      </span>
+                    </div>
+
+                    <div className="service-list">
+                      {services.length > 0 ? (
+                        services.map((service) => {
+                          const status = getServiceStatus(service);
+                          return (
+                            <article className="service-row" key={service.name}>
+                              <span className="service-cell service-cell-status" aria-hidden="true">
+                                <span className={`status-icon ${status}`}>
+                                  {status === "ready" ? <CheckIcon /> : status === "loading" ? <LoadingIcon /> : <ErrorIcon />}
+                                </span>
+                              </span>
+                              <span className="service-cell service-cell-name">
+                                <a className="service-name-link" href={`#services/${encodeURIComponent(service.name)}`}>
+                                  <span className="service-name-text">{service.name}</span>
+                                </a>
+                                <span className="service-updated-inline">
+                                  {service.updatedAt || service.createdAt
+                                    ? formatServiceTimestamp(service.updatedAt || service.createdAt || "")
+                                    : "-"}
+                                </span>
+                              </span>
+                            </article>
+                          );
+                        })
+                      ) : (
+                        <div className="empty-state">
+                          <p>{loading ? "読み込み中..." : "まだサービスはありません。"}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </section>
+
+                <section className="service-card panel deploy-panel" aria-label="サービスのデプロイ">
+                  <div className="panel-header">
+                    <div>
+                      <p className="panel-kicker">作成</p>
+                      <h2>サービスのデプロイ</h2>
+                    </div>
+                  </div>
+
+                  <div className="deploy-panel-grid">
+                    <a className="deploy-launch-card" href="#deploy" aria-label="コンテナのデプロイ">
+                      <span className="deploy-launch-icon" aria-hidden="true">
+                        <SiDocker />
+                      </span>
+                      <span className="deploy-launch-label">コンテナのデプロイ</span>
+                    </a>
+
+                    <a className="deploy-launch-card deploy-launch-secondary" href="#services" aria-label="リポジトリの接続">
+                      <span className="deploy-launch-icon deploy-launch-glyph" aria-hidden="true">
+                        <SiGithub />
+                      </span>
+                      <span className="deploy-launch-label">リポジトリの接続</span>
+                    </a>
+                  </div>
+                </section>
+              </section>
+            </section>
+          </section>
+        ) : route.section === "deploy" ? (
           <form className="deploy-card" id="deploy" onSubmit={handleSubmit}>
             <div className="panel-header">
               <div>
@@ -789,6 +969,35 @@ function App() {
                 disabled={deletingName === pendingDeleteName}
               >
                 {deletingName === pendingDeleteName ? "削除中..." : "削除"}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {pendingProjectDeleteId ? (
+        <div className="delete-overlay" role="presentation" onClick={cancelProjectDelete}>
+          <section
+            className="delete-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="削除の確認"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="panel-kicker">削除の確認</p>
+            <h3>プロジェクトの削除</h3>
+            <p>このプロジェクトを削除しますか？</p>
+            <div className="delete-actions">
+              <button className="pill button delete-cancel" type="button" onClick={cancelProjectDelete}>
+                キャンセル
+              </button>
+              <button
+                className="pill danger button"
+                type="button"
+                onClick={() => confirmDeleteProject(pendingProjectDeleteId)}
+                disabled={deletingProjectId === pendingProjectDeleteId}
+              >
+                {deletingProjectId === pendingProjectDeleteId ? "削除中..." : "削除"}
               </button>
             </div>
           </section>

@@ -272,6 +272,79 @@ func TestCreateProjectRejectsDuplicateName(t *testing.T) {
 	}
 }
 
+func TestDeleteProject(t *testing.T) {
+	withTestUUID(t)
+	auth := testAuth()
+	api := &apiServer{
+		logger:    slog.New(slog.NewTextHandler(io.Discard, nil)),
+		auth:      auth,
+		projects:  newMemoryProjectManager(),
+		namespace: "dcp-system",
+	}
+
+	createReq := httptest.NewRequest(http.MethodPost, "http://172.16.100.11:8080/api/v1/projects", strings.NewReader(`{"name":"alpha"}`))
+	createReq.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	createRec := httptest.NewRecorder()
+	api.createProject(createRec, createReq)
+
+	if createRec.Code != http.StatusCreated {
+		t.Fatalf("expected status %d, got %d", http.StatusCreated, createRec.Code)
+	}
+
+	var created project
+	if err := json.NewDecoder(createRec.Body).Decode(&created); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	deleteReq := httptest.NewRequest(http.MethodDelete, "http://172.16.100.11:8080/api/v1/projects/"+created.ID, nil)
+	deleteReq.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	deleteReq.SetPathValue("projectID", created.ID)
+	deleteRec := httptest.NewRecorder()
+	api.deleteProject(deleteRec, deleteReq)
+
+	if deleteRec.Code != http.StatusNoContent {
+		t.Fatalf("expected status %d, got %d", http.StatusNoContent, deleteRec.Code)
+	}
+}
+
+func TestDeleteDefaultProjectRejected(t *testing.T) {
+	withTestUUID(t)
+	auth := testAuth()
+	api := &apiServer{
+		logger:    slog.New(slog.NewTextHandler(io.Discard, nil)),
+		auth:      auth,
+		projects:  newMemoryProjectManager(),
+		namespace: "dcp-system",
+	}
+
+	listReq := httptest.NewRequest(http.MethodGet, "http://172.16.100.11:8080/api/v1/projects", nil)
+	listReq.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	listRec := httptest.NewRecorder()
+	api.listProjects(listRec, listReq)
+
+	if listRec.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, listRec.Code)
+	}
+
+	var got struct {
+		DefaultProjectID string    `json:"defaultProjectId"`
+		Projects         []project `json:"projects"`
+	}
+	if err := json.NewDecoder(listRec.Body).Decode(&got); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	deleteReq := httptest.NewRequest(http.MethodDelete, "http://172.16.100.11:8080/api/v1/projects/"+got.DefaultProjectID, nil)
+	deleteReq.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	deleteReq.SetPathValue("projectID", got.DefaultProjectID)
+	deleteRec := httptest.NewRecorder()
+	api.deleteProject(deleteRec, deleteReq)
+
+	if deleteRec.Code != http.StatusConflict {
+		t.Fatalf("expected status %d, got %d", http.StatusConflict, deleteRec.Code)
+	}
+}
+
 func testAuth() *keycloakAuth {
 	return &keycloakAuth{sessionSecret: "dcp-session-secret-change-me"}
 }
