@@ -582,7 +582,7 @@ h1 {
 .service-list-head-main {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 18px;
   min-width: 0;
   padding-left: 2px;
 }
@@ -686,7 +686,7 @@ h1 {
 .service-cell-name {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 18px;
   min-width: 0;
   padding-left: 2px;
 }
@@ -724,6 +724,7 @@ h1 {
   letter-spacing: 0.03em;
   color: var(--c-primary-dark);
   white-space: nowrap;
+  min-width: 120px;
 }
 
 .status-icon {
