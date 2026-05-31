@@ -23,8 +23,10 @@ type ProjectsResponse = {
 };
 
 type AuthUser = {
+  id: string;
   username: string;
-  createdAt: string;
+  email?: string;
+  name?: string;
 };
 
 type Project = {
@@ -103,10 +105,6 @@ function App() {
   const [activeProjectId, setActiveProjectId] = useState("");
   const [projectName, setProjectName] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "register">("login");
-  const [authName, setAuthName] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [authSubmitting, setAuthSubmitting] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [route, setRoute] = useState<RouteState>(() => parseRoute(window.location.hash));
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -162,7 +160,7 @@ function App() {
     setProjects([]);
     setServices([]);
     setActiveProjectId("");
-    const savedProject = localStorage.getItem(projectStorageKey(currentUser.username));
+    const savedProject = localStorage.getItem(projectStorageKey(currentUser.id));
     if (savedProject) {
       setActiveProjectId(savedProject);
     }
@@ -206,7 +204,7 @@ function App() {
       if (!response.ok) {
         throw new Error("error" in data && data.error ? data.error : "ログイン状態を確認できませんでした");
       }
-      if ("username" in data) {
+      if ("id" in data) {
         setCurrentUser(data);
       }
     } catch (authError) {
@@ -216,79 +214,20 @@ function App() {
     }
   }
 
-  async function handleAuthSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setAuthSubmitting(true);
-    setError("");
-    setMessage("");
-
-    try {
-      const path = authMode === "login" ? "/api/v1/auth/login" : "/api/v1/users";
-      const response = await fetch(path, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          username: authName.trim(),
-          password: authPassword
-        })
-      });
-      const data = (await response.json()) as AuthUser | { error?: string };
-      if (!response.ok) {
-        throw new Error("error" in data && data.error ? data.error : authMode === "login" ? "ログインに失敗しました" : "ユーザーの作成に失敗しました");
-      }
-      if (authMode === "register") {
-        const loginResponse = await fetch("/api/v1/auth/login", {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            username: authName.trim(),
-            password: authPassword
-          })
-        });
-        const loginData = (await loginResponse.json()) as AuthUser | { error?: string };
-        if (!loginResponse.ok) {
-          throw new Error("error" in loginData && loginData.error ? loginData.error : "ログインに失敗しました");
-        }
-        if ("username" in loginData) {
-          setCurrentUser(loginData);
-        }
-      } else if ("username" in data) {
-        setCurrentUser(data);
-      }
-      setAuthPassword("");
-      setMessage(authMode === "login" ? "ログインしました" : "ユーザーを作成しました");
-      setAuthName("");
-    } catch (authError) {
-      setError(authError instanceof Error ? authError.message : "認証に失敗しました");
-    } finally {
-      setAuthSubmitting(false);
-    }
+  function startLogin() {
+    window.location.href = "/api/v1/auth/login";
   }
 
-  async function handleLogout() {
-    setError("");
-    setMessage("");
-    await fetch("/api/v1/auth/logout", {
-      method: "POST",
-      credentials: "include"
-    });
-    setCurrentUser(null);
-    setProjects([]);
-    setServices([]);
-    setActiveProjectId("");
-    setProjectName("");
-    setAuthName("");
-    setAuthPassword("");
+  function startRegister() {
+    window.location.href = "/api/v1/auth/register";
   }
 
-  function projectStorageKey(username: string) {
-    return `dcp-active-project:${username}`;
+  function startLogout() {
+    window.location.href = "/api/v1/auth/logout";
+  }
+
+  function projectStorageKey(userId: string) {
+    return `dcp-active-project:${userId}`;
   }
 
   async function loadProjects() {
@@ -306,10 +245,10 @@ function App() {
       }
       if ("projects" in data) {
         setProjects(data.projects);
-        const saved = localStorage.getItem(projectStorageKey(currentUser.username));
+        const saved = localStorage.getItem(projectStorageKey(currentUser.id));
         const nextProject = data.projects.find((project) => project.id === saved)?.id ?? data.defaultProjectId;
         setActiveProjectId(nextProject);
-        localStorage.setItem(projectStorageKey(currentUser.username), nextProject);
+        localStorage.setItem(projectStorageKey(currentUser.id), nextProject);
       }
     } catch (projectError) {
       setError(projectError instanceof Error ? projectError.message : "プロジェクト一覧を読み込めませんでした");
@@ -369,7 +308,7 @@ function App() {
       if ("id" in data) {
         setProjects((current) => [...current, data]);
         setActiveProjectId(data.id);
-        localStorage.setItem(projectStorageKey(currentUser!.username), data.id);
+        localStorage.setItem(projectStorageKey(currentUser!.id), data.id);
         setProjectName("");
         setMessage(`${data.name} を作成しました`);
       }
@@ -474,63 +413,23 @@ function App() {
     return (
       <main className="app-shell auth-page">
         <section className="auth-shell">
-          <form className="auth-card panel" onSubmit={handleAuthSubmit}>
+          <div className="auth-card panel">
             <div className="panel-header">
               <div>
                 <p className="panel-kicker">D Cloud</p>
-                <h1>{authMode === "login" ? "ログイン" : "ユーザー作成"}</h1>
+                <h1>Keycloak</h1>
               </div>
             </div>
-
-            <div className="auth-mode-switch">
-              <button
-                className={`auth-mode-button ${authMode === "login" ? "active" : ""}`}
-                type="button"
-                onClick={() => setAuthMode("login")}
-              >
+            <div className="auth-actions">
+              <button className="pill primary button" type="button" onClick={startLogin}>
                 ログイン
               </button>
-              <button
-                className={`auth-mode-button ${authMode === "register" ? "active" : ""}`}
-                type="button"
-                onClick={() => setAuthMode("register")}
-              >
-                ユーザー作成
+              <button className="pill button" type="button" onClick={startRegister}>
+                ユーザー登録
               </button>
             </div>
-
-            <div className="field-grid auth-grid">
-              <label className="field">
-                <span className="field-label">ユーザー名</span>
-                <input
-                  className="text-input"
-                  value={authName}
-                  onChange={(event) => setAuthName(event.target.value)}
-                  placeholder="alice"
-                  autoComplete="username"
-                />
-              </label>
-              <label className="field">
-                <span className="field-label">パスワード</span>
-                <input
-                  className="text-input"
-                  type="password"
-                  value={authPassword}
-                  onChange={(event) => setAuthPassword(event.target.value)}
-                  placeholder="password"
-                  autoComplete={authMode === "login" ? "current-password" : "new-password"}
-                />
-              </label>
-            </div>
-
-            <div className="actions">
-              <button className="pill primary button" type="submit" disabled={authSubmitting}>
-                {authSubmitting ? "処理中..." : authMode === "login" ? "ログイン" : "ユーザー作成"}
-              </button>
-            </div>
-
             {error ? <p className="status-banner error">{error}</p> : null}
-          </form>
+          </div>
         </section>
       </main>
     );
@@ -564,8 +463,8 @@ function App() {
               value={activeProjectId}
               onChange={(event) => {
                 setActiveProjectId(event.target.value);
-                localStorage.setItem(projectStorageKey(currentUser!.username), event.target.value);
-              }}
+            localStorage.setItem(projectStorageKey(currentUser!.id), event.target.value);
+                }}
             >
             {projects.map((project) => (
               <option key={project.id} value={project.id}>
@@ -585,7 +484,7 @@ function App() {
               作成
             </button>
           </form>
-          <button className="project-create-button logout-button" type="button" onClick={() => void handleLogout()}>
+          <button className="project-create-button logout-button" type="button" onClick={startLogout}>
             ログアウト
           </button>
         </div>

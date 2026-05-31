@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dcp.fullname" . }}-core
+  labels:
+    {{- include "dcp.labels" . | nindent 4 }}
+    app.kubernetes.io/component: core
+spec:
+  replicas: {{ .Values.core.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: core
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: core
+    spec:
+      serviceAccountName: {{ include "dcp.fullname" . }}-core
+      containers:
+        - name: core
+          env:
+            - name: DCP_TARGET_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: DCP_KEYCLOAK_BASE_URL
+              value: {{ .Values.keycloak.baseUrl | quote }}
+            - name: DCP_KEYCLOAK_REALM
+              value: {{ .Values.keycloak.realm | quote }}
+            - name: DCP_KEYCLOAK_CLIENT_ID
+              value: {{ .Values.keycloak.clientId | quote }}
+            - name: DCP_KEYCLOAK_CLIENT_SECRET
+              value: {{ .Values.keycloak.clientSecret | quote }}
+            - name: DCP_SESSION_SECRET
+              value: {{ .Values.keycloak.sessionSecret | quote }}
+          image: {{ include "dcp.image" (dict "root" . "repository" .Values.core.image.repository) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dcp.fullname" . }}-core
+  labels:
+    {{- include "dcp.labels" . | nindent 4 }}
+    app.kubernetes.io/component: core
+spec:
+  ports:
+    - name: http
+      port: {{ .Values.core.service.port }}
+      targetPort: http
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: core

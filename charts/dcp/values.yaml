@@ -4,10 +4,10 @@ image:
   pullPolicy: Always
   tag: latest
 
-controlPlane:
+core:
   replicaCount: 1
   image:
-    repository: dcp-control-plane
+    repository: dcp-core
   service:
     port: 8080
 
@@ -25,3 +25,10 @@ cloudrun:
     repository: dcp-cloudrun
   service:
     port: 8080
+
+keycloak:
+  baseUrl: ""
+  realm: ""
+  clientId: ""
+  clientSecret: ""
+  sessionSecret: ""

@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	userServiceManagerLabel = "dcp-control-plane"
+	userServiceManagerLabel = "dcp-core"
 	internalCloudRunName    = "dcp-cloudrun"
 	userLabelKey            = "dcp.dev/user"
 	projectLabelKey         = "dcp.dev/project"
@@ -204,7 +204,7 @@ func (m *knativeServiceManager) Deploy(ctx context.Context, scope projectScope, 
 	manifest.Metadata.Labels = map[string]string{
 		"app.kubernetes.io/instance":   "dcp",
 		"app.kubernetes.io/component":  "cloudrun",
-		"app.kubernetes.io/managed-by": "dcp-control-plane",
+		"app.kubernetes.io/managed-by": "dcp-core",
 		userLabelKey:                   scope.UserID,
 		projectLabelKey:                scope.ProjectID,
 	}
@@ -237,7 +237,7 @@ func (m *knativeServiceManager) Deploy(ctx context.Context, scope projectScope, 
 		return deployedService{}, err
 	}
 
-	url := fmt.Sprintf("%s/apis/serving.knative.dev/v1/namespaces/%s/services/%s?fieldManager=dcp-control-plane&force=true", m.baseURL, m.namespace, req.Name)
+	url := fmt.Sprintf("%s/apis/serving.knative.dev/v1/namespaces/%s/services/%s?fieldManager=dcp-core&force=true", m.baseURL, m.namespace, req.Name)
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPatch, url, bytes.NewReader(body))
 	if err != nil {
 		return deployedService{}, err

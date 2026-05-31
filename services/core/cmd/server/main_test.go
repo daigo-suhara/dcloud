@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestHealthz(t *testing.T) {
@@ -23,7 +24,7 @@ func TestHealthz(t *testing.T) {
 	if err := json.NewDecoder(rec.Body).Decode(&got); err != nil {
 		t.Fatalf("decode response: %v", err)
 	}
-	if got.Status != "ok" || got.Service != "control-plane" {
+	if got.Status != "ok" || got.Service != "core" {
 		t.Fatalf("unexpected response: %+v", got)
 	}
 }
@@ -54,15 +55,7 @@ func TestPlatform(t *testing.T) {
 }
 
 func TestListServices(t *testing.T) {
-	auth := newMemoryAuthManager()
-	registered, err := auth.Register(context.Background(), "default-user", "secret")
-	if err != nil {
-		t.Fatalf("register user: %v", err)
-	}
-	session, err := auth.Login(context.Background(), registered.Username, "secret")
-	if err != nil {
-		t.Fatalf("login user: %v", err)
-	}
+	auth := testAuth()
 	api := &apiServer{
 		auth: auth,
 		services: &fakeServiceManager{
@@ -82,7 +75,7 @@ func TestListServices(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "http://172.16.100.11:8080/api/v1/services", nil)
-	req.AddCookie(authCookie(session.Token, false))
+	req.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
 	rec := httptest.NewRecorder()
 
 	api.listServices(rec, req)
@@ -113,15 +106,7 @@ func TestListServices(t *testing.T) {
 }
 
 func TestDeployService(t *testing.T) {
-	auth := newMemoryAuthManager()
-	registered, err := auth.Register(context.Background(), "default-user", "secret")
-	if err != nil {
-		t.Fatalf("register user: %v", err)
-	}
-	session, err := auth.Login(context.Background(), registered.Username, "secret")
-	if err != nil {
-		t.Fatalf("login user: %v", err)
-	}
+	auth := testAuth()
 	manager := &fakeServiceManager{}
 	api := &apiServer{
 		auth:      auth,
@@ -131,7 +116,7 @@ func TestDeployService(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodPost, "http://172.16.100.11:8080/api/v1/services", strings.NewReader(`{"name":"hello-dcp","image":"ghcr.io/example/hello-dcp:latest","port":8080,"minScale":1,"maxScale":5}`))
-	req.AddCookie(authCookie(session.Token, false))
+	req.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
 	rec := httptest.NewRecorder()
 
 	api.deployService(rec, req)
@@ -165,15 +150,7 @@ func TestDeployService(t *testing.T) {
 }
 
 func TestDeleteService(t *testing.T) {
-	auth := newMemoryAuthManager()
-	registered, err := auth.Register(context.Background(), "default-user", "secret")
-	if err != nil {
-		t.Fatalf("register user: %v", err)
-	}
-	session, err := auth.Login(context.Background(), registered.Username, "secret")
-	if err != nil {
-		t.Fatalf("login user: %v", err)
-	}
+	auth := testAuth()
 	manager := &fakeServiceManager{}
 	api := &apiServer{
 		auth:      auth,
@@ -183,7 +160,7 @@ func TestDeleteService(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodDelete, "http://172.16.100.11:8080/api/v1/services/hello-dcp", nil)
-	req.AddCookie(authCookie(session.Token, false))
+	req.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
 	rec := httptest.NewRecorder()
 
 	api.deleteService(rec, req)
@@ -198,7 +175,7 @@ func TestDeleteService(t *testing.T) {
 
 func TestIsUserServiceRejectsInternalCloudRun(t *testing.T) {
 	labels := map[string]string{
-		"app.kubernetes.io/managed-by": "dcp-control-plane",
+		"app.kubernetes.io/managed-by": "dcp-core",
 		userLabelKey:                   "default-user",
 		projectLabelKey:                defaultProjectID("default-user"),
 	}
@@ -216,28 +193,38 @@ func TestIsUserServiceRejectsInternalCloudRun(t *testing.T) {
 }
 
 func TestAuthFlow(t *testing.T) {
-	auth := newMemoryAuthManager()
-
-	user, err := auth.Register(context.Background(), "alice", "secret")
-	if err != nil {
-		t.Fatalf("register user: %v", err)
-	}
-	session, err := auth.Login(context.Background(), user.Username, "secret")
-	if err != nil {
-		t.Fatalf("login user: %v", err)
-	}
-	got, err := auth.CurrentUser(context.Background(), session.Token)
+	auth := testAuth()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(testSessionCookie(t, auth, authUser{ID: "alice-id", Username: "alice"}))
+	got, err := auth.CurrentUser(req)
 	if err != nil {
 		t.Fatalf("current user: %v", err)
 	}
-	if got.Username != user.Username {
+	if got.ID != "alice-id" || got.Username != "alice" {
 		t.Fatalf("unexpected current user: %+v", got)
 	}
-	if err := auth.Logout(context.Background(), session.Token); err != nil {
-		t.Fatalf("logout: %v", err)
+}
+
+func testAuth() *keycloakAuth {
+	return &keycloakAuth{sessionSecret: "dcp-session-secret-change-me"}
+}
+
+func testSessionCookie(t *testing.T, auth *keycloakAuth, user authUser) *http.Cookie {
+	t.Helper()
+	value, err := auth.signPayload(sessionEnvelope{
+		ID:        user.ID,
+		Username:  user.Username,
+		Email:     user.Email,
+		Name:      user.Name,
+		ExpiresAt: time.Now().UTC().Add(time.Hour).Unix(),
+	})
+	if err != nil {
+		t.Fatalf("sign session: %v", err)
 	}
-	if _, err := auth.CurrentUser(context.Background(), session.Token); err == nil {
-		t.Fatalf("expected session to be removed")
+	return &http.Cookie{
+		Name:  authCookieName,
+		Value: value,
+		Path:  "/",
 	}
 }
 

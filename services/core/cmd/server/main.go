@@ -28,11 +28,6 @@ type platformResponse struct {
 	Components  []string `json:"components"`
 }
 
-type authRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 type projectScope struct {
 	UserID    string
 	ProjectID string
@@ -86,7 +81,7 @@ type projectManager interface {
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	addr := env("DCP_CONTROL_PLANE_ADDR", ":8080")
+	addr := env("DCP_CORE_ADDR", ":8080")
 	namespace := env("DCP_TARGET_NAMESPACE", "dcp-system")
 	manager, err := newServiceManager(namespace)
 	if err != nil {
@@ -97,11 +92,15 @@ func main() {
 		logger.Warn("project manager disabled", "error", err)
 		projects = newMemoryProjectManager()
 	}
+	auth, err := newKeycloakAuthFromEnv()
+	if err != nil {
+		logger.Warn("keycloak auth disabled", "error", err)
+	}
 
 	mux := http.NewServeMux()
 	api := &apiServer{
 		logger:    logger,
-		auth:      newMemoryAuthManager(),
+		auth:      auth,
 		services:  manager,
 		projects:  projects,
 		namespace: namespace,
@@ -110,9 +109,11 @@ func main() {
 	mux.HandleFunc("GET /readyz", readyz)
 	mux.HandleFunc("GET /api/v1/platform", platform)
 	mux.HandleFunc("GET /api/v1/auth/me", api.me)
-	mux.HandleFunc("POST /api/v1/auth/login", api.login)
+	mux.HandleFunc("GET /api/v1/auth/login", api.login)
+	mux.HandleFunc("GET /api/v1/auth/register", api.register)
+	mux.HandleFunc("GET /api/v1/auth/callback", api.callback)
+	mux.HandleFunc("GET /api/v1/auth/logout", api.logout)
 	mux.HandleFunc("POST /api/v1/auth/logout", api.logout)
-	mux.HandleFunc("POST /api/v1/users", api.register)
 	mux.HandleFunc("GET /api/v1/projects", api.listProjects)
 	mux.HandleFunc("POST /api/v1/projects", api.createProject)
 	mux.HandleFunc("GET /api/v1/services", api.listServices)
@@ -129,7 +130,7 @@ func main() {
 
 	errc := make(chan error, 1)
 	go func() {
-		logger.Info("control-plane listening", "addr", addr)
+		logger.Info("core listening", "addr", addr)
 		errc <- server.ListenAndServe()
 	}()
 
@@ -157,7 +158,7 @@ func main() {
 
 type apiServer struct {
 	logger    *slog.Logger
-	auth      authManager
+	auth      *keycloakAuth
 	services  serviceManager
 	projects  projectManager
 	namespace string
@@ -174,7 +175,7 @@ func env(key string, fallback string) string {
 func healthz(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, healthResponse{
 		Status:    "ok",
-		Service:   "control-plane",
+		Service:   "core",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	})
 }
@@ -182,7 +183,7 @@ func healthz(w http.ResponseWriter, r *http.Request) {
 func readyz(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, healthResponse{
 		Status:    "ready",
-		Service:   "control-plane",
+		Service:   "core",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	})
 }
@@ -191,7 +192,7 @@ func platform(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, platformResponse{
 		Name:        "dcp",
 		Description: "A GCP-like cloud platform running on Kubernetes.",
-		Components:  []string{"control-plane", "console", "cloudrun"},
+		Components:  []string{"core", "console", "cloudrun"},
 	})
 }
 
@@ -209,22 +210,11 @@ func (a *apiServer) register(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "認証機能を利用できません"})
 		return
 	}
-	var req authRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "リクエスト本文のJSONが不正です"})
+	if err := a.auth.Register(w, r); err != nil {
+		a.logger.Error("register redirect failed", "error", err)
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "Keycloak への遷移に失敗しました"})
 		return
 	}
-	user, err := a.auth.Register(r.Context(), req.Username, req.Password)
-	if err != nil {
-		if errors.Is(err, errUserExists) {
-			writeJSON(w, http.StatusConflict, map[string]string{"error": "そのユーザー名は既に使われています"})
-			return
-		}
-		a.logger.Error("register failed", "error", err)
-		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "ユーザーの作成に失敗しました"})
-		return
-	}
-	writeJSON(w, http.StatusCreated, user)
 }
 
 func (a *apiServer) login(w http.ResponseWriter, r *http.Request) {
@@ -232,18 +222,25 @@ func (a *apiServer) login(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "認証機能を利用できません"})
 		return
 	}
-	var req authRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "リクエスト本文のJSONが不正です"})
+	if err := a.auth.Login(w, r); err != nil {
+		a.logger.Error("login redirect failed", "error", err)
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "Keycloak への遷移に失敗しました"})
+	}
+}
+
+func (a *apiServer) callback(w http.ResponseWriter, r *http.Request) {
+	if a.auth == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "認証機能を利用できません"})
 		return
 	}
-	session, err := a.auth.Login(r.Context(), req.Username, req.Password)
-	if err != nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "ユーザー名またはパスワードが違います"})
-		return
+	if err := a.auth.Callback(w, r); err != nil {
+		if errors.Is(err, errStateMismatch) {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "ログイン情報が一致しません"})
+			return
+		}
+		a.logger.Error("auth callback failed", "error", err)
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "ログイン処理に失敗しました"})
 	}
-	http.SetCookie(w, authCookie(session.Token, isSecureRequest(r)))
-	writeJSON(w, http.StatusOK, session.User)
 }
 
 func (a *apiServer) logout(w http.ResponseWriter, r *http.Request) {
@@ -251,12 +248,10 @@ func (a *apiServer) logout(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "認証機能を利用できません"})
 		return
 	}
-	cookie, err := r.Cookie(authCookieName)
-	if err == nil && cookie.Value != "" {
-		_ = a.auth.Logout(r.Context(), cookie.Value)
+	if err := a.auth.Logout(w, r); err != nil {
+		a.logger.Error("logout redirect failed", "error", err)
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "ログアウト処理に失敗しました"})
 	}
-	http.SetCookie(w, clearAuthCookie(isSecureRequest(r)))
-	w.WriteHeader(http.StatusNoContent)
 }
 
 func (a *apiServer) listProjects(w http.ResponseWriter, r *http.Request) {
@@ -585,11 +580,7 @@ func (a *apiServer) currentUser(r *http.Request) (authUser, error) {
 	if a.auth == nil {
 		return authUser{}, fmt.Errorf("認証機能を利用できません")
 	}
-	cookie, err := r.Cookie(authCookieName)
-	if err != nil || cookie.Value == "" {
-		return authUser{}, errSessionNotFound
-	}
-	return a.auth.CurrentUser(r.Context(), cookie.Value)
+	return a.auth.CurrentUser(r)
 }
 
 func (a *apiServer) currentUserID(r *http.Request) (string, error) {
@@ -597,7 +588,7 @@ func (a *apiServer) currentUserID(r *http.Request) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return user.Username, nil
+	return user.ID, nil
 }
 
 func statusForScopeError(err error) int {

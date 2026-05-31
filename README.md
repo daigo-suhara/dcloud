@@ -25,7 +25,7 @@ helm template dcp charts/dcp
 ```
 
 ## コンポーネント
-- `services/control-plane`: プラットフォーム管理API
+- `services/core`: プラットフォーム管理API
 - `services/cloudrun`: CloudRun相当サービスAPI
 - `services/console`: webコンソール
 - `charts/dcp`: Kubernetes配信用Helm chart
