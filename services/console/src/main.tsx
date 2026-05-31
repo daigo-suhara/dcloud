@@ -104,6 +104,7 @@ function App() {
   const [activeProjectId, setActiveProjectId] = useState("");
   const [projectName, setProjectName] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
+  const [showProjectCreateForm, setShowProjectCreateForm] = useState(false);
   const [deletingProjectId, setDeletingProjectId] = useState("");
   const [pendingProjectDeleteId, setPendingProjectDeleteId] = useState("");
   const [authLoading, setAuthLoading] = useState(true);
@@ -316,6 +317,7 @@ function App() {
         setProjects((current) => [...current, data]);
         handleProjectSelect(data.id);
         setProjectName("");
+        setShowProjectCreateForm(false);
         setMessage(`${data.name} を作成しました`);
       }
     } catch (projectError) {
@@ -556,27 +558,19 @@ function App() {
                   <p className="panel-kicker">プロジェクト</p>
                   <h2>切り替えと管理</h2>
                 </div>
+                <button
+                  className="project-create-button project-create-toggle"
+                  type="button"
+                  onClick={() => setShowProjectCreateForm((current) => !current)}
+                >
+                  プロジェクトを作成
+                </button>
               </div>
 
-              <div className="project-panel-body">
-                <label className="field project-select-field">
-                  <span className="field-label">プロジェクトを切り替え</span>
-                  <select
-                    className="project-select project-select-inline"
-                    value={activeProjectId}
-                    onChange={(event) => handleProjectSelect(event.target.value)}
-                  >
-                    {projects.map((project) => (
-                      <option key={project.id} value={project.id}>
-                        {project.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
+              {showProjectCreateForm ? (
                 <form className="project-create project-create-inline" onSubmit={handleCreateProject}>
                   <label className="field project-create-field">
-                    <span className="field-label">プロジェクトを作成</span>
+                    <span className="field-label">プロジェクト名</span>
                     <input
                       className="text-input project-input"
                       value={projectName}
@@ -591,37 +585,47 @@ function App() {
                     </button>
                   </div>
                 </form>
-              </div>
+              ) : null}
 
-              <div className="project-list">
-                {projects.map((project) => {
-                  const isActive = project.id === activeProjectId;
-                  const canDelete = project.name !== "default";
-                  return (
-                    <article className={`project-row ${isActive ? "active" : ""}`} key={project.id}>
-                      <button
-                        className="project-row-main"
-                        type="button"
-                        onClick={() => handleProjectSelect(project.id)}
-                        aria-pressed={isActive}
-                      >
-                        <span className="project-row-title">
-                          <strong>{project.name}</strong>
-                          {isActive ? <span className="project-badge">現在使用中</span> : null}
-                        </span>
-                        <span className="project-row-meta">{formatServiceTimestamp(project.createdAt)}</span>
-                      </button>
-                      <button
-                        className="project-row-delete"
-                        type="button"
-                        disabled={!canDelete || deletingProjectId === project.id}
-                        onClick={() => requestDeleteProject(project.id)}
-                      >
-                        {deletingProjectId === project.id ? "削除中..." : "削除"}
-                      </button>
-                    </article>
-                  );
-                })}
+              <div className="project-list-table">
+                <div className="project-list-head" aria-hidden="true">
+                  <span className="project-list-head-main">
+                    <span className="project-list-head-name">名前</span>
+                    <span className="project-list-head-id">ID</span>
+                  </span>
+                  <span className="project-list-head-actions" />
+                </div>
+
+                <div className="project-list">
+                  {projects.map((project) => {
+                    const isActive = project.id === activeProjectId;
+                    const canDelete = project.name !== "default";
+                    return (
+                      <article className={`project-row ${isActive ? "active" : ""}`} key={project.id}>
+                        <button
+                          className="project-row-main"
+                          type="button"
+                          onClick={() => handleProjectSelect(project.id)}
+                          aria-pressed={isActive}
+                        >
+                          <span className="project-row-title">
+                            <strong>{project.name}</strong>
+                            {isActive ? <span className="project-badge">現在使用中</span> : null}
+                          </span>
+                          <span className="project-row-id">{project.id}</span>
+                        </button>
+                        <button
+                          className="project-row-delete"
+                          type="button"
+                          disabled={!canDelete || deletingProjectId === project.id}
+                          onClick={() => requestDeleteProject(project.id)}
+                        >
+                          {deletingProjectId === project.id ? "削除中..." : "削除"}
+                        </button>
+                      </article>
+                    );
+                  })}
+                </div>
               </div>
             </section>
 
