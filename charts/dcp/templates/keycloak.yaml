@@ -192,13 +192,13 @@ spec:
               containerPort: 9000
           readinessProbe:
             httpGet:
-              path: /health/ready
+              path: /keycloak/health/ready
               port: management
             initialDelaySeconds: 20
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /health/live
+              path: /keycloak/health/live
               port: management
             initialDelaySeconds: 30
             periodSeconds: 20
