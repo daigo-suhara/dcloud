@@ -24,6 +24,7 @@ data:
       "realm": {{ .Values.keycloak.realm | default "dcp" | quote }},
       "enabled": true,
       "registrationAllowed": true,
+      "loginTheme": {{ .Values.keycloak.loginTheme | default "dcp" | quote }},
       "clients": [
         {
           "clientId": {{ .Values.keycloak.clientId | default "dcp-core" | quote }},
@@ -42,6 +43,88 @@ data:
           }
         }
       ]
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "dcp.fullname" . }}-keycloak-theme
+  labels:
+    {{- include "dcp.labels" . | nindent 4 }}
+    app.kubernetes.io/component: keycloak
+data:
+  theme.properties: |
+    parent=keycloak
+    styles=css/login.css css/dcp.css
+  dcp.css: |
+    .login-pf body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.10), transparent 24%),
+        radial-gradient(circle at top right, rgba(15, 23, 42, 0.05), transparent 26%),
+        linear-gradient(180deg, #ffffff 0%, #f8fafc 45%, #eef2f7 100%);
+      color: #0f172a;
+    }
+
+    .login-pf .card-pf {
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      border-radius: 12px;
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.10);
+      background: rgba(255, 255, 255, 0.96);
+    }
+
+    .login-pf #kc-header-wrapper {
+      color: #0f172a;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: none;
+    }
+
+    .login-pf #kc-form,
+    .login-pf #kc-content {
+      padding-top: 0;
+    }
+
+    .login-pf .pf-c-form-control,
+    .login-pf input[type="text"],
+    .login-pf input[type="password"],
+    .login-pf input[type="email"] {
+      border-radius: 10px;
+      border-color: rgba(148, 163, 184, 0.38);
+      box-shadow: none;
+    }
+
+    .login-pf .pf-c-button,
+    .login-pf button,
+    .login-pf input[type="submit"] {
+      border-radius: 10px;
+      font-weight: 700;
+      text-transform: none;
+    }
+
+    .login-pf .btn-primary,
+    .login-pf .pf-c-button.pf-m-primary {
+      background: #0f172a;
+      border-color: #0f172a;
+    }
+
+    .login-pf .btn-primary:hover,
+    .login-pf .pf-c-button.pf-m-primary:hover {
+      background: #111827;
+      border-color: #111827;
+    }
+
+    .login-pf a {
+      color: #2563eb;
+    }
+
+    .login-pf .alert {
+      border-radius: 10px;
+      border-color: rgba(148, 163, 184, 0.24);
+    }
+
+    .login-pf .login-pf-page .form-control-feedback {
+      color: #64748b;
     }
 ---
 apiVersion: v1
@@ -208,10 +291,20 @@ spec:
             - name: realm-import
               mountPath: /opt/keycloak/data/import/realm.json
               subPath: realm.json
+            - name: login-theme
+              mountPath: /opt/keycloak/themes
       volumes:
         - name: realm-import
           configMap:
             name: {{ include "dcp.fullname" . }}-keycloak-realm
+        - name: login-theme
+          configMap:
+            name: {{ include "dcp.fullname" . }}-keycloak-theme
+            items:
+              - key: theme.properties
+                path: dcp/login/theme.properties
+              - key: dcp.css
+                path: dcp/login/resources/css/dcp.css
 ---
 apiVersion: v1
 kind: Service

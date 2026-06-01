@@ -52,6 +52,7 @@ keycloak:
   realm: dcp
   clientId: dcp-core
   clientSecret: ""
+  loginTheme: dcp
   sessionSecret: dcp-session-secret-change-me
   adminUsername: admin
   adminPassword: dcp-keycloak-admin-change-me
