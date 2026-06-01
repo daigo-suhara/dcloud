@@ -6,7 +6,6 @@ import { Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon, L
 import { alpha } from "@mui/material/styles";
 import { navItems, type RouteState } from "../../types";
 import { Brand } from "./Brand";
-import { shellBrandRowSx } from "./constants";
 
 type DrawerNavProps = {
   onCloseSidebar: () => void;
@@ -35,14 +34,16 @@ export function DrawerNav({ onCloseSidebar, onNavigate, route, sidebarOpen }: Dr
         }
       }}
     >
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 0, pt: 0, pb: 2, px: 2 }}>
-        <Box sx={shellBrandRowSx}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 0, pt: 0, pb: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", minHeight: 64, px: 2 }}>
           <IconButton onClick={onCloseSidebar} aria-label="close navigation" sx={{ width: 40, height: 40, p: 0, flex: "0 0 auto" }}>
             <CloseIcon />
           </IconButton>
-          <Brand />
+          <Box sx={{ flex: "1 1 auto", minWidth: 0, display: "flex", alignItems: "center" }}>
+            <Brand />
+          </Box>
         </Box>
-        <Divider sx={{ mt: 0 }} />
+        <Divider sx={{ mt: 0, mb: 1.5 }} />
         <List disablePadding>
           {navItems.map((item) => (
             <ListItemButton
