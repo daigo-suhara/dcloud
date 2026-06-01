@@ -1,9 +1,51 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { HiOutlineHome, HiOutlineCloud } from "react-icons/hi2";
-import { HiOutlineServerStack } from "react-icons/hi2";
-import { LuContainer } from "react-icons/lu";
-import { SiGithub, SiDocker } from "react-icons/si";
+import {
+  Alert,
+  AppBar,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Container,
+  CssBaseline,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Drawer,
+  IconButton,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  MenuItem,
+  Paper,
+  Snackbar,
+  TextField,
+  Toolbar,
+  Typography,
+  createTheme,
+  ThemeProvider
+} from "@mui/material";
+import { alpha } from "@mui/material/styles";
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CloseIcon from "@mui/icons-material/Close";
+import CloudQueueOutlinedIcon from "@mui/icons-material/CloudQueueOutlined";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import ErrorOutlinedIcon from "@mui/icons-material/ErrorOutlined";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import HourglassTopIcon from "@mui/icons-material/HourglassTop";
+import LogoutIcon from "@mui/icons-material/Logout";
+import MenuIcon from "@mui/icons-material/Menu";
+import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
 import "./styles.css";
 
 type PlatformResponse = {
@@ -54,6 +96,61 @@ type DeployForm = {
   maxScale: string;
 };
 
+const theme = createTheme({
+  palette: {
+    mode: "light",
+    primary: { main: "#0f172a" },
+    background: {
+      default: "#f8fafc",
+      paper: "#ffffff"
+    },
+    text: {
+      primary: "#0f172a",
+      secondary: "#64748b"
+    }
+  },
+  shape: {
+    borderRadius: 16
+  },
+  typography: {
+    fontFamily: '"Noto Sans JP", sans-serif',
+    button: {
+      textTransform: "none",
+      fontWeight: 600
+    }
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          margin: 0
+        },
+        a: {
+          color: "inherit",
+          textDecoration: "none"
+        }
+      }
+    },
+    MuiButton: {
+      defaultProps: {
+        disableElevation: true
+      },
+      styleOverrides: {
+        root: {
+          borderRadius: 12
+        }
+      }
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: "none"
+        }
+      }
+    }
+  }
+});
+
 const initialForm: DeployForm = {
   name: "",
   image: "",
@@ -97,6 +194,11 @@ function parseRoute(hash: string): RouteState {
   return { section: "home", selectedServiceName: null };
 }
 
+const shellBg = {
+  background:
+    "radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 24%), radial-gradient(circle at top right, rgba(15, 23, 42, 0.05), transparent 26%), linear-gradient(180deg, #ffffff 0%, #f8fafc 45%, #eef2f7 100%)"
+} as const;
+
 function App() {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [services, setServices] = useState<DeployedService[]>([]);
@@ -117,6 +219,7 @@ function App() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [form, setForm] = useState(initialForm);
+
   const selectedService =
     route.section === "container" && route.selectedServiceName
       ? services.find((service) => service.name === route.selectedServiceName)
@@ -127,27 +230,15 @@ function App() {
     if (!message) {
       return;
     }
-
-    const timer = window.setTimeout(() => {
-      setMessage("");
-    }, 3500);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
+    const timer = window.setTimeout(() => setMessage(""), 3500);
+    return () => window.clearTimeout(timer);
   }, [message]);
 
   useEffect(() => {
-    const handleHashChange = () => {
-      setRoute(parseRoute(window.location.hash));
-    };
-
+    const handleHashChange = () => setRoute(parseRoute(window.location.hash));
     window.addEventListener("hashchange", handleHashChange);
     void loadCurrentUser();
-
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
+    return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
   useEffect(() => {
@@ -179,9 +270,7 @@ function App() {
       void loadServices({ quiet: true });
     }, 5000);
 
-    return () => {
-      window.clearInterval(timer);
-    };
+    return () => window.clearInterval(timer);
   }, [activeProjectId]);
 
   function apiHeaders(extra?: HeadersInit) {
@@ -299,7 +388,6 @@ function App() {
     setCreatingProject(true);
     setError("");
     setMessage("");
-
     try {
       const response = await fetch("/api/v1/projects", {
         credentials: "include",
@@ -332,7 +420,6 @@ function App() {
     setSubmitting(true);
     setError("");
     setMessage("");
-
     try {
       const response = await fetch("/api/v1/services", {
         method: "POST",
@@ -353,7 +440,6 @@ function App() {
       if (!response.ok) {
         throw new Error("error" in data && data.error ? data.error : "サービスの作成に失敗しました");
       }
-
       if ("name" in data) {
         setMessage(`${data.name} を作成しました`);
       }
@@ -387,19 +473,16 @@ function App() {
     setDeletingName(name);
     setError("");
     setMessage("");
-
     try {
       const response = await fetch(`/api/v1/services/${name}`, {
         method: "DELETE",
         credentials: "include",
         headers: apiHeaders()
       });
-
       if (!response.ok && response.status !== 204) {
         const data = (await response.json()) as { error?: string };
         throw new Error(data.error ?? "サービスの削除に失敗しました");
       }
-
       setMessage(`${name} を削除しました`);
       if (route.selectedServiceName === name) {
         window.location.hash = "#container";
@@ -417,7 +500,6 @@ function App() {
     setDeletingProjectId(projectId);
     setError("");
     setMessage("");
-
     try {
       const response = await fetch(`/api/v1/projects/${projectId}`, {
         method: "DELETE",
@@ -439,506 +521,609 @@ function App() {
 
   if (authLoading) {
     return (
-      <main className="app-shell">
-        <section className="auth-shell">
-          <div className="auth-card panel">
-            <p className="panel-kicker">D Cloud</p>
-            <h1>読み込み中</h1>
-          </div>
-        </section>
-      </main>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box sx={{ minHeight: "100vh", ...shellBg }}>
+          <Container maxWidth="sm" sx={{ minHeight: "100vh", display: "grid", placeItems: "center", py: 4 }}>
+            <Card variant="outlined" sx={{ width: "100%", borderRadius: 4, boxShadow: "0 24px 48px rgba(15, 23, 42, 0.12)" }}>
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 2 }}>
+                  <CircularProgress />
+                  <Box>
+                    <Typography variant="overline" color="primary">
+                      D Cloud Console
+                    </Typography>
+                    <Typography variant="h4" sx={{ mt: 1, fontWeight: 700 }}>
+                      認証状態を確認しています
+                    </Typography>
+                    <Typography color="text.secondary" sx={{ mt: 1 }}>
+                      ログイン情報を確認して、管理画面を表示します。
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Container>
+        </Box>
+      </ThemeProvider>
     );
   }
 
   if (!currentUser) {
     return (
-      <main className="app-shell auth-page">
-        <section className="auth-shell">
-          <div className="auth-card panel">
-            <div className="panel-header">
-              <div>
-                <p className="panel-kicker">D Cloud</p>
-                <h1>Keycloak</h1>
-              </div>
-            </div>
-            <div className="auth-actions">
-              <button className="pill primary button" type="button" onClick={startLogin}>
-                ログイン
-              </button>
-              <button className="pill button" type="button" onClick={startRegister}>
-                ユーザー登録
-              </button>
-            </div>
-            {error ? <p className="status-banner error">{error}</p> : null}
-          </div>
-        </section>
-      </main>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box sx={{ minHeight: "100vh", ...shellBg }}>
+          <Container maxWidth="sm" sx={{ minHeight: "100vh", display: "grid", placeItems: "center", py: 4 }}>
+            <Card variant="outlined" sx={{ width: "100%", borderRadius: 4, overflow: "hidden", boxShadow: "0 24px 48px rgba(15, 23, 42, 0.12)" }}>
+              <Box sx={{ height: 6, background: "linear-gradient(90deg, #2563eb, #7c3aed)" }} />
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+                      <CloudQueueOutlinedIcon sx={{ fontSize: 32, color: "primary.main" }} />
+                      <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>
+                          D Cloud
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Console
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Chip label="Infrastructure console" variant="outlined" />
+                  </Box>
+
+                  <Box>
+                    <Typography variant="overline" color="primary">
+                      D Cloud Console
+                    </Typography>
+                    <Typography variant="h4" sx={{ mt: 1, fontWeight: 700 }}>
+                      プロジェクトとサービスを管理する
+                    </Typography>
+                    <Typography color="text.secondary" sx={{ mt: 1, lineHeight: 1.8 }}>
+                      サインインすると、プロジェクトの切り替え、サービスのデプロイ、削除までこの画面から操作できます。
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 1.5 }}>
+                    <Button variant="contained" size="large" onClick={startLogin} fullWidth>
+                      ログイン
+                    </Button>
+                    <Button variant="outlined" size="large" onClick={startRegister} fullWidth>
+                      ユーザー登録
+                    </Button>
+                  </Box>
+
+                  {error ? <Alert severity="error">{error}</Alert> : null}
+                </Box>
+              </CardContent>
+            </Card>
+          </Container>
+        </Box>
+      </ThemeProvider>
     );
   }
 
+  const serviceStatusIcon =
+    selectedStatus === "ready" ? (
+      <CheckCircleIcon fontSize="small" />
+    ) : selectedStatus === "loading" ? (
+      <HourglassTopIcon fontSize="small" />
+    ) : (
+      <ErrorOutlinedIcon fontSize="small" />
+    );
+
   return (
-    <main className={`app-shell ${sidebarOpen ? "sidebar-open" : "sidebar-collapsed"}`}>
-      {message ? (
-        <div className="toast toast-success" role="status" aria-live="polite">
-          {message}
-        </div>
-      ) : null}
-      <header className="app-header">
-        <button
-          className="header-toggle"
-          type="button"
-          aria-expanded={sidebarOpen}
-          aria-controls="sidebar-navigation"
-          onClick={() => setSidebarOpen((current) => !current)}
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ minHeight: "100vh", ...shellBg }}>
+        <Snackbar open={Boolean(message)} autoHideDuration={3500} onClose={() => setMessage("")} anchorOrigin={{ vertical: "top", horizontal: "right" }}>
+          <Alert severity="success" variant="filled" sx={{ width: "100%" }}>
+            {message}
+          </Alert>
+        </Snackbar>
+
+        <AppBar
+          position="sticky"
+          color="transparent"
+          elevation={0}
+          sx={{
+            backdropFilter: "blur(18px)",
+            backgroundColor: alpha("#ffffff", 0.78),
+            borderBottom: "1px solid rgba(148, 163, 184, 0.18)"
+          }}
         >
-          <span className="header-toggle-icon" aria-hidden="true">
-            <HamburgerIcon />
-          </span>
-        </button>
-        <div className="brand-slot">
-          <BrandLogo />
-        </div>
-        <div className="project-switcher header-project-switcher" aria-label="project-switcher">
-          <select
-            className="project-select header-project-select"
-            value={activeProjectId}
-            onChange={(event) => handleProjectSelect(event.target.value)}
-            disabled={projects.length === 0}
-            aria-label="プロジェクトを切り替え"
-          >
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button className="project-create-button logout-button header-logout" type="button" onClick={startLogout}>
-          ログアウト
-        </button>
-      </header>
-      {sidebarOpen ? <div className="sidebar-backdrop" role="presentation" onClick={() => setSidebarOpen(false)} /> : null}
-      <aside className={`sidebar ${sidebarOpen ? "open" : ""}`} aria-label="navigation">
-        <div className="sidebar-top">
-          <div className="brand-slot">
-            <BrandLogo />
-          </div>
-        </div>
-        <button
-          className="sidebar-close-button"
-          type="button"
-          aria-label="サイドバーを閉じる"
-          onClick={() => setSidebarOpen(false)}
-        >
-          <span className="sidebar-close-icon" aria-hidden="true">
-            <CloseIcon />
-          </span>
-        </button>
-        <div className="sidebar-divider" aria-hidden="true" />
-        <nav className="sidebar-nav" id="sidebar-navigation">
-          {navItems.map((item) => (
-            <a
-              key={item.id}
-              className={`nav-item ${route.section === item.id ? "active" : ""}`}
-              href={`#${item.id}`}
-              onClick={() => {
-                if (window.matchMedia("(max-width: 760px)").matches) {
-                  setSidebarOpen(false);
-                }
-              }}
+          <Toolbar sx={{ gap: 1.5, minHeight: 64 }}>
+            <IconButton edge="start" onClick={() => setSidebarOpen(true)} aria-label="navigation">
+              <MenuIcon />
+            </IconButton>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0 }}>
+              <CloudQueueOutlinedIcon sx={{ color: "primary.main" }} />
+              <Typography variant="h6" sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>
+                D Cloud
+              </Typography>
+            </Box>
+            <Box sx={{ flex: 1 }} />
+            <TextField
+              select
+              size="small"
+              value={activeProjectId}
+              onChange={(event) => handleProjectSelect(event.target.value)}
+              disabled={projects.length === 0}
+              sx={{ minWidth: { xs: 120, sm: 220 }, bgcolor: "background.paper" }}
+              slotProps={{ htmlInput: { "aria-label": "プロジェクトを切り替え" } }}
             >
-              <span className="nav-icon" aria-hidden="true">
-                {item.id === "home" ? (
-                  <HiOutlineHome />
-                ) : item.id === "container" ? (
-                  <LuContainer />
-                ) : (
-                  <HiOutlineServerStack />
-                )}
-              </span>
-              <span className="nav-copy">
-                <strong>{item.label}</strong>
-              </span>
-            </a>
-          ))}
-        </nav>
-      </aside>
+              {projects.map((project) => (
+                <MenuItem key={project.id} value={project.id}>
+                  {project.name}
+                </MenuItem>
+              ))}
+            </TextField>
+            <Button variant="outlined" startIcon={<LogoutIcon />} onClick={startLogout} sx={{ whiteSpace: "nowrap" }}>
+              ログアウト
+            </Button>
+          </Toolbar>
+        </AppBar>
 
-      <section className="content">
-        {route.section === "home" ? (
-          <section className="home-stack">
-            <section className="panel project-panel" id="projects" aria-label="project-management">
-              <div className="panel-header">
-                <div>
-                  <p className="panel-kicker">プロジェクト</p>
-                </div>
-                <button
-                  className="project-create-button project-create-toggle"
-                  type="button"
-                  onClick={() => setShowProjectCreateForm((current) => !current)}
+        <Drawer
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          variant="temporary"
+          ModalProps={{ keepMounted: true }}
+          slotProps={{
+            paper: {
+              sx: {
+                width: 300,
+                borderRadius: 4,
+                m: 2,
+                border: "1px solid rgba(148, 163, 184, 0.24)",
+                boxShadow: "0 24px 48px rgba(15, 23, 42, 0.12)"
+              }
+            }
+          }}
+        >
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, p: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+                <CloudQueueOutlinedIcon color="primary" />
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  D Cloud
+                </Typography>
+              </Box>
+              <IconButton onClick={() => setSidebarOpen(false)} aria-label="close navigation">
+                <CloseIcon />
+              </IconButton>
+            </Box>
+            <Divider />
+            <List disablePadding>
+              {navItems.map((item) => (
+                <ListItemButton
+                  key={item.id}
+                  selected={route.section === item.id}
+                  onClick={() => {
+                    window.location.hash = `#${item.id}`;
+                    if (window.matchMedia("(max-width: 760px)").matches) {
+                      setSidebarOpen(false);
+                    }
+                  }}
+                  sx={{
+                    mb: 1,
+                    borderRadius: 2,
+                    border: "1px solid rgba(148, 163, 184, 0.24)",
+                    "&.Mui-selected": {
+                      bgcolor: alpha("#2563eb", 0.08),
+                      borderColor: alpha("#2563eb", 0.28)
+                    }
+                  }}
                 >
-                  プロジェクトを作成
-                </button>
-              </div>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    {item.id === "home" ? <HomeOutlinedIcon /> : item.id === "container" ? <StorageOutlinedIcon /> : <CloudUploadOutlinedIcon />}
+                  </ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              ))}
+            </List>
+          </Box>
+        </Drawer>
 
-              {showProjectCreateForm ? (
-                <form className="project-create project-create-inline" onSubmit={handleCreateProject}>
-                  <label className="field project-create-field">
-                    <span className="field-label">プロジェクト名</span>
-                    <input
-                      className="text-input project-input"
-                      value={projectName}
-                      onChange={(event) => setProjectName(event.target.value)}
-                      placeholder="新しいプロジェクト"
-                      aria-label="新しいプロジェクト"
-                    />
-                  </label>
-                  <div className="project-create-actions">
-                    <button className="project-create-button" type="submit" disabled={creatingProject || !projectName.trim()}>
-                      作成
-                    </button>
-                  </div>
-                </form>
-              ) : null}
+        <Container maxWidth={false} sx={{ py: { xs: 2, md: 3 }, px: { xs: 1.5, sm: 2, md: 3 } }}>
+          {route.section === "home" ? (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <Card variant="outlined" sx={{ borderRadius: 4 }}>
+                <CardContent sx={{ p: 3, display: "grid", gap: 2 }}>
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2, flexWrap: "wrap" }}>
+                    <Box>
+                      <Typography variant="overline" color="primary">
+                        プロジェクト
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
+                        プロジェクト管理
+                      </Typography>
+                    </Box>
+                    <Button variant="contained" startIcon={<AddOutlinedIcon />} onClick={() => setShowProjectCreateForm((current) => !current)}>
+                      プロジェクトを作成
+                    </Button>
+                  </Box>
 
-              <div className="project-list-section">
-              <div className="project-list-table">
-                <div className="project-list-head" aria-hidden="true">
-                  <span className="project-list-head-main">
-                    <span className="project-list-head-name">名前</span>
-                    <span className="project-list-head-id">ID</span>
-                  </span>
-                  <span className="project-list-head-actions" />
-                </div>
+                  {showProjectCreateForm ? (
+                    <Box component="form" onSubmit={handleCreateProject} sx={{ display: "grid", gap: 2, maxWidth: 560 }}>
+                      <TextField
+                        label="プロジェクト名"
+                        value={projectName}
+                        onChange={(event) => setProjectName(event.target.value)}
+                        placeholder="新しいプロジェクト"
+                        fullWidth
+                      />
+                      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                        <Button type="submit" variant="contained" disabled={creatingProject || !projectName.trim()}>
+                          作成
+                        </Button>
+                      </Box>
+                    </Box>
+                  ) : null}
 
-                <div className="project-list">
-                  {projects.map((project) => {
-                    const isActive = project.id === activeProjectId;
-                    const canDelete = project.name !== "default";
-                    return (
-                      <article className={`project-row ${isActive ? "active" : ""}`} key={project.id}>
-                        <button
-                          className="project-row-main"
-                          type="button"
-                          onClick={() => handleProjectSelect(project.id)}
-                          aria-pressed={isActive}
-                        >
-                          <span className="project-row-title">
-                            <strong>{project.name}</strong>
-                            {isActive ? <span className="project-badge">現在使用中</span> : null}
-                          </span>
-                          <span className="project-row-id">{project.id}</span>
-                        </button>
-                        <button
-                          className="project-row-delete"
-                          type="button"
-                          disabled={!canDelete || deletingProjectId === project.id}
-                          onClick={() => requestDeleteProject(project.id)}
-                        >
-                          {deletingProjectId === project.id ? "削除中..." : "削除"}
-                        </button>
-                      </article>
-                    );
-                  })}
-                </div>
-              </div>
-              </div>
-            </section>
+                  <Box sx={{ display: "grid", gap: 1 }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(180px, 1fr) minmax(0, 1fr) auto" }, gap: 1.5, px: 1.5, color: "text.secondary", fontSize: 12, fontWeight: 700 }}>
+                      <Box>名前</Box>
+                      <Box>ID</Box>
+                      <Box />
+                    </Box>
 
-          </section>
-        ) : route.section === "container" ? (
-          <section className="service-rail" aria-label="container-services">
-            {route.selectedServiceName ? (
-              <section className="service-card panel service-detail-card" aria-label="service-detail">
-                {selectedService ? (
-                  <>
-                    <div className="service-detail-head">
-                      <div className="service-detail-title">
-                        <span className={`status-icon ${selectedStatus}`} aria-hidden="true">
-                          {selectedStatus === "ready" ? (
-                            <CheckIcon />
-                          ) : selectedStatus === "loading" ? (
-                            <LoadingIcon />
-                          ) : (
-                            <ErrorIcon />
-                          )}
-                        </span>
-                        <h3>{selectedService.name}</h3>
-                      </div>
-                      <a className="detail-back" href="#container">
-                        一覧に戻る
-                      </a>
-                    </div>
-
-                    <div className="detail-grid">
-                      <div>
-                        <dt>状態</dt>
-                        <dd>{formatServiceStatus(selectedService)}</dd>
-                      </div>
-                      <div>
-                        <dt>イメージ</dt>
-                        <dd>{selectedService.image}</dd>
-                      </div>
-                      <div>
-                        <dt>URL</dt>
-                        <dd>
-                          {selectedService.url ? (
-                            <a href={selectedService.url} target="_blank" rel="noreferrer">
-                              {selectedService.url}
-                            </a>
-                          ) : (
-                            "-"
-                          )}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>作成時刻</dt>
-                        <dd>{selectedService.createdAt ?? "-"}</dd>
-                      </div>
-                    </div>
-
-                    <div className="delete-actions detail-actions">
-                      <button className="pill danger button" type="button" onClick={() => requestDelete(selectedService.name)}>
-                        削除
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="service-detail-head">
-                      <div className="service-detail-title">
-                        <h3>サービスが見つかりません</h3>
-                      </div>
-                      <a className="detail-back" href="#container">
-                        一覧に戻る
-                      </a>
-                    </div>
-                    <p className="service-detail-empty">削除されたか、まだ同期されていません。</p>
-                  </>
-                )}
-              </section>
-            ) : (
-              <section className="service-card panel service-list-card" id="container">
-                <div className="panel-header">
-                  <div>
-                    <p className="panel-kicker">サービス</p>
-                    <h2>デプロイ済みサービス</h2>
-                  </div>
-                </div>
-
-                <div className="service-list-table">
-                  <div className="service-list-head" aria-hidden="true">
-                    <span className="service-list-head-status" />
-                    <span className="service-list-head-main">
-                      <span className="service-list-head-name">名前</span>
-                      <span className="service-list-head-updated">更新日時</span>
-                    </span>
-                  </div>
-
-                  <div className="service-list">
-                    {services.length > 0 ? (
-                      services.map((service) => {
-                        const status = getServiceStatus(service);
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
+                      {projects.map((project) => {
+                        const isActive = project.id === activeProjectId;
+                        const canDelete = project.name !== "default";
                         return (
-                          <article className="service-row" key={service.name}>
-                            <span className="service-cell service-cell-status" aria-hidden="true">
-                              <span className={`status-icon ${status}`}>
-                                {status === "ready" ? <CheckIcon /> : status === "loading" ? <LoadingIcon /> : <ErrorIcon />}
-                              </span>
-                            </span>
-                            <span className="service-cell service-cell-name">
-                              <a className="service-name-link" href={`#container/${encodeURIComponent(service.name)}`}>
-                                <span className="service-name-text">{service.name}</span>
-                              </a>
-                              <span className="service-updated-inline">
-                                {service.updatedAt || service.createdAt
-                                  ? formatServiceTimestamp(service.updatedAt || service.createdAt || "")
-                                  : "-"}
-                              </span>
-                            </span>
-                          </article>
+                          <Paper
+                            key={project.id}
+                            variant="outlined"
+                            sx={{
+                              p: 1.5,
+                              borderRadius: 3,
+                              borderColor: isActive ? alpha("#2563eb", 0.4) : "divider",
+                              bgcolor: isActive ? alpha("#2563eb", 0.04) : "background.paper"
+                            }}
+                          >
+                            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(180px, 1fr) minmax(0, 1fr) auto" }, gap: 1.5, alignItems: "center" }}>
+                              <Box sx={{ minWidth: 0 }}>
+                                <Button onClick={() => handleProjectSelect(project.id)} sx={{ width: "100%", justifyContent: "flex-start", textAlign: "left", px: 0, color: "inherit" }}>
+                                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                                    <Typography sx={{ fontWeight: 700 }}>{project.name}</Typography>
+                                    {isActive ? <Chip label="現在使用中" size="small" color="primary" variant="outlined" /> : null}
+                                  </Box>
+                                </Button>
+                              </Box>
+                              <Box sx={{ minWidth: 0 }}>
+                                <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-all" }}>
+                                  {project.id}
+                                </Typography>
+                              </Box>
+                              <Box>
+                                <Button
+                                  variant="outlined"
+                                  color="inherit"
+                                  startIcon={<DeleteOutlinedIcon />}
+                                  disabled={!canDelete || deletingProjectId === project.id}
+                                  onClick={() => requestDeleteProject(project.id)}
+                                  fullWidth
+                                >
+                                  {deletingProjectId === project.id ? "削除中..." : "削除"}
+                                </Button>
+                              </Box>
+                            </Box>
+                          </Paper>
                         );
-                      })
-                    ) : (
-                      <div className="empty-state">
-                        <p>{loading ? "読み込み中..." : "まだサービスはありません。"}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </section>
-            )}
+                      })}
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
+          ) : route.section === "container" ? (
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) 360px" }, gap: 3, alignItems: "start" }}>
+              <Box>
+                {route.selectedServiceName ? (
+                  <Card variant="outlined" sx={{ borderRadius: 4 }}>
+                    <CardContent sx={{ p: 3, display: "grid", gap: 2 }}>
+                      {selectedService ? (
+                        <>
+                          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0 }}>
+                              <Box sx={{ width: 34, height: 34, borderRadius: "999px", display: "grid", placeItems: "center", bgcolor: selectedStatus === "ready" ? alpha("#16a34a", 0.12) : selectedStatus === "loading" ? alpha("#2563eb", 0.12) : alpha("#dc2626", 0.12), color: selectedStatus === "ready" ? "success.main" : selectedStatus === "loading" ? "primary.main" : "error.main" }}>
+                                {serviceStatusIcon}
+                              </Box>
+                              <Box sx={{ minWidth: 0 }}>
+                                <Typography variant="overline" color="primary">
+                                  サービス詳細
+                                </Typography>
+                                <Typography variant="h5" sx={{ fontWeight: 700, wordBreak: "break-word" }}>
+                                  {selectedService.name}
+                                </Typography>
+                              </Box>
+                            </Box>
+                            <Button startIcon={<ArrowBackIcon />} onClick={() => (window.location.hash = "#container")}>
+                              一覧に戻る
+                            </Button>
+                          </Box>
 
-            <section className="service-card panel deploy-panel" aria-label="サービスのデプロイ">
-              <div className="panel-header">
-                <div>
-                  <p className="panel-kicker">作成</p>
-                  <h2>サービスのデプロイ</h2>
-                </div>
-              </div>
+                          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
+                            <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, bgcolor: "grey.50" }}>
+                              <Typography variant="caption" color="text.secondary">
+                                状態
+                              </Typography>
+                              <Typography sx={{ mt: 0.5, fontWeight: 600 }}>{formatServiceStatus(selectedService)}</Typography>
+                            </Paper>
+                            <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, bgcolor: "grey.50" }}>
+                              <Typography variant="caption" color="text.secondary">
+                                イメージ
+                              </Typography>
+                              <Typography sx={{ mt: 0.5, fontWeight: 600, wordBreak: "break-all" }}>{selectedService.image}</Typography>
+                            </Paper>
+                            <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, bgcolor: "grey.50" }}>
+                              <Typography variant="caption" color="text.secondary">
+                                URL
+                              </Typography>
+                              <Typography sx={{ mt: 0.5, fontWeight: 600, wordBreak: "break-all" }}>
+                                {selectedService.url ? (
+                                  <a href={selectedService.url} target="_blank" rel="noreferrer">
+                                    {selectedService.url}
+                                  </a>
+                                ) : (
+                                  "-"
+                                )}
+                              </Typography>
+                            </Paper>
+                            <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, bgcolor: "grey.50" }}>
+                              <Typography variant="caption" color="text.secondary">
+                                作成時刻
+                              </Typography>
+                              <Typography sx={{ mt: 0.5, fontWeight: 600 }}>{selectedService.createdAt ?? "-"}</Typography>
+                            </Paper>
+                          </Box>
 
-              <div className="deploy-panel-grid">
-                <a className="deploy-launch-card" href="#deploy" aria-label="コンテナのデプロイ">
-                  <span className="deploy-launch-icon" aria-hidden="true">
-                    <SiDocker />
-                  </span>
-                  <span className="deploy-launch-label">コンテナのデプロイ</span>
-                </a>
+                          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                            <Button variant="contained" color="error" startIcon={<DeleteOutlinedIcon />} onClick={() => requestDelete(selectedService.name)}>
+                              削除
+                            </Button>
+                          </Box>
+                        </>
+                      ) : (
+                        <>
+                          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                              サービスが見つかりません
+                            </Typography>
+                            <Button startIcon={<ArrowBackIcon />} onClick={() => (window.location.hash = "#container")}>
+                              一覧に戻る
+                            </Button>
+                          </Box>
+                          <Typography color="text.secondary">削除されたか、まだ同期されていません。</Typography>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card variant="outlined" sx={{ borderRadius: 4 }}>
+                    <CardContent sx={{ p: 3, display: "grid", gap: 2 }}>
+                      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+                        <Box>
+                          <Typography variant="overline" color="primary">
+                            サービス
+                          </Typography>
+                          <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
+                            デプロイ済みサービス
+                          </Typography>
+                        </Box>
+                      </Box>
 
-                <a className="deploy-launch-card deploy-launch-secondary" href="#container" aria-label="リポジトリの接続">
-                  <span className="deploy-launch-icon deploy-launch-glyph" aria-hidden="true">
-                    <SiGithub />
-                  </span>
-                  <span className="deploy-launch-label">リポジトリの接続</span>
-                </a>
-              </div>
-            </section>
-          </section>
-        ) : route.section === "deploy" ? (
-          <form className="deploy-card" id="deploy" onSubmit={handleSubmit}>
-            <div className="panel-header">
-              <div>
-                <p className="panel-kicker">サービスの作成</p>
-                <h2>コンテナを作成</h2>
-              </div>
-              <a className="detail-back" href="#home">
-                一覧に戻る
-              </a>
-            </div>
+                      <Box sx={{ display: "grid", gap: 0 }}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: "42px minmax(0, 1fr)", alignItems: "center", minHeight: 36, px: 1, color: "text.secondary", fontSize: 11, fontWeight: 700, borderBottom: "1px solid rgba(148, 163, 184, 0.18)" }}>
+                          <Box />
+                          <Box sx={{ display: "grid", gridTemplateColumns: "minmax(120px, max-content) 150px", columnGap: 3 }}>
+                            <Box>名前</Box>
+                            <Box>更新日時</Box>
+                          </Box>
+                        </Box>
 
-            <div className="field-grid">
-              <label className="field">
-                <span className="field-label">サービス名</span>
-                <input
-                  className="text-input"
-                  value={form.name}
-                  onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                  placeholder="service-name"
-                  autoComplete="off"
-                />
-              </label>
+                        <Box sx={{ borderTop: "1px solid rgba(148, 163, 184, 0.18)" }}>
+                          {services.length > 0 ? (
+                            services.map((service) => {
+                              const status = getServiceStatus(service);
+                              const statusIcon = status === "ready" ? <CheckCircleIcon fontSize="small" /> : status === "loading" ? <HourglassTopIcon fontSize="small" /> : <ErrorOutlinedIcon fontSize="small" />;
+                              return (
+                                <Paper
+                                  key={service.name}
+                                  variant="outlined"
+                                  sx={{
+                                    display: "grid",
+                                    gridTemplateColumns: "42px minmax(0, 1fr)",
+                                    alignItems: "center",
+                                    minHeight: 44,
+                                    px: 1,
+                                    borderRadius: 0,
+                                    borderLeft: 0,
+                                    borderRight: 0,
+                                    borderTop: 0
+                                  }}
+                                >
+                                  <Box sx={{ display: "grid", placeItems: "center" }}>
+                                    <Box sx={{ width: 22, height: 22, display: "grid", placeItems: "center", borderRadius: "999px", bgcolor: status === "ready" ? alpha("#16a34a", 0.12) : status === "loading" ? alpha("#2563eb", 0.12) : alpha("#dc2626", 0.12), color: status === "ready" ? "success.main" : status === "loading" ? "primary.main" : "error.main" }}>
+                                      {statusIcon}
+                                    </Box>
+                                  </Box>
+                                  <Box sx={{ display: "grid", gridTemplateColumns: "minmax(120px, max-content) 150px", columnGap: 3, alignItems: "center", minWidth: 0 }}>
+                                    <Button component="a" href={`#container/${encodeURIComponent(service.name)}`} sx={{ justifyContent: "flex-start", textAlign: "left", color: "inherit", px: 0, minWidth: 0 }}>
+                                      <Typography sx={{ fontWeight: 700, wordBreak: "break-all" }}>{service.name}</Typography>
+                                    </Button>
+                                    <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+                                      {service.updatedAt || service.createdAt ? formatServiceTimestamp(service.updatedAt || service.createdAt || "") : "-"}
+                                    </Typography>
+                                  </Box>
+                                </Paper>
+                              );
+                            })
+                          ) : (
+                            <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, borderStyle: "dashed", bgcolor: alpha("#ffffff", 0.7) }}>
+                              <Typography color="text.secondary">{loading ? "読み込み中..." : "まだサービスはありません。"}</Typography>
+                            </Paper>
+                          )}
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                )}
+              </Box>
 
-              <label className="field">
-                <span className="field-label">コンテナイメージのURL</span>
-                <input
-                  className="text-input"
-                  value={form.image}
-                  onChange={(event) => setForm((current) => ({ ...current, image: event.target.value }))}
-                  placeholder="ghcr.io/org/app:tag"
-                  autoComplete="off"
-                />
-              </label>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <Card variant="outlined" sx={{ borderRadius: 4 }}>
+                  <CardContent sx={{ p: 3, display: "grid", gap: 2 }}>
+                    <Box>
+                      <Typography variant="overline" color="primary">
+                        作成
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mt: 0.5 }}>
+                        サービスのデプロイ
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                      <Button component="a" href="#deploy" variant="contained" startIcon={<CloudUploadOutlinedIcon />} fullWidth>
+                        コンテナのデプロイ
+                      </Button>
+                      <Button component="a" href="#container" variant="outlined" startIcon={<GitHubIcon />} fullWidth>
+                        リポジトリの接続
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Box>
+            </Box>
+          ) : route.section === "deploy" ? (
+            <Card variant="outlined" sx={{ borderRadius: 4, maxWidth: 980 }}>
+              <CardContent sx={{ p: 3, display: "grid", gap: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+                  <Box>
+                    <Typography variant="overline" color="primary">
+                      サービスの作成
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
+                      コンテナを作成
+                    </Typography>
+                  </Box>
+                  <Button startIcon={<ArrowBackIcon />} onClick={() => (window.location.hash = "#home")}>
+                    一覧に戻る
+                  </Button>
+                </Box>
 
-              <label className="field">
-                <span className="field-label">Port</span>
-                <input
-                  className="text-input"
-                  type="number"
-                  min={1}
-                  max={65535}
-                  value={form.port}
-                  onChange={(event) => setForm((current) => ({ ...current, port: event.target.value }))}
-                  placeholder="8080"
-                />
-              </label>
+                <Box component="form" onSubmit={handleSubmit} sx={{ display: "grid", gap: 2 }}>
+                  <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" } }}>
+                    <Box sx={{ gridColumn: { xs: "auto", md: "span 2" } }}>
+                      <TextField
+                        label="サービス名"
+                        value={form.name}
+                        onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                        placeholder="service-name"
+                        fullWidth
+                      />
+                    </Box>
+                    <Box>
+                      <TextField
+                        label="コンテナイメージのURL"
+                        value={form.image}
+                        onChange={(event) => setForm((current) => ({ ...current, image: event.target.value }))}
+                        placeholder="ghcr.io/org/app:tag"
+                        fullWidth
+                      />
+                    </Box>
+                    <TextField
+                      label="Port"
+                      type="number"
+                      slotProps={{ htmlInput: { min: 1, max: 65535 } }}
+                      value={form.port}
+                      onChange={(event) => setForm((current) => ({ ...current, port: event.target.value }))}
+                      placeholder="8080"
+                      fullWidth
+                    />
+                    <TextField
+                      label="最小スケール数"
+                      type="number"
+                      slotProps={{ htmlInput: { min: 0, max: 20 } }}
+                      value={form.minScale}
+                      onChange={(event) => setForm((current) => ({ ...current, minScale: event.target.value }))}
+                      placeholder="0"
+                      fullWidth
+                    />
+                    <TextField
+                      label="最大スケール数"
+                      type="number"
+                      slotProps={{ htmlInput: { min: 1, max: 20 } }}
+                      value={form.maxScale}
+                      onChange={(event) => setForm((current) => ({ ...current, maxScale: event.target.value }))}
+                      placeholder="1"
+                      fullWidth
+                    />
+                  </Box>
 
-              <label className="field">
-                <span className="field-label">最小スケール数</span>
-                <input
-                  className="text-input"
-                  type="number"
-                  min={0}
-                  max={20}
-                  value={form.minScale}
-                  onChange={(event) => setForm((current) => ({ ...current, minScale: event.target.value }))}
-                  placeholder="0"
-                />
-              </label>
+                  <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                    <Button type="submit" variant="contained" disabled={submitting}>
+                      {submitting ? "作成中..." : "作成"}
+                    </Button>
+                  </Box>
+                </Box>
 
-              <label className="field">
-                <span className="field-label">最大スケール数</span>
-                <input
-                  className="text-input"
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={form.maxScale}
-                  onChange={(event) => setForm((current) => ({ ...current, maxScale: event.target.value }))}
-                  placeholder="1"
-                />
-              </label>
+                {error ? <Alert severity="error">{error}</Alert> : null}
+              </CardContent>
+            </Card>
+          ) : null}
+        </Container>
 
-            </div>
+        <Dialog open={Boolean(pendingDeleteName)} onClose={cancelDelete} fullWidth maxWidth="sm">
+          <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <DeleteOutlinedIcon color="error" />
+            削除の確認
+          </DialogTitle>
+          <DialogContent dividers>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                {pendingDeleteName}
+              </Typography>
+              <Typography color="text.secondary">このサービスを削除しますか？</Typography>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={cancelDelete} variant="outlined">
+              キャンセル
+            </Button>
+            <Button onClick={() => confirmDelete(pendingDeleteName)} variant="contained" color="error" disabled={deletingName === pendingDeleteName}>
+              {deletingName === pendingDeleteName ? "削除中..." : "削除"}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-            <div className="actions">
-              <button className="pill primary button" type="submit" disabled={submitting}>
-                {submitting ? "作成中..." : "作成"}
-              </button>
-            </div>
-
-            {error ? <p className="status-banner error">{error}</p> : null}
-          </form>
-        ) : null}
-      </section>
-
-      {pendingDeleteName ? (
-        <div className="delete-overlay" role="presentation" onClick={cancelDelete}>
-          <section
-            className="delete-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="削除の確認"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <p className="panel-kicker">削除の確認</p>
-            <h3>{pendingDeleteName}</h3>
-            <p>このサービスを削除しますか？</p>
-            <div className="delete-actions">
-              <button className="pill button delete-cancel" type="button" onClick={cancelDelete}>
-                キャンセル
-              </button>
-              <button
-                className="pill danger button"
-                type="button"
-                onClick={() => confirmDelete(pendingDeleteName)}
-                disabled={deletingName === pendingDeleteName}
-              >
-                {deletingName === pendingDeleteName ? "削除中..." : "削除"}
-              </button>
-            </div>
-          </section>
-        </div>
-      ) : null}
-
-      {pendingProjectDeleteId ? (
-        <div className="delete-overlay" role="presentation" onClick={cancelProjectDelete}>
-          <section
-            className="delete-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="削除の確認"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <p className="panel-kicker">削除の確認</p>
-            <h3>プロジェクトの削除</h3>
-            <p>このプロジェクトを削除しますか？</p>
-            <div className="delete-actions">
-              <button className="pill button delete-cancel" type="button" onClick={cancelProjectDelete}>
-                キャンセル
-              </button>
-              <button
-                className="pill danger button"
-                type="button"
-                onClick={() => confirmDeleteProject(pendingProjectDeleteId)}
-                disabled={deletingProjectId === pendingProjectDeleteId}
-              >
-                {deletingProjectId === pendingProjectDeleteId ? "削除中..." : "削除"}
-              </button>
-            </div>
-          </section>
-        </div>
-      ) : null}
-    </main>
+        <Dialog open={Boolean(pendingProjectDeleteId)} onClose={cancelProjectDelete} fullWidth maxWidth="sm">
+          <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <DeleteOutlinedIcon color="error" />
+            削除の確認
+          </DialogTitle>
+          <DialogContent dividers>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                プロジェクトの削除
+              </Typography>
+              <Typography color="text.secondary">このプロジェクトを削除しますか？</Typography>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={cancelProjectDelete} variant="outlined">
+              キャンセル
+            </Button>
+            <Button onClick={() => confirmDeleteProject(pendingProjectDeleteId)} variant="contained" color="error" disabled={deletingProjectId === pendingProjectDeleteId}>
+              {deletingProjectId === pendingProjectDeleteId ? "削除中..." : "削除"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </ThemeProvider>
   );
 }
 
@@ -1002,60 +1187,6 @@ function formatServiceTimestamp(value: string) {
     hour: "2-digit",
     minute: "2-digit"
   }).format(date);
-}
-
-function HamburgerIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 7h16" />
-      <path d="M4 12h16" />
-      <path d="M4 17h16" />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 6l12 12" />
-      <path d="M18 6 6 18" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="m5 12 4.2 4.2L19 6.5" />
-    </svg>
-  );
-}
-
-function ErrorIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M7 7l10 10" />
-      <path d="M17 7 7 17" />
-    </svg>
-  );
-}
-
-function LoadingIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="loading-icon">
-      <circle cx="12" cy="12" r="8" />
-      <path d="M12 4a8 8 0 0 1 8 8" />
-    </svg>
-  );
-}
-
-function BrandLogo() {
-  return (
-    <span className="brand-logo" aria-hidden="true">
-      <HiOutlineCloud />
-      <span className="brand-logo-text">D Cloud</span>
-    </span>
-  );
 }
 
 createRoot(document.getElementById("root")!).render(
