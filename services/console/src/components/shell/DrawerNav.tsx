@@ -1,9 +1,8 @@
 import CloseIcon from "@mui/icons-material/Close";
-import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
-import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
-import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
-import { Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Typography } from "@mui/material";
+import { Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { alpha } from "@mui/material/styles";
+import { BiHomeAlt2, BiServer } from "react-icons/bi";
+import { PiShippingContainer } from "react-icons/pi";
 import { navItems, type RouteState } from "../../types";
 import { Brand } from "./Brand";
 
@@ -67,9 +66,17 @@ export function DrawerNav({ onCloseSidebar, onNavigate, route, sidebarOpen }: Dr
               }}
             >
               <ListItemIcon sx={{ minWidth: 40 }}>
-                {item.id === "home" ? <HomeOutlinedIcon /> : item.id === "container" ? <StorageOutlinedIcon /> : <CloudUploadOutlinedIcon />}
+                <Box sx={{ width: 28, height: 28, borderRadius: "999px", display: "grid", placeItems: "center", bgcolor: route.section === item.id ? alpha("#2563eb", 0.12) : alpha("#0f172a", 0.04), color: route.section === item.id ? "primary.main" : "text.secondary" }}>
+                  {item.id === "home" ? (
+                    <Box component={BiHomeAlt2} sx={{ fontSize: 18 }} />
+                  ) : item.id === "container" ? (
+                    <Box component={PiShippingContainer} sx={{ fontSize: 18 }} />
+                  ) : (
+                    <Box component={BiServer} sx={{ fontSize: 18 }} />
+                  )}
+                </Box>
               </ListItemIcon>
-              <ListItemText primary={item.label} sx={{ my: 0 }} />
+              <ListItemText primary={<Box component="span" sx={{ fontWeight: 600 }}>{item.label}</Box>} sx={{ my: 0 }} />
             </ListItemButton>
           ))}
         </List>
