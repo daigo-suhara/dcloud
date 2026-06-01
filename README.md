@@ -10,6 +10,8 @@ k8sの上にGCPのようなクラウドを作るOSSプロジェクト
 - DESIGN.mdを参照すること
 - actionsでghcrにプッシュする
 - マイクロサービスアーキテクチャで実装する．各コンポーネントをociコンテナ化
+- サービス公開URLのデフォルトは `apps.daigo-suhara.com` を使う前提にしている
+- Cloudflare Tunnel の設定は `src/capt-cluster` 側で管理し、このリポジトリは origin 側の Host ルーティングだけを持つ
 
 ## 開発スケジュール
 1. 基盤を作る

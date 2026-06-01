@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -134,7 +135,7 @@ func (m *knativeServiceManager) List(ctx context.Context, scope projectScope) ([
 			ProjectID:  item.Metadata.Labels[projectLabelKey],
 			Generation: item.Metadata.Generation,
 			CreatedAt:  item.Metadata.CreationTimestamp.UTC().Format(time.RFC3339),
-			URL:        publicServiceURL(item.Metadata.Labels[projectLabelKey], item.Metadata.Name),
+			URL:        servicePublicURL(item.Metadata.Labels[projectLabelKey], item.Metadata.Name),
 		}
 		if len(item.Spec.Template.Spec.Containers) > 0 {
 			service.Image = item.Spec.Template.Spec.Containers[0].Image
@@ -187,6 +188,48 @@ func (m *knativeServiceManager) TargetURL(ctx context.Context, scope projectScop
 
 	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
 		return "", err
+	}
+	if payload.Status.URL == "" {
+		return "", fmt.Errorf("service %q has no target url", name)
+	}
+	return payload.Status.URL, nil
+}
+
+func (m *knativeServiceManager) PublicTargetURL(ctx context.Context, name string) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/apis/serving.knative.dev/v1/namespaces/%s/services/%s", m.baseURL, m.namespace, name), nil)
+	if err != nil {
+		return "", err
+	}
+	m.authorize(req)
+
+	res, err := m.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == http.StatusNotFound {
+		return "", errServiceNotFound
+	}
+	if res.StatusCode >= 300 {
+		return "", decodeAPIError(res)
+	}
+
+	var payload struct {
+		Metadata struct {
+			Name   string            `json:"name"`
+			Labels map[string]string `json:"labels"`
+		} `json:"metadata"`
+		Status struct {
+			URL string `json:"url"`
+		} `json:"status"`
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+		return "", err
+	}
+	if payload.Metadata.Name == "" || payload.Metadata.Labels["app.kubernetes.io/managed-by"] != userServiceManagerLabel || payload.Metadata.Name == internalCloudRunName {
+		return "", errServiceNotFound
 	}
 	if payload.Status.URL == "" {
 		return "", fmt.Errorf("service %q has no target url", name)
@@ -363,7 +406,7 @@ func decodeService(res *http.Response, scope projectScope) (deployedService, err
 		ProjectID:  payload.Metadata.Labels[projectLabelKey],
 		Generation: payload.Metadata.Generation,
 		CreatedAt:  payload.Metadata.CreationTimestamp.UTC().Format(time.RFC3339),
-		URL:        publicServiceURL(payload.Metadata.Labels[projectLabelKey], payload.Metadata.Name),
+		URL:        servicePublicURL(payload.Metadata.Labels[projectLabelKey], payload.Metadata.Name),
 	}
 	if len(payload.Spec.Template.Spec.Containers) > 0 {
 		service.Image = payload.Spec.Template.Spec.Containers[0].Image
@@ -385,9 +428,13 @@ func decodeService(res *http.Response, scope projectScope) (deployedService, err
 	return service, nil
 }
 
-func publicServiceURL(projectID string, name string) string {
+func servicePublicURL(projectID string, name string) string {
+	domain := strings.TrimSpace(os.Getenv("DCP_PUBLIC_SERVICE_DOMAIN"))
+	if domain != "" {
+		return fmt.Sprintf("https://%s.%s/", name, strings.TrimSuffix(domain, "."))
+	}
 	if projectID == "" {
-		return fmt.Sprintf("/cloudrun/%s/", name)
+		return fmt.Sprintf("/services/%s/", name)
 	}
 	return fmt.Sprintf("/cloudrun/%s/%s/", projectID, name)
 }

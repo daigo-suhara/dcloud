@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
+	"net"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"os"
 	"os/signal"
@@ -70,6 +71,7 @@ type serviceManager interface {
 	Deploy(context.Context, projectScope, deployRequest) (deployedService, error)
 	Delete(context.Context, projectScope, string) error
 	TargetURL(context.Context, projectScope, string) (string, error)
+	PublicTargetURL(context.Context, string) (string, error)
 }
 
 type projectManager interface {
@@ -124,6 +126,7 @@ func main() {
 	mux.HandleFunc("DELETE /api/v1/services/", api.deleteService)
 	mux.HandleFunc("/cloudrun/", api.proxyService)
 	mux.HandleFunc("/services/", api.proxyService)
+	mux.HandleFunc("/", api.proxyService)
 
 	server := &http.Server{
 		Addr:              addr,
@@ -472,68 +475,61 @@ func (a *apiServer) proxyService(w http.ResponseWriter, r *http.Request) {
 	if trimmed == r.URL.Path {
 		trimmed = strings.TrimPrefix(r.URL.Path, "/services/")
 	}
-	if trimmed == "" {
-		http.NotFound(w, r)
+	if trimmed != "" && trimmed != r.URL.Path {
+		parts := strings.SplitN(trimmed, "/", 3)
+		if len(parts) < 2 {
+			http.NotFound(w, r)
+			return
+		}
+		userID, err := a.currentUserID(r)
+		if err != nil {
+			http.Error(w, "ログインしてください", http.StatusUnauthorized)
+			return
+		}
+		scope := projectScope{UserID: userID, ProjectID: parts[0]}
+		if !isDNSLabel(scope.ProjectID) {
+			http.NotFound(w, r)
+			return
+		}
+		if _, err := a.projects.Ensure(r.Context(), scope.UserID, scope.ProjectID); err != nil {
+			http.Error(w, "プロジェクトが見つかりません", http.StatusNotFound)
+			return
+		}
+		name := parts[1]
+		if !isDNSLabel(name) {
+			http.NotFound(w, r)
+			return
+		}
+
+		targetURL, err := a.services.TargetURL(r.Context(), scope, name)
+		if err != nil {
+			a.logger.Error("resolve service target failed", "error", err, "name", name)
+			http.Error(w, "サービスが見つかりません", http.StatusNotFound)
+			return
+		}
+
+		remainder := ""
+		if len(parts) == 3 {
+			remainder = "/" + parts[2]
+		}
+		a.proxyToTarget(w, r, targetURL, remainder, name)
 		return
 	}
-	parts := strings.SplitN(trimmed, "/", 3)
-	if len(parts) < 2 {
-		http.NotFound(w, r)
-		return
-	}
-	userID, err := a.currentUserID(r)
-	if err != nil {
-		http.Error(w, "ログインしてください", http.StatusUnauthorized)
-		return
-	}
-	scope := projectScope{UserID: userID, ProjectID: parts[0]}
-	if !isDNSLabel(scope.ProjectID) {
-		http.NotFound(w, r)
-		return
-	}
-	if _, err := a.projects.Ensure(r.Context(), scope.UserID, scope.ProjectID); err != nil {
-		http.Error(w, "プロジェクトが見つかりません", http.StatusNotFound)
-		return
-	}
-	name := parts[1]
-	if !isDNSLabel(name) {
+
+	name := a.serviceNameFromHost(r)
+	if name == "" {
 		http.NotFound(w, r)
 		return
 	}
 
-	targetURL, err := a.services.TargetURL(r.Context(), scope, name)
+	targetURL, err := a.services.PublicTargetURL(r.Context(), name)
 	if err != nil {
-		a.logger.Error("resolve service target failed", "error", err, "name", name)
+		a.logger.Error("resolve public service target failed", "error", err, "name", name)
 		http.Error(w, "サービスが見つかりません", http.StatusNotFound)
 		return
 	}
 
-	target, err := url.Parse(targetURL)
-	if err != nil {
-		a.logger.Error("invalid service target url", "error", err, "name", name, "target", targetURL)
-		http.Error(w, "バックエンドURLが不正です", http.StatusBadGateway)
-		return
-	}
-
-	remainder := ""
-	if len(parts) == 3 {
-		remainder = "/" + parts[2]
-	}
-	proxy := httputil.NewSingleHostReverseProxy(target)
-	proxy.Director = func(req *http.Request) {
-		req.URL.Scheme = target.Scheme
-		req.URL.Host = target.Host
-		req.URL.Path = singleJoiningSlash(target.Path, remainder)
-		req.URL.RawQuery = r.URL.RawQuery
-		req.Host = target.Host
-		req.Header.Set("X-Forwarded-Host", r.Host)
-		req.Header.Set("X-Forwarded-Proto", "http")
-	}
-	proxy.ErrorHandler = func(_ http.ResponseWriter, _ *http.Request, proxyErr error) {
-		a.logger.Error("proxy service failed", "error", proxyErr, "name", name)
-		http.Error(w, "接続先サービスを利用できません", http.StatusBadGateway)
-	}
-	proxy.ServeHTTP(w, r)
+	a.proxyToTarget(w, r, targetURL, r.URL.Path, name)
 }
 
 func (a *apiServer) setPublicURLs(r *http.Request, services []deployedService) {
@@ -543,7 +539,77 @@ func (a *apiServer) setPublicURLs(r *http.Request, services []deployedService) {
 }
 
 func (a *apiServer) setPublicURL(r *http.Request, service *deployedService) {
-	service.URL = fmt.Sprintf("%s/cloudrun/%s/%s/", publicBaseURL(r), service.ProjectID, service.Name)
+	service.URL = publicServiceURL(r, service.ProjectID, service.Name)
+}
+
+func (a *apiServer) proxyToTarget(w http.ResponseWriter, r *http.Request, targetURL string, path string, name string) {
+	target, err := url.Parse(targetURL)
+	if err != nil {
+		a.logger.Error("invalid service target url", "error", err, "name", name, "target", targetURL)
+		http.Error(w, "バックエンドURLが不正です", http.StatusBadGateway)
+		return
+	}
+
+	proxyURL := *target
+	proxyURL.Path = singleJoiningSlash(target.Path, path)
+	proxyURL.RawQuery = r.URL.RawQuery
+
+	req, err := http.NewRequestWithContext(r.Context(), r.Method, proxyURL.String(), r.Body)
+	if err != nil {
+		a.logger.Error("proxy request failed", "error", err, "name", name)
+		http.Error(w, "接続先サービスを利用できません", http.StatusBadGateway)
+		return
+	}
+	req.Header = cloneHeader(r.Header)
+	req.Host = target.Host
+	req.Header.Set("X-Forwarded-Host", r.Host)
+	if isSecureRequest(r) {
+		req.Header.Set("X-Forwarded-Proto", "https")
+	} else {
+		req.Header.Set("X-Forwarded-Proto", "http")
+	}
+	removeHopByHopHeaders(req.Header)
+
+	res, err := proxyHTTPClient.Do(req)
+	if err != nil {
+		a.logger.Error("proxy service failed", "error", err, "name", name)
+		http.Error(w, "接続先サービスを利用できません", http.StatusBadGateway)
+		return
+	}
+	defer res.Body.Close()
+
+	copyHeader(w.Header(), res.Header)
+	removeHopByHopHeaders(w.Header())
+	w.WriteHeader(res.StatusCode)
+	if _, err := io.Copy(w, res.Body); err != nil {
+		a.logger.Error("proxy response copy failed", "error", err, "name", name)
+	}
+}
+
+func (a *apiServer) serviceNameFromHost(r *http.Request) string {
+	domain := strings.TrimSpace(os.Getenv("DCP_PUBLIC_SERVICE_DOMAIN"))
+	if domain == "" {
+		return ""
+	}
+
+	host := requestHost(r)
+	if host == "" {
+		return ""
+	}
+	host = strings.ToLower(host)
+	domain = strings.ToLower(strings.TrimSuffix(domain, "."))
+	if host == domain {
+		return ""
+	}
+	if !strings.HasSuffix(host, "."+domain) {
+		return ""
+	}
+
+	name := strings.TrimSuffix(host, "."+domain)
+	if name == "" || strings.Contains(name, ".") || !isDNSLabel(name) {
+		return ""
+	}
+	return name
 }
 
 func publicBaseURL(r *http.Request) string {
@@ -556,6 +622,68 @@ func publicBaseURL(r *http.Request) string {
 		host = r.Host
 	}
 	return fmt.Sprintf("%s://%s", proto, host)
+}
+
+func publicServiceURL(r *http.Request, projectID string, name string) string {
+	domain := strings.TrimSpace(os.Getenv("DCP_PUBLIC_SERVICE_DOMAIN"))
+	if domain != "" {
+		domain = strings.TrimSuffix(domain, ".")
+		return fmt.Sprintf("https://%s.%s/", name, domain)
+	}
+	if projectID == "" {
+		return fmt.Sprintf("%s/services/%s/", publicBaseURL(r), name)
+	}
+	return fmt.Sprintf("%s/cloudrun/%s/%s/", publicBaseURL(r), projectID, name)
+}
+
+func requestHost(r *http.Request) string {
+	host := strings.TrimSpace(r.Header.Get("X-Forwarded-Host"))
+	if host == "" {
+		host = strings.TrimSpace(r.Host)
+	}
+	if host == "" {
+		return ""
+	}
+	if strings.Contains(host, ":") {
+		if h, _, err := net.SplitHostPort(host); err == nil {
+			host = h
+		}
+	}
+	return strings.TrimSpace(host)
+}
+
+var proxyHTTPClient = &http.Client{Timeout: 30 * time.Second}
+
+func cloneHeader(src http.Header) http.Header {
+	dst := make(http.Header, len(src))
+	for key, values := range src {
+		dst[key] = append([]string(nil), values...)
+	}
+	return dst
+}
+
+func copyHeader(dst, src http.Header) {
+	for key, values := range src {
+		for _, value := range values {
+			dst.Add(key, value)
+		}
+	}
+}
+
+func removeHopByHopHeaders(header http.Header) {
+	for _, key := range []string{
+		"Connection",
+		"Proxy-Connection",
+		"Keep-Alive",
+		"Proxy-Authenticate",
+		"Proxy-Authorization",
+		"Te",
+		"Trailer",
+		"Transfer-Encoding",
+		"Upgrade",
+	} {
+		header.Del(key)
+	}
 }
 
 func singleJoiningSlash(a, b string) string {

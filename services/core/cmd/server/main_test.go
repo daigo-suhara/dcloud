@@ -199,6 +199,29 @@ func TestDeleteService(t *testing.T) {
 	}
 }
 
+func TestPublicServiceURLUsesConfiguredDomain(t *testing.T) {
+	t.Setenv("DCP_PUBLIC_SERVICE_DOMAIN", "apps.example.com")
+
+	req := httptest.NewRequest(http.MethodGet, "http://console.example.com/api/v1/services", nil)
+	got := publicServiceURL(req, "default-project", "hello-dcp")
+
+	if got != "https://hello-dcp.apps.example.com/" {
+		t.Fatalf("expected host-based public url, got %q", got)
+	}
+}
+
+func TestServiceNameFromHost(t *testing.T) {
+	t.Setenv("DCP_PUBLIC_SERVICE_DOMAIN", "apps.example.com")
+	api := &apiServer{}
+
+	req := httptest.NewRequest(http.MethodGet, "http://hello-dcp.apps.example.com/", nil)
+	req.Header.Set("X-Forwarded-Host", "hello-dcp.apps.example.com")
+
+	if got := api.serviceNameFromHost(req); got != "hello-dcp" {
+		t.Fatalf("expected service name hello-dcp, got %q", got)
+	}
+}
+
 func TestIsUserServiceRejectsInternalCloudRun(t *testing.T) {
 	withTestUUID(t)
 	labels := map[string]string{
@@ -447,4 +470,8 @@ func (f *fakeServiceManager) Delete(_ context.Context, _ projectScope, name stri
 
 func (f *fakeServiceManager) TargetURL(_ context.Context, scope projectScope, name string) (string, error) {
 	return "http://" + name + "." + scope.ProjectID + ".svc.cluster.local", nil
+}
+
+func (f *fakeServiceManager) PublicTargetURL(_ context.Context, name string) (string, error) {
+	return "http://" + name + ".svc.cluster.local", nil
 }
