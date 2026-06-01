@@ -9,7 +9,7 @@ data:
   default.conf: |
     server {
       listen 8080;
-      server_name _;
+      server_name {{ .Values.console.publicHostname | quote }};
 
       root /usr/share/nginx/html;
       index index.html;
@@ -55,10 +55,9 @@ data:
       }
     }
 
-    {{- if .Values.console.publicServiceDomain }}
     server {
       listen 8080;
-      server_name ~^(?<service>[a-z0-9-]+)\.{{ .Values.console.publicServiceDomain | replace "." "\\." }}$;
+      server_name ~^(?!{{ first (splitList "." .Values.console.publicHostname) }}$)[a-z0-9-]+\.{{ .Values.console.publicServiceDomain | replace "." "\\." }}$;
 
       location / {
         proxy_pass http://{{ include "dcp.fullname" . }}-core:8080;
@@ -68,4 +67,3 @@ data:
         proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
       }
     }
-    {{- end }}

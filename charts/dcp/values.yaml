@@ -16,7 +16,7 @@ core:
     repository: dcp-core
   service:
     port: 8080
-  publicServiceDomain: apps.daigo-suhara.com
+  publicServiceDomain: drkatana.com
 
 console:
   replicaCount: 1
@@ -25,7 +25,8 @@ console:
   service:
     type: LoadBalancer
     port: 8080
-  publicServiceDomain: apps.daigo-suhara.com
+  publicServiceDomain: drkatana.com
+  publicHostname: cloud.daigo-suhara.com
 
 cloudrun:
   replicaCount: 1
