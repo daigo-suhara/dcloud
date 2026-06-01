@@ -27,12 +27,20 @@ export function Header({ activeProjectId, hasProjects, onLogout, onProjectSelect
         borderBottom: "1px solid rgba(148, 163, 184, 0.18)"
       }}
     >
-      <Toolbar disableGutters sx={{ ...shellHeaderRowSx, flexWrap: "wrap", rowGap: 1, py: 1 }}>
+      <Toolbar
+        disableGutters
+        sx={{
+          ...shellHeaderRowSx,
+          flexWrap: "nowrap",
+          py: 1
+        }}
+      >
         <IconButton onClick={onToggleSidebar} aria-label="navigation" sx={{ width: 40, height: 40, p: 0, flex: "0 0 auto" }}>
           <MenuIcon />
         </IconButton>
-        <Brand />
-        <Box sx={{ flex: 1, minWidth: 0, display: { xs: "none", sm: "block" } }} />
+        <Box sx={{ flex: "1 1 auto", minWidth: 0, display: "flex", alignItems: "center" }}>
+          <Brand />
+        </Box>
         <TextField
           select
           size="small"
@@ -40,9 +48,9 @@ export function Header({ activeProjectId, hasProjects, onLogout, onProjectSelect
           onChange={(event) => onProjectSelect(event.target.value)}
           disabled={!hasProjects}
           sx={{
-            minWidth: { xs: 0, sm: 220 },
-            width: { xs: "calc(100% - 96px)", sm: "auto" },
-            flex: { xs: "1 1 180px", sm: "0 0 auto" },
+            minWidth: 0,
+            width: { xs: "clamp(120px, 42vw, 180px)", sm: 220 },
+            flex: "0 1 auto",
             bgcolor: "background.paper"
           }}
           slotProps={{ htmlInput: { "aria-label": "プロジェクトを切り替え" } }}
@@ -53,7 +61,7 @@ export function Header({ activeProjectId, hasProjects, onLogout, onProjectSelect
             </MenuItem>
           ))}
         </TextField>
-        <Button variant="outlined" startIcon={<LogoutIcon />} onClick={onLogout} sx={{ whiteSpace: "nowrap", width: { xs: "100%", sm: "auto" } }}>
+        <Button variant="outlined" startIcon={<LogoutIcon />} onClick={onLogout} sx={{ whiteSpace: "nowrap", display: { xs: "none", sm: "inline-flex" } }}>
           ログアウト
         </Button>
       </Toolbar>
