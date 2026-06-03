@@ -51,7 +51,8 @@ export function Header({ activeProjectId, hasProjects, onLogout, onProjectSelect
             minWidth: 0,
             width: { xs: "clamp(120px, 42vw, 180px)", sm: 220 },
             flex: "0 1 auto",
-            bgcolor: "background.paper"
+            bgcolor: "background.paper",
+            display: { xs: "none", sm: "inline-flex" }
           }}
           slotProps={{ htmlInput: { "aria-label": "プロジェクトを切り替え" } }}
         >
