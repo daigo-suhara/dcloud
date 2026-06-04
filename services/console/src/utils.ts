@@ -34,6 +34,7 @@ export function getServiceStatus(service: DeployedService) {
     reason.includes("pending") ||
     reason.includes("loading") ||
     reason.includes("progress") ||
+    reason.includes("creating") ||
     reason.includes("reconcil") ||
     reason.includes("revisionmissing") ||
     reason.includes("unknown")
@@ -85,4 +86,3 @@ export function formatServiceTimestamp(value: string) {
     minute: "2-digit"
   }).format(date);
 }
-
