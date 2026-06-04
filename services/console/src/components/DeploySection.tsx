@@ -1,7 +1,6 @@
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { Alert, Box, Button, Card, CardContent, Chip, Divider, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Card, CardContent, Divider, Paper, Stack, TextField, Typography } from "@mui/material";
 import type { FormEvent } from "react";
 import type { DeployForm } from "../types";
 
@@ -25,18 +24,13 @@ export function DeploySection({ error, form, onBack, onChange, onSubmit, submitt
     <Card variant="outlined" sx={{ borderRadius: 2, maxWidth: 1120, width: "100%" }}>
       <CardContent sx={{ p: { xs: 2.5, sm: 3 }, display: "grid", gap: 2.5 }}>
         <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
-          <Box sx={{ display: "grid", gap: 1 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Chip icon={<CloudUploadOutlinedIcon fontSize="small" />} label="サービス作成" variant="outlined" />
-            </Box>
-            <Box sx={{ display: "grid", gap: 0.75 }}>
-              <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
-                コンテナを作成
-              </Typography>
-              <Typography color="text.secondary">
-                イメージ、ポート、スケール範囲をまとめて指定してデプロイします。
-              </Typography>
-            </Box>
+          <Box sx={{ display: "grid", gap: 0.75 }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
+              コンテナを作成
+            </Typography>
+            <Typography color="text.secondary">
+              イメージ、ポート、スケール範囲をまとめて指定してデプロイします。
+            </Typography>
           </Box>
           <Button startIcon={<ArrowBackIcon />} onClick={onBack} variant="outlined">
             一覧に戻る

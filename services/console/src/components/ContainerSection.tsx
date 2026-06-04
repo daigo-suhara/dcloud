@@ -113,14 +113,9 @@ export function ContainerSection({
           <Card variant="outlined" sx={{ borderRadius: 2 }}>
             <CardContent sx={{ p: 3, display: "grid", gap: 2 }}>
               <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
-                <Box>
-                  <Typography variant="overline" color="primary">
-                    サービス
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
-                    デプロイ済みサービス
-                  </Typography>
-                </Box>
+                <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                  デプロイ済みサービス
+                </Typography>
               </Box>
 
               <Box sx={{ display: "grid", gap: 0 }}>
@@ -185,14 +180,9 @@ export function ContainerSection({
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent sx={{ p: 3, display: "grid", gap: 2 }}>
-            <Box>
-              <Typography variant="overline" color="primary">
-                作成
-              </Typography>
-              <Typography variant="h6" sx={{ fontWeight: 700, mt: 0.5 }}>
-                サービスのデプロイ
-              </Typography>
-            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              サービスのデプロイ
+            </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
               <Button component="a" href="#deploy" variant="contained" startIcon={<CloudUploadOutlinedIcon />} fullWidth onClick={onDeployClick}>
                 コンテナのデプロイ
