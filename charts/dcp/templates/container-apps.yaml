@@ -15,12 +15,16 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: container-apps
     spec:
+      enableServiceLinks: false
+      timeoutSeconds: 300
       containers:
         - name: container-apps
           image: {{ include "dcp.image" (dict "root" . "repository" .Values.containerApps.image.repository) }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources: {}
           ports:
             - containerPort: {{ .Values.containerApps.service.port }}
+              protocol: TCP
           readinessProbe:
             httpGet:
               path: /readyz
