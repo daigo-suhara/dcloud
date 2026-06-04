@@ -83,8 +83,16 @@ function App() {
             onDeleteService={controller.requestDelete}
             onOpenService={controller.handleOpenService}
             onRepoConnectClick={() => (window.location.hash = "#container")}
+            onReloadLogs={() => {
+              if (controller.selectedService) {
+                void controller.loadServiceLogs(controller.selectedService.name);
+              }
+            }}
             selectedService={controller.selectedService}
             selectedStatus={controller.selectedStatus}
+            serviceLogs={controller.serviceLogs}
+            serviceLogsError={controller.serviceLogsError}
+            serviceLogsLoading={controller.serviceLogsLoading}
             services={controller.services}
           />
         ) : controller.route.section === "deploy" ? (

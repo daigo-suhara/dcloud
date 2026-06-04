@@ -204,6 +204,42 @@ func TestDeleteService(t *testing.T) {
 	}
 }
 
+func TestServiceLogs(t *testing.T) {
+	auth := testAuth()
+	manager := &fakeServiceManager{
+		services: []deployedService{
+			{
+				Name:      "hello-dcp",
+				Namespace: "dcp-system",
+				ProjectID: testProjectID("default"),
+			},
+		},
+		logs: map[string]string{
+			"hello-dcp": "line 1\nline 2\n",
+		},
+	}
+	api := &apiServer{
+		auth:      auth,
+		services:  manager,
+		projects:  newMemoryProjectManager(),
+		namespace: "dcp-system",
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "http://172.16.100.11:8080/api/v1/services/hello-dcp/logs", nil)
+	req.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	req.SetPathValue("service", "hello-dcp")
+	rec := httptest.NewRecorder()
+
+	api.serviceLogs(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, rec.Code)
+	}
+	if got := rec.Body.String(); got != "line 1\nline 2\n" {
+		t.Fatalf("unexpected logs payload: %q", got)
+	}
+}
+
 func TestUserServiceURLUsesConfiguredDomain(t *testing.T) {
 	t.Setenv("DCP_PUBLIC_SERVICE_DOMAIN", "apps.example.com")
 
@@ -486,6 +522,7 @@ type fakeServiceManager struct {
 	services []deployedService
 	deployed []scopedDeploy
 	deleted  []string
+	logs     map[string]string
 }
 
 type scopedDeploy struct {
@@ -543,4 +580,11 @@ func (f *fakeServiceManager) TargetURL(_ context.Context, scope projectScope, na
 
 func (f *fakeServiceManager) PublicTargetURL(_ context.Context, name string) (string, error) {
 	return "http://" + name + ".svc.cluster.local", nil
+}
+
+func (f *fakeServiceManager) Logs(_ context.Context, _ projectScope, name string, _ int) (string, error) {
+	if f.logs == nil {
+		return "", nil
+	}
+	return f.logs[name], nil
 }

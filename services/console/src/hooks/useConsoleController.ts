@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { initialForm, type AuthUser, type DeployedService, type PlatformResponse, type Project, type ProjectsResponse, type RouteState } from "../types";
 import { getServiceStatus, parseRoute } from "../utils";
@@ -27,6 +27,10 @@ export function useConsoleController() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [form, setForm] = useState(initialForm);
+  const [serviceLogs, setServiceLogs] = useState("");
+  const [serviceLogsLoading, setServiceLogsLoading] = useState(false);
+  const [serviceLogsError, setServiceLogsError] = useState("");
+  const serviceLogsAbortRef = useRef<AbortController | null>(null);
 
   const selectedService =
     route.section === "container" && route.selectedServiceName
@@ -80,6 +84,18 @@ export function useConsoleController() {
 
     return () => window.clearInterval(timer);
   }, [activeProjectId]);
+
+  useEffect(() => {
+    if (!selectedService) {
+      serviceLogsAbortRef.current?.abort();
+      setServiceLogs("");
+      setServiceLogsError("");
+      setServiceLogsLoading(false);
+      return;
+    }
+    void loadServiceLogs(selectedService.name);
+    return () => serviceLogsAbortRef.current?.abort();
+  }, [selectedService?.name]);
 
   function apiHeaders(extra?: HeadersInit) {
     const headers = new Headers(extra);
@@ -195,6 +211,46 @@ export function useConsoleController() {
     } finally {
       if (!options?.quiet) {
         setLoading(false);
+      }
+    }
+  }
+
+  async function loadServiceLogs(name: string) {
+    serviceLogsAbortRef.current?.abort();
+    const controller = new AbortController();
+    serviceLogsAbortRef.current = controller;
+    setServiceLogsLoading(true);
+    setServiceLogsError("");
+    try {
+      const response = await fetch(`/api/v1/services/${encodeURIComponent(name)}/logs?tailLines=250`, {
+        credentials: "include",
+        headers: apiHeaders(),
+        signal: controller.signal
+      });
+      const text = await response.text();
+      if (controller.signal.aborted) {
+        return;
+      }
+      if (!response.ok) {
+        let errorMessage = text || "ログを読み込めませんでした";
+        try {
+          const data = JSON.parse(text) as { error?: string };
+          errorMessage = data.error ?? errorMessage;
+        } catch {
+          // fall through to text or default message
+        }
+        throw new Error(errorMessage);
+      }
+      setServiceLogs(text);
+    } catch (logsError) {
+      if (logsError instanceof DOMException && logsError.name === "AbortError") {
+        return;
+      }
+      setServiceLogs("");
+      setServiceLogsError(logsError instanceof Error ? logsError.message : "ログを読み込めませんでした");
+    } finally {
+      if (!controller.signal.aborted) {
+        setServiceLogsLoading(false);
       }
     }
   }
@@ -355,6 +411,7 @@ export function useConsoleController() {
     handleOpenService,
     handleSubmit,
     loadCurrentUser,
+    loadServiceLogs,
     loading,
     message,
     pendingDeleteName,
@@ -366,6 +423,9 @@ export function useConsoleController() {
     route,
     selectedService,
     selectedStatus,
+    serviceLogs,
+    serviceLogsError,
+    serviceLogsLoading,
     setProjectName,
     setRoute,
     setSidebarOpen,

@@ -10,8 +10,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -189,6 +191,45 @@ func (m *knativeServiceManager) PublicTargetURL(ctx context.Context, name string
 	return service.TargetURL, nil
 }
 
+func (m *knativeServiceManager) Logs(ctx context.Context, scope projectScope, name string, tailLines int) (string, error) {
+	service, err := m.getUserService(ctx, scope, name)
+	if err != nil {
+		return "", err
+	}
+
+	pods, err := m.listServicePods(ctx, scope, service)
+	if err != nil {
+		return "", err
+	}
+	if len(pods) == 0 {
+		return "", nil
+	}
+
+	sort.Slice(pods, func(i, j int) bool {
+		if pods[i].Metadata.CreationTimestamp.Equal(pods[j].Metadata.CreationTimestamp) {
+			return pods[i].Metadata.Name > pods[j].Metadata.Name
+		}
+		return pods[i].Metadata.CreationTimestamp.After(pods[j].Metadata.CreationTimestamp)
+	})
+
+	containerName := service.Name
+	for _, pod := range pods {
+		logs, err := m.readPodLogs(ctx, pod.Metadata.Name, containerName, tailLines)
+		if err == nil {
+			return logs, nil
+		}
+		if errors.Is(err, errServiceNotFound) {
+			continue
+		}
+		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "container") {
+			continue
+		}
+		return "", err
+	}
+
+	return "", nil
+}
+
 func (m *knativeServiceManager) Deploy(ctx context.Context, scope projectScope, req deployRequest) (deployedService, error) {
 	resourceName := userServiceResourceName(scope.ProjectID, req.Name)
 	manifest := knativeServiceManifest{
@@ -280,6 +321,74 @@ func (m *knativeServiceManager) Delete(ctx context.Context, scope projectScope, 
 	}
 
 	return nil
+}
+
+func (m *knativeServiceManager) listServicePods(ctx context.Context, scope projectScope, service deployedService) ([]knativePodInfo, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/api/v1/namespaces/%s/pods?labelSelector=%s", m.baseURL, m.namespace, strings.Join([]string{
+		"app.kubernetes.io/managed-by=" + userServiceManagerLabel,
+		userLabelKey + "=" + scope.UserID,
+		projectLabelKey + "=" + strings.TrimSpace(service.ProjectID),
+		serviceNameLabel + "=" + service.Name,
+	}, ",")), nil)
+	if err != nil {
+		return nil, err
+	}
+	m.authorize(req)
+
+	res, err := m.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode >= 300 {
+		return nil, decodeAPIError(res)
+	}
+
+	var payload struct {
+		Items []knativePodInfo `json:"items"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+		return nil, err
+	}
+	return payload.Items, nil
+}
+
+func (m *knativeServiceManager) readPodLogs(ctx context.Context, podName string, containerName string, tailLines int) (string, error) {
+	reqURL := fmt.Sprintf("%s/api/v1/namespaces/%s/pods/%s/log", m.baseURL, m.namespace, podName)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
+	if err != nil {
+		return "", err
+	}
+	query := req.URL.Query()
+	if containerName != "" {
+		query.Set("container", containerName)
+	}
+	if tailLines > 0 {
+		query.Set("tailLines", strconv.Itoa(tailLines))
+	}
+	query.Set("timestamps", "true")
+	req.URL.RawQuery = query.Encode()
+	m.authorize(req)
+
+	res, err := m.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == http.StatusNotFound || res.StatusCode == http.StatusBadRequest {
+		return "", errServiceNotFound
+	}
+	if res.StatusCode >= 300 {
+		return "", decodeAPIError(res)
+	}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
 }
 
 func (m *knativeServiceManager) getUserService(ctx context.Context, scope projectScope, name string) (deployedService, error) {
@@ -573,4 +682,11 @@ type knativeContainer struct {
 
 type knativeContainerPort struct {
 	ContainerPort int `json:"containerPort"`
+}
+
+type knativePodInfo struct {
+	Metadata struct {
+		Name              string    `json:"name"`
+		CreationTimestamp time.Time `json:"creationTimestamp"`
+	} `json:"metadata"`
 }

@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -75,6 +76,7 @@ type serviceManager interface {
 	Delete(context.Context, projectScope, string) error
 	TargetURL(context.Context, projectScope, string) (string, error)
 	PublicTargetURL(context.Context, string) (string, error)
+	Logs(context.Context, projectScope, string, int) (string, error)
 }
 
 type projectManager interface {
@@ -126,6 +128,7 @@ func main() {
 	mux.HandleFunc("/api/v1/projects/", api.projectsByPath)
 	mux.HandleFunc("GET /api/v1/services", api.listServices)
 	mux.HandleFunc("POST /api/v1/services", api.deployService)
+	mux.HandleFunc("GET /api/v1/services/{service}/logs", api.serviceLogs)
 	mux.HandleFunc("DELETE /api/v1/services/", api.deleteService)
 	mux.HandleFunc("/container-apps/", api.proxyService)
 	mux.HandleFunc("/services/", api.proxyService)
@@ -474,6 +477,49 @@ func (a *apiServer) deployService(w http.ResponseWriter, r *http.Request) {
 	a.setPublicURL(r, &service)
 
 	writeJSON(w, http.StatusCreated, service)
+}
+
+func (a *apiServer) serviceLogs(w http.ResponseWriter, r *http.Request) {
+	if a.services == nil {
+		http.Error(w, "サービス管理機能を利用できません", http.StatusServiceUnavailable)
+		return
+	}
+	scope, err := a.projectScopeFromRequest(w, r)
+	if err != nil {
+		writeJSON(w, statusForScopeError(err), map[string]string{"error": err.Error()})
+		return
+	}
+
+	name := strings.TrimSpace(r.PathValue("service"))
+	if name == "" || !isDNSLabel(name) {
+		http.NotFound(w, r)
+		return
+	}
+
+	tailLines := 200
+	if value := strings.TrimSpace(r.URL.Query().Get("tailLines")); value != "" {
+		if parsed, err := strconv.Atoi(value); err == nil && parsed > 0 {
+			tailLines = parsed
+		}
+	}
+
+	logs, err := a.services.Logs(r.Context(), scope, name, tailLines)
+	if err != nil {
+		if errors.Is(err, errServiceNotFound) {
+			http.NotFound(w, r)
+			return
+		}
+		a.logger.Error("service logs failed", "error", err, "name", name)
+		writeJSON(w, http.StatusBadGateway, map[string]string{
+			"error": "ログを取得できませんでした",
+		})
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	if _, err := io.WriteString(w, logs); err != nil {
+		a.logger.Error("write service logs failed", "error", err, "name", name)
+	}
 }
 
 func (a *apiServer) deleteService(w http.ResponseWriter, r *http.Request) {

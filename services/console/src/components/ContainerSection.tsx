@@ -5,6 +5,7 @@ import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import ErrorOutlinedIcon from "@mui/icons-material/ErrorOutlined";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import { Box, Button, Card, CardContent, CircularProgress, Paper, Typography } from "@mui/material";
 import type { DeployedService } from "../types";
 import { formatServiceStatus, formatServiceTimestamp, getServiceStatus } from "../utils";
@@ -16,8 +17,12 @@ type ContainerSectionProps = {
   onDeleteService: (name: string) => void;
   onOpenService: (name: string) => void;
   onRepoConnectClick: () => void;
+  onReloadLogs: () => void;
   selectedService: DeployedService | null;
   selectedStatus: ReturnType<typeof getServiceStatus> | null;
+  serviceLogs: string;
+  serviceLogsError: string;
+  serviceLogsLoading: boolean;
   services: DeployedService[];
 };
 
@@ -28,8 +33,12 @@ export function ContainerSection({
   onDeleteService,
   onOpenService,
   onRepoConnectClick,
+  onReloadLogs,
   selectedService,
   selectedStatus,
+  serviceLogs,
+  serviceLogsError,
+  serviceLogsLoading,
   services
 }: ContainerSectionProps) {
   const selectedStatusIcon =
@@ -113,6 +122,47 @@ export function ContainerSection({
                   <Typography sx={{ mt: 0.5, fontWeight: 600 }}>{selectedService.createdAt ?? "-"}</Typography>
                 </Paper>
               </Box>
+
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: "grey.50" }}>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+                  <Typography variant="caption" color="text.secondary">
+                    ログ
+                  </Typography>
+                  <Button size="small" variant="text" startIcon={<RefreshOutlinedIcon />} onClick={onReloadLogs} disabled={serviceLogsLoading}>
+                    更新
+                  </Button>
+                </Box>
+                {serviceLogsLoading ? (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mt: 1.25, color: "text.secondary" }}>
+                    <CircularProgress size={16} thickness={5} />
+                    <Typography color="text.secondary">読み込み中</Typography>
+                  </Box>
+                ) : serviceLogsError ? (
+                  <Typography sx={{ mt: 1.25, color: "error.main", whiteSpace: "pre-wrap" }}>{serviceLogsError}</Typography>
+                ) : serviceLogs.trim() ? (
+                  <Box
+                    component="pre"
+                    sx={{
+                      mt: 1.25,
+                      mb: 0,
+                      p: 1.5,
+                      borderRadius: 1.5,
+                      bgcolor: "grey.100",
+                      fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace',
+                      fontSize: 13,
+                      lineHeight: 1.6,
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                      overflow: "auto",
+                      maxHeight: 360
+                    }}
+                  >
+                    {serviceLogs}
+                  </Box>
+                ) : (
+                  <Typography sx={{ mt: 1.25, color: "text.secondary" }}>まだログはありません。</Typography>
+                )}
+              </Paper>
 
               <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                 <Button variant="contained" color="error" startIcon={<DeleteOutlinedIcon />} onClick={() => onDeleteService(selectedService.name)}>
