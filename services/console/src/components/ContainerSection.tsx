@@ -113,8 +113,8 @@ export function ContainerSection({
           <Card variant="outlined" sx={{ borderRadius: 2 }}>
             <CardContent sx={{ p: 3, display: "grid", gap: 2 }}>
               <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
-                <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                  デプロイ済みサービス
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  サービス
                 </Typography>
               </Box>
 
