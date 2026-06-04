@@ -59,3 +59,6 @@ export const shellBg = {
   background:
     "radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 24%), radial-gradient(circle at top right, rgba(15, 23, 42, 0.05), transparent 26%), linear-gradient(180deg, #ffffff 0%, #f8fafc 45%, #eef2f7 100%)"
 } as const;
+
+export const actionLinkColor = "#2563eb";
+export const actionLinkHoverColor = "#1d4ed8";

@@ -316,7 +316,7 @@ export function useConsoleController() {
         setMessage(`${data.name} を作成しました`);
         handleOpenService(data.name);
       }
-      setForm((current) => ({ ...current, name: "hello-dcp", port: "8080", minScale: "0", maxScale: "20" }));
+      setForm(initialForm);
       await loadServices();
     } catch (deployError) {
       setError(deployError instanceof Error ? deployError.message : "サービスの作成に失敗しました");

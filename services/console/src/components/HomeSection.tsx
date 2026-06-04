@@ -66,54 +66,56 @@ export function HomeSection({
             <Table size="small" sx={{ "& .MuiTableCell-root": { borderBottomColor: "rgba(148, 163, 184, 0.18)" } }}>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ width: 56 }} />
+                  <TableCell sx={{ width: { xs: 44, sm: 56 } }} />
                   <TableCell sx={{ fontSize: 12, fontWeight: 700, color: "text.secondary" }}>名前</TableCell>
                   <TableCell sx={{ display: { xs: "none", sm: "table-cell" }, fontSize: 12, fontWeight: 700, color: "text.secondary" }}>ID</TableCell>
                   <TableCell sx={{ width: { xs: 92, sm: 120 } }} />
                 </TableRow>
               </TableHead>
               <TableBody>
-              {projects.map((project) => {
-                const isActive = project.id === activeProjectId;
-                const canDelete = project.name !== "default";
-                return (
-                  <TableRow
-                    key={project.id}
-                    hover
-                    selected={isActive}
-                    sx={{
-                      "& td": {
-                        bgcolor: isActive ? alpha("#2563eb", 0.04) : "background.paper"
-                      }
-                    }}
-                  >
-                    <TableCell sx={{ py: 1.25, pl: 1 }}>
-                      <Radio checked={isActive} onChange={() => onSelectProject(project.id)} value={project.id} name="project-select" size="small" />
-                    </TableCell>
-                    <TableCell sx={{ py: 1.25 }}>
-                      <Typography sx={{ fontWeight: 700 }}>{project.name}</Typography>
-                    </TableCell>
-                    <TableCell sx={{ display: { xs: "none", sm: "table-cell" }, py: 1.25 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-all" }}>
-                        {project.id}
-                      </Typography>
-                    </TableCell>
-                    <TableCell sx={{ py: 1.25, pr: 1 }}>
-                      <Button
-                        variant="outlined"
-                        color="inherit"
-                        startIcon={<DeleteOutlinedIcon />}
-                        disabled={!canDelete || deletingProjectId === project.id}
-                        onClick={() => onRequestDeleteProject(project.id)}
-                        fullWidth
-                        size="small"
-                      >
-                        {deletingProjectId === project.id ? "削除中..." : "削除"}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                {projects.map((project) => {
+                  const isActive = project.id === activeProjectId;
+                  const canDelete = project.name !== "default";
+                  return (
+                    <TableRow
+                      key={project.id}
+                      hover
+                      selected={isActive}
+                      sx={{
+                        minHeight: { xs: 40, sm: "auto" },
+                        "& td": {
+                          bgcolor: isActive ? alpha("#2563eb", 0.04) : "background.paper"
+                        }
+                      }}
+                    >
+                      <TableCell sx={{ py: { xs: 0.5, sm: 1.25 }, pl: { xs: 0.25, sm: 1 } }}>
+                        <Radio checked={isActive} onChange={() => onSelectProject(project.id)} value={project.id} name="project-select" size="small" />
+                      </TableCell>
+                      <TableCell sx={{ py: { xs: 0.5, sm: 1.25 }, pl: { xs: 0, sm: 1.5 } }}>
+                        <Typography sx={{ fontWeight: 700 }}>{project.name}</Typography>
+                      </TableCell>
+                      <TableCell sx={{ display: { xs: "none", sm: "table-cell" }, py: 1.25 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-all" }}>
+                          {project.id}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ py: { xs: 0.5, sm: 1.25 }, pr: { xs: 0.5, sm: 1 } }}>
+                        <Button
+                          variant="outlined"
+                          color="inherit"
+                          startIcon={<DeleteOutlinedIcon />}
+                          disabled={!canDelete || deletingProjectId === project.id}
+                          onClick={() => onRequestDeleteProject(project.id)}
+                          fullWidth
+                          size="small"
+                          sx={{ whiteSpace: "nowrap" }}
+                        >
+                          {deletingProjectId === project.id ? "削除中..." : "削除"}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </Box>

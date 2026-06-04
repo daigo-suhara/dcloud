@@ -2,6 +2,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Alert, Box, Button, Card, CardContent, Divider, TextField, Typography } from "@mui/material";
 import type { FormEvent } from "react";
 import type { DeployForm } from "../types";
+import { actionLinkColor, actionLinkHoverColor } from "../theme";
 
 function isDnsLabel(value: string) {
   return /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(value) && value.length <= 63;
@@ -78,11 +79,36 @@ export function DeploySection({ error, form, onBack, onChange, onSubmit, submitt
                   placeholder="ghcr.io/org/app:tag"
                   helperText=""
                   fullWidth
+                  slotProps={{
+                    htmlInput: {
+                      autoComplete: "off",
+                      autoCorrect: "off",
+                      autoCapitalize: "none",
+                      spellCheck: false
+                    }
+                  }}
                 />
 
                 <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
-                  <Button type="button" variant="text" size="small" onClick={fillTestImage} sx={{ px: 0, minWidth: 0 }}>
-                    テストイメージ
+                  <Button
+                    type="button"
+                    variant="text"
+                    size="small"
+                    onClick={fillTestImage}
+                    sx={{
+                      px: 0,
+                      minWidth: 0,
+                      color: actionLinkColor,
+                      fontWeight: 700,
+                      textDecoration: "underline",
+                      textUnderlineOffset: "3px",
+                      "&:hover": {
+                        color: actionLinkHoverColor,
+                        textDecorationThickness: "2px"
+                      }
+                    }}
+                  >
+                    サンプルコンテナを使用
                   </Button>
                 </Box>
 

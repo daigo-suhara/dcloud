@@ -8,6 +8,7 @@ import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import { Box, Button, Card, CardContent, CircularProgress, Paper, Typography } from "@mui/material";
 import type { DeployedService } from "../types";
+import { actionLinkColor, actionLinkHoverColor } from "../theme";
 import { formatServiceStatus, formatServiceTimestamp, getServiceStatus } from "../utils";
 
 type ContainerSectionProps = {
@@ -96,15 +97,15 @@ export function ContainerSection({
                     {selectedService.url ? (
                       <Box
                         component="a"
-                        href={selectedService.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        sx={{
-                          color: "primary.main",
+                      href={selectedService.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      sx={{
+                          color: actionLinkColor,
                           textDecoration: "underline",
                           textUnderlineOffset: "3px",
                           "&:hover": {
-                            color: "primary.dark"
+                            color: actionLinkHoverColor
                           }
                         }}
                       >
