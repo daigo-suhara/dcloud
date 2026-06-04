@@ -48,21 +48,20 @@ export function DrawerNav({ onCloseSidebar, onNavigate, route, sidebarOpen }: Dr
             <ListItemButton
               key={item.id}
               selected={route.section === item.id}
-            onClick={() => {
-              onNavigate(item.id);
-              if (window.matchMedia("(max-width: 760px)").matches) {
-                onCloseSidebar();
-              }
-            }}
-            sx={{
-              mb: 1,
-              borderRadius: 1.5,
-              minHeight: 48,
-              "&.Mui-selected": {
-                bgcolor: alpha("#2563eb", 0.08)
-              }
-            }}
-          >
+              onClick={() => {
+                onNavigate(item.id);
+                if (window.matchMedia("(max-width: 760px)").matches) {
+                  onCloseSidebar();
+                }
+              }}
+              sx={{
+                borderRadius: 1.5,
+                minHeight: 48,
+                "&.Mui-selected": {
+                  bgcolor: alpha("#2563eb", 0.08)
+                }
+              }}
+            >
               <ListItemIcon sx={{ minWidth: 40 }}>
                 <Box sx={{ width: 28, height: 28, borderRadius: "999px", display: "grid", placeItems: "center", bgcolor: route.section === item.id ? alpha("#2563eb", 0.12) : alpha("#0f172a", 0.04), color: route.section === item.id ? "primary.main" : "text.secondary" }}>
                   {item.id === "home" ? (

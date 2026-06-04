@@ -54,9 +54,9 @@ export type RouteState = {
 export const initialForm: DeployForm = {
   name: "",
   image: "",
-  port: "",
+  port: "8080",
   minScale: "0",
-  maxScale: "1"
+  maxScale: "20"
 };
 
 export const navItems = [
@@ -64,4 +64,3 @@ export const navItems = [
   { id: "container", label: "コンテナ" },
   { id: "deploy", label: "仮想マシン" }
 ] as const;
-
