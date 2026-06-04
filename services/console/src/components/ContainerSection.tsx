@@ -207,9 +207,9 @@ export function ContainerSection({
                           variant="outlined"
                           sx={{
                             display: "grid",
-                            gridTemplateColumns: { xs: "1fr", sm: "42px minmax(0, 1fr)" },
-                            gap: { xs: 1, sm: 0 },
-                            alignItems: { xs: "start", sm: "center" },
+                            gridTemplateColumns: { xs: "42px minmax(0, 1fr)", sm: "42px minmax(0, 1fr)" },
+                            gap: { xs: 0, sm: 0 },
+                            alignItems: "center",
                             minHeight: 44,
                             p: { xs: 1.25, sm: 0 },
                             borderRadius: 0,
@@ -218,7 +218,7 @@ export function ContainerSection({
                             borderTop: 0
                           }}
                         >
-                          <Box sx={{ display: "grid", placeItems: "center", alignSelf: { xs: "start", sm: "center" } }}>
+                          <Box sx={{ display: "grid", placeItems: "center" }}>
                             <Box sx={{ width: 22, height: 22, display: "grid", placeItems: "center", borderRadius: "999px", bgcolor: status === "ready" ? "transparent" : status === "loading" ? alpha("#2563eb", 0.12) : alpha("#dc2626", 0.12), color: status === "ready" ? "success.main" : status === "loading" ? "primary.main" : "error.main" }}>
                               {statusIcon}
                             </Box>
