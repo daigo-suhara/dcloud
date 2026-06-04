@@ -330,6 +330,59 @@ func TestDeleteProject(t *testing.T) {
 	}
 }
 
+func TestDeleteProjectDeletesServices(t *testing.T) {
+	withTestUUID(t)
+	auth := testAuth()
+	manager := &fakeServiceManager{
+		services: []deployedService{
+			{
+				Name:      "hello-dcp",
+				Namespace: "dcp-system",
+				ProjectID: testProjectID("alpha"),
+			},
+			{
+				Name:      "other-service",
+				Namespace: "dcp-system",
+				ProjectID: testProjectID("beta"),
+			},
+		},
+	}
+	api := &apiServer{
+		logger:    slog.New(slog.NewTextHandler(io.Discard, nil)),
+		auth:      auth,
+		services:  manager,
+		projects:  newMemoryProjectManager(),
+		namespace: "dcp-system",
+	}
+
+	createReq := httptest.NewRequest(http.MethodPost, "http://172.16.100.11:8080/api/v1/projects", strings.NewReader(`{"name":"alpha"}`))
+	createReq.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	createRec := httptest.NewRecorder()
+	api.createProject(createRec, createReq)
+
+	if createRec.Code != http.StatusCreated {
+		t.Fatalf("expected status %d, got %d", http.StatusCreated, createRec.Code)
+	}
+
+	var created project
+	if err := json.NewDecoder(createRec.Body).Decode(&created); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	deleteReq := httptest.NewRequest(http.MethodDelete, "http://172.16.100.11:8080/api/v1/projects/"+created.ID, nil)
+	deleteReq.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	deleteReq.SetPathValue("projectID", created.ID)
+	deleteRec := httptest.NewRecorder()
+	api.deleteProject(deleteRec, deleteReq)
+
+	if deleteRec.Code != http.StatusNoContent {
+		t.Fatalf("expected status %d, got %d", http.StatusNoContent, deleteRec.Code)
+	}
+	if len(manager.deleted) != 1 || manager.deleted[0] != "hello-dcp" {
+		t.Fatalf("unexpected deleted services: %+v", manager.deleted)
+	}
+}
+
 func TestDeleteProjectByName(t *testing.T) {
 	withTestUUID(t)
 	auth := testAuth()
@@ -438,7 +491,13 @@ type scopedDeploy struct {
 }
 
 func (f *fakeServiceManager) List(_ context.Context, scope projectScope) ([]deployedService, error) {
-	out := append([]deployedService(nil), f.services...)
+	out := make([]deployedService, 0, len(f.services))
+	for _, service := range f.services {
+		if service.ProjectID != "" && scope.ProjectID != "" && service.ProjectID != scope.ProjectID {
+			continue
+		}
+		out = append(out, service)
+	}
 	for i := range out {
 		if out[i].ProjectID == "" {
 			out[i].ProjectID = scope.ProjectID

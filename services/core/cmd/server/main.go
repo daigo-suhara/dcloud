@@ -329,8 +329,42 @@ func (a *apiServer) deleteProject(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "プロジェクトIDが不正です"})
 		return
 	}
-	if err := a.projects.Delete(r.Context(), userID, projectID); err != nil {
-		a.logger.Error("delete project failed", "error", err, "user", userID, "project", projectID)
+
+	projects, err := a.projects.List(r.Context(), userID)
+	if err != nil {
+		a.logger.Error("load projects for delete failed", "error", err, "user", userID, "project", projectID)
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "プロジェクトの削除に失敗しました"})
+		return
+	}
+	project, ok := findProjectByIDOrName(projects, projectID)
+	if !ok {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "プロジェクトが見つかりません"})
+		return
+	}
+	if project.Name == "default" {
+		writeJSON(w, http.StatusConflict, map[string]string{"error": "デフォルトプロジェクトは削除できません"})
+		return
+	}
+
+	if a.services != nil {
+		scope := projectScope{UserID: userID, ProjectID: project.ID}
+		services, err := a.services.List(r.Context(), scope)
+		if err != nil {
+			a.logger.Error("list services for project delete failed", "error", err, "user", userID, "project", project.ID)
+			writeJSON(w, http.StatusBadGateway, map[string]string{"error": "サービスの削除に失敗しました"})
+			return
+		}
+		for _, service := range services {
+			if err := a.services.Delete(r.Context(), scope, service.Name); err != nil {
+				a.logger.Error("delete project service failed", "error", err, "user", userID, "project", project.ID, "service", service.Name)
+				writeJSON(w, http.StatusBadGateway, map[string]string{"error": "サービスの削除に失敗しました"})
+				return
+			}
+		}
+	}
+
+	if err := a.projects.Delete(r.Context(), userID, project.ID); err != nil {
+		a.logger.Error("delete project failed", "error", err, "user", userID, "project", project.ID)
 		switch {
 		case errors.Is(err, errProjectNotFound):
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "プロジェクトが見つかりません"})
@@ -342,6 +376,15 @@ func (a *apiServer) deleteProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func findProjectByIDOrName(projects []project, projectID string) (project, bool) {
+	for _, p := range projects {
+		if p.ID == projectID || p.Name == projectID {
+			return p, true
+		}
+	}
+	return project{}, false
 }
 
 func (a *apiServer) projectsByPath(w http.ResponseWriter, r *http.Request) {
