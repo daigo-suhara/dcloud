@@ -166,7 +166,7 @@ export function ContainerSection({
                       );
                     })
                   ) : (
-                    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, borderStyle: "dashed", bgcolor: alpha("#ffffff", 0.7) }}>
+                    <Paper variant="outlined" sx={{ mt: 1.5, p: 2, borderRadius: 2, borderStyle: "dashed", bgcolor: alpha("#ffffff", 0.7) }}>
                       <Typography color="text.secondary">{loading ? "読み込み中..." : "まだサービスはありません。"}</Typography>
                     </Paper>
                   )}
