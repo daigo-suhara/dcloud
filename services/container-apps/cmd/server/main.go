@@ -29,12 +29,12 @@ type containerAppService struct {
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	addr := env("DCP_CLOUDRUN_ADDR", ":8080")
+	addr := env("DCP_CONTAINER_APPS_ADDR", env("DCP_CLOUDRUN_ADDR", ":8080"))
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", healthz)
 	mux.HandleFunc("GET /readyz", readyz)
-	mux.HandleFunc("GET /api/v1/cloudrun/services", listServices)
+	mux.HandleFunc("GET /api/v1/container-apps/services", listServices)
 
 	server := &http.Server{
 		Addr:              addr,
@@ -44,7 +44,7 @@ func main() {
 
 	errc := make(chan error, 1)
 	go func() {
-		logger.Info("cloudrun listening", "addr", addr)
+		logger.Info("container-apps listening", "addr", addr)
 		errc <- server.ListenAndServe()
 	}()
 
@@ -81,7 +81,7 @@ func env(key string, fallback string) string {
 func healthz(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, healthResponse{
 		Status:    "ok",
-		Service:   "cloudrun",
+		Service:   "container-apps",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	})
 }
@@ -89,7 +89,7 @@ func healthz(w http.ResponseWriter, r *http.Request) {
 func readyz(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, healthResponse{
 		Status:    "ready",
-		Service:   "cloudrun",
+		Service:   "container-apps",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	})
 }

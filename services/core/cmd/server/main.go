@@ -55,16 +55,18 @@ type deployRequest struct {
 }
 
 type deployedService struct {
-	Name       string `json:"name"`
-	Image      string `json:"image"`
-	URL        string `json:"url,omitempty"`
-	Ready      bool   `json:"ready"`
-	Reason     string `json:"reason,omitempty"`
-	CreatedAt  string `json:"createdAt,omitempty"`
-	UpdatedAt  string `json:"updatedAt,omitempty"`
-	Namespace  string `json:"namespace"`
-	ProjectID  string `json:"projectId,omitempty"`
-	Generation int64  `json:"generation,omitempty"`
+	Name         string `json:"name"`
+	Image        string `json:"image"`
+	URL          string `json:"url,omitempty"`
+	TargetURL    string `json:"-"`
+	ResourceName string `json:"-"`
+	Ready        bool   `json:"ready"`
+	Reason       string `json:"reason,omitempty"`
+	CreatedAt    string `json:"createdAt,omitempty"`
+	UpdatedAt    string `json:"updatedAt,omitempty"`
+	Namespace    string `json:"namespace"`
+	ProjectID    string `json:"projectId,omitempty"`
+	Generation   int64  `json:"generation,omitempty"`
 }
 
 type serviceManager interface {
@@ -125,7 +127,7 @@ func main() {
 	mux.HandleFunc("GET /api/v1/services", api.listServices)
 	mux.HandleFunc("POST /api/v1/services", api.deployService)
 	mux.HandleFunc("DELETE /api/v1/services/", api.deleteService)
-	mux.HandleFunc("/cloudrun/", api.proxyService)
+	mux.HandleFunc("/container-apps/", api.proxyService)
 	mux.HandleFunc("/services/", api.proxyService)
 	mux.HandleFunc("/", api.proxyService)
 
@@ -199,7 +201,7 @@ func platform(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, platformResponse{
 		Name:        "dcp",
 		Description: "A GCP-like cloud platform running on Kubernetes.",
-		Components:  []string{"core", "console", "cloudrun"},
+		Components:  []string{"core", "console", "container-apps"},
 	})
 }
 
@@ -515,37 +517,23 @@ func (a *apiServer) proxyService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	trimmed := strings.TrimPrefix(r.URL.Path, "/cloudrun/")
+	trimmed := strings.TrimPrefix(r.URL.Path, "/container-apps/")
 	if trimmed == r.URL.Path {
 		trimmed = strings.TrimPrefix(r.URL.Path, "/services/")
 	}
 	if trimmed != "" && trimmed != r.URL.Path {
-		parts := strings.SplitN(trimmed, "/", 3)
-		if len(parts) < 2 {
+		parts := strings.SplitN(trimmed, "/", 2)
+		if len(parts) < 1 {
 			http.NotFound(w, r)
 			return
 		}
-		userID, err := a.currentUserID(w, r)
-		if err != nil {
-			http.Error(w, "ログインしてください", http.StatusUnauthorized)
-			return
-		}
-		scope := projectScope{UserID: userID, ProjectID: parts[0]}
-		if !isDNSLabel(scope.ProjectID) {
-			http.NotFound(w, r)
-			return
-		}
-		if _, err := a.projects.Ensure(r.Context(), scope.UserID, scope.ProjectID); err != nil {
-			http.Error(w, "プロジェクトが見つかりません", http.StatusNotFound)
-			return
-		}
-		name := parts[1]
+		name := strings.TrimSpace(parts[0])
 		if !isDNSLabel(name) {
 			http.NotFound(w, r)
 			return
 		}
 
-		targetURL, err := a.services.TargetURL(r.Context(), scope, name)
+		targetURL, err := a.services.PublicTargetURL(r.Context(), name)
 		if err != nil {
 			a.logger.Error("resolve service target failed", "error", err, "name", name)
 			http.Error(w, "サービスが見つかりません", http.StatusNotFound)
@@ -553,8 +541,8 @@ func (a *apiServer) proxyService(w http.ResponseWriter, r *http.Request) {
 		}
 
 		remainder := ""
-		if len(parts) == 3 {
-			remainder = "/" + parts[2]
+		if len(parts) == 2 {
+			remainder = "/" + parts[1]
 		}
 		a.proxyToTarget(w, r, targetURL, remainder, name)
 		return
@@ -583,7 +571,11 @@ func (a *apiServer) setPublicURLs(r *http.Request, services []deployedService) {
 }
 
 func (a *apiServer) setPublicURL(r *http.Request, service *deployedService) {
-	service.URL = userserviceroute.UserServiceURL(publicBaseURL(r), strings.TrimSpace(os.Getenv("DCP_PUBLIC_SERVICE_DOMAIN")), service.ProjectID, service.Name)
+	name := service.ResourceName
+	if name == "" {
+		name = service.Name
+	}
+	service.URL = userserviceroute.UserServiceURL(publicBaseURL(r), strings.TrimSpace(os.Getenv("DCP_PUBLIC_SERVICE_DOMAIN")), name)
 }
 
 func (a *apiServer) proxyToTarget(w http.ResponseWriter, r *http.Request, targetURL string, path string, name string) {

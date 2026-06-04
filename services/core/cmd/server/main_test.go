@@ -83,17 +83,19 @@ func TestPlatform(t *testing.T) {
 func TestListServices(t *testing.T) {
 	withTestUUID(t)
 	auth := testAuth()
+	resourceName := userServiceResourceName(testProjectID("default"), "hello-dcp")
 	api := &apiServer{
 		auth: auth,
 		services: &fakeServiceManager{
 			services: []deployedService{
 				{
-					Name:      "hello-dcp",
-					Image:     "ghcr.io/example/hello-dcp:latest",
-					Namespace: "dcp-system",
-					ProjectID: testProjectID("default"),
-					Ready:     true,
-					UpdatedAt: "2026-05-31T00:00:00Z",
+					Name:         "hello-dcp",
+					Image:        "ghcr.io/example/hello-dcp:latest",
+					Namespace:    "dcp-system",
+					ProjectID:    testProjectID("default"),
+					ResourceName: resourceName,
+					Ready:        true,
+					UpdatedAt:    "2026-05-31T00:00:00Z",
 				},
 			},
 		},
@@ -124,7 +126,7 @@ func TestListServices(t *testing.T) {
 	if len(got.Services) != 1 || got.Services[0].Name != "hello-dcp" {
 		t.Fatalf("unexpected services payload: %+v", got.Services)
 	}
-	if got.Services[0].URL != "https://172.16.100.11:8080/cloudrun/"+testProjectID("default")+"/hello-dcp/" {
+	if got.Services[0].URL != "https://172.16.100.11:8080/container-apps/"+resourceName+"/" {
 		t.Fatalf("expected public service url, got %q", got.Services[0].URL)
 	}
 	if got.Services[0].UpdatedAt == "" {
@@ -135,6 +137,7 @@ func TestListServices(t *testing.T) {
 func TestDeployService(t *testing.T) {
 	withTestUUID(t)
 	auth := testAuth()
+	resourceName := userServiceResourceName(testProjectID("default"), "hello-dcp")
 	manager := &fakeServiceManager{}
 	api := &apiServer{
 		auth:      auth,
@@ -163,7 +166,7 @@ func TestDeployService(t *testing.T) {
 	if got.Name != "hello-dcp" || got.Image != "ghcr.io/example/hello-dcp:latest" {
 		t.Fatalf("unexpected deploy response: %+v", got)
 	}
-	if got.URL != "https://172.16.100.11:8080/cloudrun/"+testProjectID("default")+"/hello-dcp/" {
+	if got.URL != "https://172.16.100.11:8080/container-apps/"+resourceName+"/" {
 		t.Fatalf("expected public service url, got %q", got.URL)
 	}
 	if got.UpdatedAt == "" {
@@ -204,7 +207,7 @@ func TestDeleteService(t *testing.T) {
 func TestUserServiceURLUsesConfiguredDomain(t *testing.T) {
 	t.Setenv("DCP_PUBLIC_SERVICE_DOMAIN", "apps.example.com")
 
-	got := userserviceroute.UserServiceURL("https://console.example.com", "apps.example.com", "default-project", "hello-dcp")
+	got := userserviceroute.UserServiceURL("https://console.example.com", "apps.example.com", "hello-dcp")
 
 	if got != "https://hello-dcp.apps.example.com/" {
 		t.Fatalf("expected host-based public url, got %q", got)
@@ -231,8 +234,8 @@ func TestIsUserServiceRejectsInternalCloudRun(t *testing.T) {
 	}
 	scope := projectScope{UserID: "default-user", ProjectID: testProjectID("default")}
 
-	if isUserService("dcp-cloudrun", labels, scope) {
-		t.Fatalf("expected dcp-cloudrun to be treated as internal")
+	if isUserService("dcp-container-apps", labels, scope) {
+		t.Fatalf("expected dcp-container-apps to be treated as internal")
 	}
 	if !isUserService("hello-dcp", labels, scope) {
 		t.Fatalf("expected labeled user service to be visible")
@@ -503,22 +506,29 @@ func (f *fakeServiceManager) List(_ context.Context, scope projectScope) ([]depl
 			out[i].ProjectID = scope.ProjectID
 		}
 		if out[i].URL == "" {
-			out[i].URL = "/cloudrun/" + out[i].ProjectID + "/" + out[i].Name + "/"
+			name := out[i].ResourceName
+			if name == "" {
+				name = userServiceResourceName(out[i].ProjectID, out[i].Name)
+			}
+			out[i].ResourceName = name
+			out[i].URL = "/container-apps/" + name + "/"
 		}
 	}
 	return out, nil
 }
 
 func (f *fakeServiceManager) Deploy(_ context.Context, scope projectScope, req deployRequest) (deployedService, error) {
+	resourceName := userServiceResourceName(scope.ProjectID, req.Name)
 	f.deployed = append(f.deployed, scopedDeploy{scope: scope, req: req})
 	return deployedService{
-		Name:      req.Name,
-		Image:     req.Image,
-		Namespace: "dcp-system",
-		ProjectID: scope.ProjectID,
-		Ready:     true,
-		URL:       "/cloudrun/" + scope.ProjectID + "/" + req.Name + "/",
-		UpdatedAt: "2026-05-31T00:00:00Z",
+		Name:         req.Name,
+		Image:        req.Image,
+		Namespace:    "dcp-system",
+		ProjectID:    scope.ProjectID,
+		ResourceName: resourceName,
+		Ready:        true,
+		URL:          "/container-apps/" + resourceName + "/",
+		UpdatedAt:    "2026-05-31T00:00:00Z",
 	}, nil
 }
 

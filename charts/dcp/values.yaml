@@ -28,10 +28,10 @@ console:
   publicServiceDomain: drkatana.com
   publicHostname: cloud.daigo-suhara.com
 
-cloudrun:
+containerApps:
   replicaCount: 1
   image:
-    repository: dcp-cloudrun
+    repository: dcp-container-apps
   service:
     port: 8080
 

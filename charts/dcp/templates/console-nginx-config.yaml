@@ -26,7 +26,7 @@ data:
         proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
       }
 
-      location /cloudrun/ {
+      location /container-apps/ {
         proxy_pass http://{{ include "dcp.fullname" . }}-core:8080;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;

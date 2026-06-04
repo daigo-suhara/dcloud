@@ -33,15 +33,12 @@ func UserServiceNameFromHost(r *http.Request, publicServiceDomain string) string
 	return name
 }
 
-func UserServiceURL(baseURL string, publicServiceDomain string, projectID string, name string) string {
+func UserServiceURL(baseURL string, publicServiceDomain string, name string) string {
 	domain := strings.TrimSpace(publicServiceDomain)
 	if domain != "" {
 		return fmt.Sprintf("https://%s.%s/", name, strings.TrimSuffix(domain, "."))
 	}
-	if projectID == "" {
-		return fmt.Sprintf("%s/services/%s/", baseURL, name)
-	}
-	return fmt.Sprintf("%s/cloudrun/%s/%s/", baseURL, projectID, name)
+	return fmt.Sprintf("%s/container-apps/%s/", baseURL, name)
 }
 
 func requestHost(r *http.Request) string {

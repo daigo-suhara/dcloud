@@ -21,13 +21,13 @@ func TestHealthz(t *testing.T) {
 	if err := json.NewDecoder(rec.Body).Decode(&got); err != nil {
 		t.Fatalf("decode response: %v", err)
 	}
-	if got.Status != "ok" || got.Service != "cloudrun" {
+	if got.Status != "ok" || got.Service != "container-apps" {
 		t.Fatalf("unexpected response: %+v", got)
 	}
 }
 
 func TestListServices(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/cloudrun/services", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/container-apps/services", nil)
 	rec := httptest.NewRecorder()
 
 	listServices(rec, req)

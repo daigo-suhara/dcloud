@@ -5,6 +5,10 @@ import { Alert, Box, Button, Card, CardContent, Chip, Divider, Paper, Stack, Tex
 import type { FormEvent } from "react";
 import type { DeployForm } from "../types";
 
+function isDnsLabel(value: string) {
+  return /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(value) && value.length <= 63;
+}
+
 type DeploySectionProps = {
   error: string;
   form: DeployForm;
@@ -15,6 +19,8 @@ type DeploySectionProps = {
 };
 
 export function DeploySection({ error, form, onBack, onChange, onSubmit, submitting }: DeploySectionProps) {
+  const serviceName = form.name.trim();
+  const serviceNameError = serviceName.length > 0 && !isDnsLabel(serviceName);
   return (
     <Card variant="outlined" sx={{ borderRadius: 2, maxWidth: 1120, width: "100%" }}>
       <CardContent sx={{ p: { xs: 2.5, sm: 3 }, display: "grid", gap: 2.5 }}>
@@ -57,7 +63,18 @@ export function DeploySection({ error, form, onBack, onChange, onSubmit, submitt
                   value={form.name}
                   onChange={(event) => onChange({ name: event.target.value })}
                   placeholder="service-name"
-                  helperText="DNS 名や一覧に表示される名前です"
+                  error={serviceNameError}
+                  helperText={serviceNameError ? "英小文字・数字・ハイフンのみで入力してください" : "DNS 名や一覧に表示される名前です"}
+                  slotProps={{
+                    htmlInput: {
+                      autoCapitalize: "none",
+                      autoComplete: "off",
+                      autoCorrect: "off",
+                      inputMode: "text",
+                      maxLength: 63,
+                      pattern: "[a-z0-9]([a-z0-9-]*[a-z0-9])?"
+                    }
+                  }}
                   fullWidth
                 />
 
@@ -107,7 +124,7 @@ export function DeploySection({ error, form, onBack, onChange, onSubmit, submitt
                   <Button variant="outlined" onClick={onBack}>
                     キャンセル
                   </Button>
-                  <Button type="submit" variant="contained" disabled={submitting}>
+                  <Button type="submit" variant="contained" disabled={submitting || serviceNameError}>
                     {submitting ? "作成中..." : "作成"}
                   </Button>
                 </Box>
