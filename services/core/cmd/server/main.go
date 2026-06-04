@@ -14,7 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-	"sync"
 	"time"
 
 	"github.com/daigo-suhara/dcp/services/core/internal/userserviceroute"
@@ -113,7 +112,6 @@ func main() {
 		services:  manager,
 		projects:  projects,
 		namespace: namespace,
-		accessLog: newServiceAccessLogBuffer(500),
 	}
 	mux.HandleFunc("GET /healthz", healthz)
 	mux.HandleFunc("GET /readyz", readyz)
@@ -176,52 +174,6 @@ type apiServer struct {
 	services  serviceManager
 	projects  projectManager
 	namespace string
-	accessLog *serviceAccessLogBuffer
-}
-
-type serviceAccessLogBuffer struct {
-	mu      sync.Mutex
-	entries map[string][]string
-	limit   int
-}
-
-func newServiceAccessLogBuffer(limit int) *serviceAccessLogBuffer {
-	return &serviceAccessLogBuffer{
-		entries: make(map[string][]string),
-		limit:   limit,
-	}
-}
-
-func (b *serviceAccessLogBuffer) add(service string, line string) {
-	if b == nil || service == "" || line == "" {
-		return
-	}
-
-	b.mu.Lock()
-	defer b.mu.Unlock()
-
-	b.entries[service] = append(b.entries[service], line)
-	if b.limit > 0 && len(b.entries[service]) > b.limit {
-		b.entries[service] = append([]string(nil), b.entries[service][len(b.entries[service])-b.limit:]...)
-	}
-}
-
-func (b *serviceAccessLogBuffer) read(service string, tailLines int) string {
-	if b == nil || service == "" {
-		return ""
-	}
-
-	b.mu.Lock()
-	defer b.mu.Unlock()
-
-	lines := b.entries[service]
-	if len(lines) == 0 {
-		return ""
-	}
-	if tailLines > 0 && len(lines) > tailLines {
-		lines = lines[len(lines)-tailLines:]
-	}
-	return strings.Join(lines, "\n")
 }
 
 func env(key string, fallback string) string {
@@ -564,15 +516,6 @@ func (a *apiServer) serviceLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessLogs := strings.TrimSpace(a.accessLog.read(name, tailLines))
-	if accessLogs != "" {
-		if logs != "" {
-			logs += "\n\n"
-			logs += "# access logs\n"
-		}
-		logs += accessLogs
-	}
-
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if _, err := io.WriteString(w, logs); err != nil {
 		a.logger.Error("write service logs failed", "error", err, "name", name)
@@ -682,11 +625,9 @@ func (a *apiServer) setPublicURL(r *http.Request, service *deployedService) {
 }
 
 func (a *apiServer) proxyToTarget(w http.ResponseWriter, r *http.Request, targetURL string, path string, name string) {
-	start := time.Now()
 	target, err := url.Parse(targetURL)
 	if err != nil {
 		a.logger.Error("invalid service target url", "error", err, "name", name, "target", targetURL)
-		a.accessLog.add(name, fmt.Sprintf("%s method=%s path=%s status=%d error=%q", time.Now().UTC().Format(time.RFC3339), r.Method, r.URL.Path, http.StatusBadGateway, "invalid backend url"))
 		http.Error(w, "バックエンドURLが不正です", http.StatusBadGateway)
 		return
 	}
@@ -698,7 +639,6 @@ func (a *apiServer) proxyToTarget(w http.ResponseWriter, r *http.Request, target
 	req, err := http.NewRequestWithContext(r.Context(), r.Method, proxyURL.String(), r.Body)
 	if err != nil {
 		a.logger.Error("proxy request failed", "error", err, "name", name)
-		a.accessLog.add(name, fmt.Sprintf("%s method=%s path=%s status=%d error=%q", time.Now().UTC().Format(time.RFC3339), r.Method, r.URL.Path, http.StatusBadGateway, "build proxy request failed"))
 		http.Error(w, "接続先サービスを利用できません", http.StatusBadGateway)
 		return
 	}
@@ -715,7 +655,6 @@ func (a *apiServer) proxyToTarget(w http.ResponseWriter, r *http.Request, target
 	res, err := proxyHTTPClient.Do(req)
 	if err != nil {
 		a.logger.Error("proxy service failed", "error", err, "name", name)
-		a.accessLog.add(name, fmt.Sprintf("%s method=%s path=%s status=%d error=%q", time.Now().UTC().Format(time.RFC3339), r.Method, r.URL.Path, http.StatusBadGateway, err.Error()))
 		http.Error(w, "接続先サービスを利用できません", http.StatusBadGateway)
 		return
 	}
@@ -724,7 +663,6 @@ func (a *apiServer) proxyToTarget(w http.ResponseWriter, r *http.Request, target
 	copyHeader(w.Header(), res.Header)
 	removeHopByHopHeaders(w.Header())
 	w.WriteHeader(res.StatusCode)
-	a.accessLog.add(name, fmt.Sprintf("%s method=%s path=%s status=%d duration_ms=%d", time.Now().UTC().Format(time.RFC3339), r.Method, r.URL.Path, res.StatusCode, time.Since(start).Milliseconds()))
 	if _, err := io.Copy(w, res.Body); err != nil {
 		a.logger.Error("proxy response copy failed", "error", err, "name", name)
 	}

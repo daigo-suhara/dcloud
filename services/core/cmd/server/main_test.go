@@ -240,41 +240,6 @@ func TestServiceLogs(t *testing.T) {
 	}
 }
 
-func TestServiceLogsIncludesAccessLogs(t *testing.T) {
-	auth := testAuth()
-	manager := &fakeServiceManager{
-		services: []deployedService{
-			{
-				Name:      "hello-dcp",
-				Namespace: "dcp-system",
-				ProjectID: testProjectID("default"),
-			},
-		},
-	}
-	api := &apiServer{
-		auth:      auth,
-		services:  manager,
-		projects:  newMemoryProjectManager(),
-		namespace: "dcp-system",
-		accessLog: newServiceAccessLogBuffer(10),
-	}
-	api.accessLog.add("hello-dcp", "2026-06-05T00:00:00Z method=GET path=/ status=200 duration_ms=12")
-
-	req := httptest.NewRequest(http.MethodGet, "http://172.16.100.11:8080/api/v1/services/hello-dcp/logs", nil)
-	req.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
-	req.SetPathValue("service", "hello-dcp")
-	rec := httptest.NewRecorder()
-
-	api.serviceLogs(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Fatalf("expected status %d, got %d", http.StatusOK, rec.Code)
-	}
-	if got := rec.Body.String(); got != "2026-06-05T00:00:00Z method=GET path=/ status=200 duration_ms=12" {
-		t.Fatalf("unexpected logs payload: %q", got)
-	}
-}
-
 func TestUserServiceURLUsesConfiguredDomain(t *testing.T) {
 	t.Setenv("DCP_PUBLIC_SERVICE_DOMAIN", "apps.example.com")
 
