@@ -93,7 +93,7 @@ export function useConsoleController() {
       setServiceLogsLoading(false);
       return;
     }
-    void loadServiceLogs(selectedService.name);
+    void loadServiceLogs(selectedServiceLogName(selectedService));
     return () => serviceLogsAbortRef.current?.abort();
   }, [selectedService?.name]);
 
@@ -253,6 +253,10 @@ export function useConsoleController() {
     }
   }
 
+  function selectedServiceLogName(service: DeployedService) {
+    return service.resourceName ?? service.name;
+  }
+
   async function handleCreateProject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setCreatingProject(true);
@@ -410,6 +414,7 @@ export function useConsoleController() {
     handleSubmit,
     loadCurrentUser,
     loadServiceLogs,
+    selectedServiceLogName,
     loading,
     message,
     pendingDeleteName,

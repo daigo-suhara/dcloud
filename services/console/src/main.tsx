@@ -85,7 +85,7 @@ function App() {
             onRepoConnectClick={() => (window.location.hash = "#container")}
             onReloadLogs={() => {
               if (controller.selectedService) {
-                void controller.loadServiceLogs(controller.selectedService.name);
+                void controller.loadServiceLogs(controller.selectedServiceLogName(controller.selectedService));
               }
             }}
             selectedService={controller.selectedService}

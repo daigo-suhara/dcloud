@@ -29,6 +29,7 @@ export type DeployedService = {
   name: string;
   image: string;
   url?: string;
+  resourceName?: string;
   ready: boolean;
   reason?: string;
   createdAt?: string;

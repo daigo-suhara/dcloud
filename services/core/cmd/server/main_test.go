@@ -240,6 +240,46 @@ func TestServiceLogs(t *testing.T) {
 	}
 }
 
+func TestServiceLogsMuxRoute(t *testing.T) {
+	auth := testAuth()
+	manager := &fakeServiceManager{
+		services: []deployedService{
+			{
+				Name:         "hello-dcp",
+				Namespace:    "dcp-system",
+				ProjectID:    testProjectID("default"),
+				ResourceName: "hello-dcp-11111111",
+			},
+		},
+		logs: map[string]string{
+			"hello-dcp": "line 1\nline 2\n",
+		},
+	}
+	api := &apiServer{
+		auth:      auth,
+		services:  manager,
+		projects:  newMemoryProjectManager(),
+		namespace: "dcp-system",
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/v1/services/{service}/logs", api.serviceLogs)
+
+	req := httptest.NewRequest(http.MethodGet, "http://172.16.100.11:8080/api/v1/services/hello-dcp/logs", nil)
+	req.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	req.SetPathValue("service", "hello-dcp")
+	rec := httptest.NewRecorder()
+
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, rec.Code)
+	}
+	if got := rec.Body.String(); got != "line 1\nline 2\n" {
+		t.Fatalf("unexpected logs payload: %q", got)
+	}
+}
+
 func TestUserServiceURLUsesConfiguredDomain(t *testing.T) {
 	t.Setenv("DCP_PUBLIC_SERVICE_DOMAIN", "apps.example.com")
 
