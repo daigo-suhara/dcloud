@@ -194,14 +194,11 @@ func (m *knativeServiceManager) PublicTargetURL(ctx context.Context, name string
 
 func (m *knativeServiceManager) Logs(ctx context.Context, scope projectScope, name string, tailLines int) (string, error) {
 	service, err := m.getUserService(ctx, scope, name)
-	if errors.Is(err, errServiceNotFound) && isDNSLabel(name) {
-		service, err = m.getUserServiceByResourceName(ctx, scope, name)
-	}
 	if err != nil {
 		return "", err
 	}
 
-	pods, err := m.listServicePods(ctx, scope, service)
+	pods, err := m.listServicePods(ctx, service)
 	if err != nil {
 		return "", err
 	}
@@ -327,11 +324,11 @@ func (m *knativeServiceManager) Delete(ctx context.Context, scope projectScope, 
 	return nil
 }
 
-func (m *knativeServiceManager) listServicePods(ctx context.Context, scope projectScope, service deployedService) ([]knativePodInfo, error) {
+func (m *knativeServiceManager) listServicePods(ctx context.Context, service deployedService) ([]knativePodInfo, error) {
 	selector := neturl.Values{}
 	selector.Set("labelSelector", strings.Join([]string{
 		"app.kubernetes.io/managed-by=" + userServiceManagerLabel,
-		userLabelKey + "=" + strings.TrimSpace(scope.UserID),
+		userLabelKey + "=" + serviceNameLabelValue(service),
 		projectLabelKey + "=" + strings.TrimSpace(service.ProjectID),
 		serviceNameLabel + "=" + service.Name,
 	}, ","))
@@ -400,91 +397,6 @@ func (m *knativeServiceManager) readPodLogs(ctx context.Context, podName string,
 		return "", err
 	}
 	return string(logs), nil
-}
-
-func (m *knativeServiceManager) getUserServiceByResourceName(ctx context.Context, scope projectScope, resourceName string) (deployedService, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/apis/serving.knative.dev/v1/namespaces/%s/services/%s", m.baseURL, m.namespace, resourceName), nil)
-	if err != nil {
-		return deployedService{}, err
-	}
-	m.authorize(req)
-
-	res, err := m.client.Do(req)
-	if err != nil {
-		return deployedService{}, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode == http.StatusNotFound {
-		return deployedService{}, errServiceNotFound
-	}
-	if res.StatusCode >= 300 {
-		return deployedService{}, decodeAPIError(res)
-	}
-
-	var payload struct {
-		Metadata struct {
-			Name              string            `json:"name"`
-			CreationTimestamp time.Time         `json:"creationTimestamp"`
-			Generation        int64             `json:"generation"`
-			Namespace         string            `json:"namespace"`
-			Labels            map[string]string `json:"labels"`
-		} `json:"metadata"`
-		Spec struct {
-			Template struct {
-				Spec struct {
-					Containers []struct {
-						Image string `json:"image"`
-					} `json:"containers"`
-				} `json:"spec"`
-			} `json:"template"`
-		} `json:"spec"`
-		Status struct {
-			URL        string `json:"url"`
-			Conditions []struct {
-				Type               string    `json:"type"`
-				Status             string    `json:"status"`
-				Reason             string    `json:"reason"`
-				LastTransitionTime time.Time `json:"lastTransitionTime"`
-			} `json:"conditions"`
-		} `json:"status"`
-	}
-
-	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-		return deployedService{}, err
-	}
-	if !isUserService(payload.Metadata.Name, payload.Metadata.Labels, scope) {
-		return deployedService{}, errServiceNotFound
-	}
-
-	service := deployedService{
-		Name:         displayServiceName(payload.Metadata.Name, payload.Metadata.Labels),
-		Namespace:    payload.Metadata.Namespace,
-		ProjectID:    payload.Metadata.Labels[projectLabelKey],
-		Generation:   payload.Metadata.Generation,
-		CreatedAt:    payload.Metadata.CreationTimestamp.UTC().Format(time.RFC3339),
-		ResourceName: payload.Metadata.Name,
-		TargetURL:    payload.Status.URL,
-		URL:          userserviceroute.UserServiceURL("", strings.TrimSpace(os.Getenv("DCP_PUBLIC_SERVICE_DOMAIN")), payload.Metadata.Name),
-	}
-	if len(payload.Spec.Template.Spec.Containers) > 0 {
-		service.Image = payload.Spec.Template.Spec.Containers[0].Image
-	}
-	for _, cond := range payload.Status.Conditions {
-		if cond.Type == "Ready" {
-			service.Ready = cond.Status == "True"
-			service.Reason = cond.Reason
-			if !cond.LastTransitionTime.IsZero() {
-				service.UpdatedAt = cond.LastTransitionTime.UTC().Format(time.RFC3339)
-			}
-			break
-		}
-	}
-	if service.UpdatedAt == "" {
-		service.UpdatedAt = service.CreatedAt
-	}
-
-	return service, nil
 }
 
 func (m *knativeServiceManager) getUserService(ctx context.Context, scope projectScope, name string) (deployedService, error) {

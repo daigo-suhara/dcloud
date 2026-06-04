@@ -60,7 +60,7 @@ type deployedService struct {
 	Image        string `json:"image"`
 	URL          string `json:"url,omitempty"`
 	TargetURL    string `json:"-"`
-	ResourceName string `json:"resourceName,omitempty"`
+	ResourceName string `json:"-"`
 	Ready        bool   `json:"ready"`
 	Reason       string `json:"reason,omitempty"`
 	CreatedAt    string `json:"createdAt,omitempty"`
