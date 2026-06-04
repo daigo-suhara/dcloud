@@ -62,3 +62,20 @@ export const shellBg = {
 
 export const actionLinkColor = "#2563eb";
 export const actionLinkHoverColor = "#1d4ed8";
+
+export const actionLinkSx = {
+  color: actionLinkColor,
+  fontWeight: 700,
+  textDecoration: "underline",
+  textUnderlineOffset: "3px",
+  "&:hover": {
+    color: actionLinkHoverColor,
+    textDecorationThickness: "2px"
+  }
+} as const;
+
+export const actionLinkButtonSx = {
+  px: 0,
+  minWidth: 0,
+  ...actionLinkSx
+} as const;
