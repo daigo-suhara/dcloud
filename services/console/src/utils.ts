@@ -59,19 +59,19 @@ export function formatServiceStatus(service: DeployedService) {
 export function formatServiceReason(reason?: string) {
   switch (reason) {
     case "RevisionMissing":
-      return "リビジョンを準備中です";
+      return "リビジョンを準備中";
     case "RevisionFailed":
-      return "リビジョンの作成に失敗しました";
+      return "リビジョンの作成に失敗";
     case "ContainerMissing":
-      return "コンテナが見つかりません";
+      return "コンテナを準備中";
     case "ContainerCreating":
-      return "コンテナを作成中です";
+      return "コンテナを作成中";
     case "ImagePullBackOff":
-      return "イメージの取得に失敗しました";
+      return "イメージ取得に失敗";
     case "ErrImagePull":
-      return "イメージ取得エラーです";
+      return "イメージ取得エラー";
     default:
-      return "処理中です";
+      return "処理中";
   }
 }
 

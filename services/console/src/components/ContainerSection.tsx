@@ -71,7 +71,11 @@ export function ContainerSection({
                   <Typography variant="caption" color="text.secondary">
                     状態
                   </Typography>
-                  <Typography sx={{ mt: 0.5, fontWeight: 600 }}>{formatServiceStatus(selectedService)}</Typography>
+                  <Box component="ul" sx={{ m: 0.5, pl: 2.25 }}>
+                    <Box component="li" sx={{ fontWeight: 600 }}>
+                      {formatServiceStatus(selectedService)}
+                    </Box>
+                  </Box>
                 </Paper>
                 <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: "grey.50" }}>
                   <Typography variant="caption" color="text.secondary">
