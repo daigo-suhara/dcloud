@@ -12,6 +12,7 @@ import { formatServiceStatus, formatServiceTimestamp, getServiceStatus } from ".
 
 type ContainerSectionProps = {
   loading: boolean;
+  deletingServiceName: string;
   onBackToList: () => void;
   onDeployClick: () => void;
   onDeleteService: (name: string) => void;
@@ -24,6 +25,7 @@ type ContainerSectionProps = {
 
 export function ContainerSection({
   loading,
+  deletingServiceName,
   onBackToList,
   onDeployClick,
   onDeleteService,
@@ -109,8 +111,14 @@ export function ContainerSection({
               </Box>
 
               <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                <Button variant="contained" color="error" startIcon={<DeleteOutlinedIcon />} onClick={() => onDeleteService(selectedService.name)}>
-                  削除
+                <Button
+                  variant="contained"
+                  color="error"
+                  startIcon={deletingServiceName === selectedService.name ? <CircularProgress size={16} thickness={5} sx={{ color: "inherit" }} /> : <DeleteOutlinedIcon />}
+                  onClick={() => onDeleteService(selectedService.name)}
+                  disabled={deletingServiceName === selectedService.name}
+                >
+                  {deletingServiceName === selectedService.name ? "削除中..." : "削除"}
                 </Button>
               </Box>
             </CardContent>

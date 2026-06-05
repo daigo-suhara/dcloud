@@ -78,6 +78,7 @@ function App() {
         ) : controller.route.section === "container" ? (
           <ContainerSection
             loading={controller.loading}
+            deletingServiceName={controller.deletingName}
             onBackToList={() => (window.location.hash = "#container")}
             onDeployClick={() => (window.location.hash = "#deploy")}
             onDeleteService={controller.requestDelete}
