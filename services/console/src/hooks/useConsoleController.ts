@@ -56,12 +56,14 @@ export function useConsoleController() {
       setServices([]);
       setActiveProjectId("");
       setProjectName("");
+      setShowProjectCreateForm(false);
       return;
     }
 
     setProjects([]);
     setServices([]);
     setActiveProjectId("");
+    setShowProjectCreateForm(false);
     const savedProject = localStorage.getItem(projectStorageKey(currentUser.id));
     if (savedProject) {
       setActiveProjectId(savedProject);
@@ -160,9 +162,18 @@ export function useConsoleController() {
       }
       if ("projects" in data) {
         setProjects(data.projects);
+        if (data.projects.length === 0) {
+          localStorage.removeItem(projectStorageKey(currentUser.id));
+          setActiveProjectId("");
+          setShowProjectCreateForm(true);
+          window.location.hash = "#home";
+          return;
+        }
+
         const saved = localStorage.getItem(projectStorageKey(currentUser.id));
-        const nextProject = data.projects.find((project) => project.id === saved)?.id ?? data.defaultProjectId;
+        const nextProject = data.projects.find((project) => project.id === saved)?.id ?? data.projects[0].id;
         handleProjectSelect(nextProject);
+        setShowProjectCreateForm(false);
       }
     } catch (projectError) {
       setError(projectError instanceof Error ? projectError.message : "プロジェクト一覧を読み込めませんでした");
@@ -332,6 +343,12 @@ export function useConsoleController() {
         throw new Error(data.error ?? "プロジェクトの削除に失敗しました");
       }
       setMessage("プロジェクトを削除しました");
+      if (activeProjectId === projectId) {
+        localStorage.removeItem(projectStorageKey(currentUser!.id));
+        setActiveProjectId("");
+        setShowProjectCreateForm(true);
+        window.location.hash = "#home";
+      }
       await loadProjects();
     } catch (projectError) {
       setError(projectError instanceof Error ? projectError.message : "プロジェクトの削除に失敗しました");

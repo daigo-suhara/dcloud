@@ -8,7 +8,6 @@ export type PlatformResponse = {
 export type ProjectsResponse = {
   user: string;
   projects: Project[];
-  defaultProjectId: string;
 };
 
 export type AuthUser = {

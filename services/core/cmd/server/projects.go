@@ -20,7 +20,6 @@ const projectsConfigMapName = "dcp-projects"
 var uuidGenerator = uuid.NewString
 
 var errProjectAlreadyExists = errors.New("project already exists")
-var errDefaultProjectProtected = errors.New("default project is protected")
 
 type memoryProjectManager struct {
 	mu       sync.Mutex
@@ -35,7 +34,6 @@ func (m *memoryProjectManager) List(_ context.Context, userID string) ([]project
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.ensureDefaultLocked(userID)
 	return filterProjectsByOwner(m.projects, userID), nil
 }
 
@@ -59,9 +57,6 @@ func (m *memoryProjectManager) Delete(_ context.Context, userID string, projectI
 		if p.Owner != userID || (p.ID != projectID && p.Name != projectID) {
 			continue
 		}
-		if p.Name == "default" {
-			return errDefaultProjectProtected
-		}
 		m.projects = append(m.projects[:i], m.projects[i+1:]...)
 		return nil
 	}
@@ -72,31 +67,12 @@ func (m *memoryProjectManager) Ensure(_ context.Context, userID string, projectI
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.ensureDefaultLocked(userID)
 	for _, p := range m.projects {
 		if p.Owner == userID && p.ID == projectID {
 			return p, nil
 		}
 	}
 	return project{}, errProjectNotFound
-}
-
-func (m *memoryProjectManager) Default(_ context.Context, userID string) (project, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	return m.ensureDefaultLocked(userID), nil
-}
-
-func (m *memoryProjectManager) ensureDefaultLocked(userID string) project {
-	for _, p := range m.projects {
-		if p.Owner == userID && p.Name == "default" {
-			return p
-		}
-	}
-	p := newProject(userID, "default", m.projects)
-	m.projects = append(m.projects, p)
-	return p
 }
 
 type kubeProjectManager struct {
@@ -130,15 +106,8 @@ func (m *kubeProjectManager) List(ctx context.Context, userID string) ([]project
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	projects, resourceVersion, err := m.load(ctx)
+	projects, _, err := m.load(ctx)
 	if err != nil {
-		return nil, err
-	}
-	projects, _, err = ensureDefaultProject(projects, userID)
-	if err != nil {
-		return nil, err
-	}
-	if err := m.save(ctx, projects, resourceVersion); err != nil {
 		return nil, err
 	}
 	return filterProjectsByOwner(projects, userID), nil
@@ -175,9 +144,6 @@ func (m *kubeProjectManager) Delete(ctx context.Context, userID string, projectI
 	removed := false
 	for _, p := range projects {
 		if p.Owner == userID && (p.ID == projectID || p.Name == projectID) {
-			if p.Name == "default" {
-				return errDefaultProjectProtected
-			}
 			removed = true
 			continue
 		}
@@ -196,15 +162,8 @@ func (m *kubeProjectManager) Ensure(ctx context.Context, userID string, projectI
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	projects, resourceVersion, err := m.load(ctx)
+	projects, _, err := m.load(ctx)
 	if err != nil {
-		return project{}, err
-	}
-	projects, _, err = ensureDefaultProject(projects, userID)
-	if err != nil {
-		return project{}, err
-	}
-	if err := m.save(ctx, projects, resourceVersion); err != nil {
 		return project{}, err
 	}
 	for _, p := range projects {
@@ -213,24 +172,6 @@ func (m *kubeProjectManager) Ensure(ctx context.Context, userID string, projectI
 		}
 	}
 	return project{}, errProjectNotFound
-}
-
-func (m *kubeProjectManager) Default(ctx context.Context, userID string) (project, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	projects, resourceVersion, err := m.load(ctx)
-	if err != nil {
-		return project{}, err
-	}
-	projects, p, err := ensureDefaultProject(projects, userID)
-	if err != nil {
-		return project{}, err
-	}
-	if err := m.save(ctx, projects, resourceVersion); err != nil {
-		return project{}, err
-	}
-	return p, nil
 }
 
 func (m *kubeProjectManager) load(ctx context.Context) ([]project, string, error) {
@@ -341,16 +282,6 @@ func newProject(userID string, name string, existing []project) project {
 		Owner:     userID,
 		CreatedAt: now.Format(time.RFC3339),
 	}
-}
-
-func ensureDefaultProject(projects []project, userID string) ([]project, project, error) {
-	for _, p := range projects {
-		if p.Owner == userID && p.Name == "default" {
-			return projects, p, nil
-		}
-	}
-	p := newProject(userID, "default", projects)
-	return append(projects, p), p, nil
 }
 
 func filterProjectsByOwner(projects []project, userID string) []project {

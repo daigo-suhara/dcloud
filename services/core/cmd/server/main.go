@@ -82,7 +82,6 @@ type projectManager interface {
 	Create(context.Context, string, string) (project, error)
 	Delete(context.Context, string, string) error
 	Ensure(context.Context, string, string) (project, error)
-	Default(context.Context, string) (project, error)
 }
 
 func main() {
@@ -275,16 +274,9 @@ func (a *apiServer) listProjects(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "プロジェクト一覧の取得に失敗しました"})
 		return
 	}
-	defaultProject, err := a.projects.Default(r.Context(), userID)
-	if err != nil {
-		a.logger.Error("resolve default project failed", "error", err, "user", userID)
-		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "デフォルトプロジェクトの取得に失敗しました"})
-		return
-	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"user":             userID,
-		"projects":         projects,
-		"defaultProjectId": defaultProject.ID,
+		"user":     userID,
+		"projects": projects,
 	})
 }
 
@@ -370,8 +362,6 @@ func (a *apiServer) deleteProject(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, errProjectNotFound):
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "プロジェクトが見つかりません"})
-		case errors.Is(err, errDefaultProjectProtected):
-			writeJSON(w, http.StatusConflict, map[string]string{"error": "デフォルトプロジェクトは削除できません"})
 		default:
 			writeJSON(w, http.StatusBadGateway, map[string]string{"error": "プロジェクトの削除に失敗しました"})
 		}
@@ -729,15 +719,13 @@ func (a *apiServer) projectScopeFromRequest(w http.ResponseWriter, r *http.Reque
 	if projectID == "" {
 		projectID = strings.TrimSpace(r.URL.Query().Get("project"))
 	}
-	var p project
 	if projectID == "" {
-		p, err = a.projects.Default(r.Context(), userID)
-	} else {
-		if !isDNSLabel(projectID) {
-			return projectScope{}, fmt.Errorf("プロジェクトIDが不正です")
-		}
-		p, err = a.projects.Ensure(r.Context(), userID, projectID)
+		return projectScope{}, fmt.Errorf("プロジェクトを選択してください")
 	}
+	if !isDNSLabel(projectID) {
+		return projectScope{}, fmt.Errorf("プロジェクトIDが不正です")
+	}
+	p, err := a.projects.Ensure(r.Context(), userID, projectID)
 	if err != nil {
 		if errors.Is(err, errProjectNotFound) {
 			return projectScope{}, fmt.Errorf("プロジェクトが見つかりません")

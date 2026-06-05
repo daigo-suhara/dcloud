@@ -32,6 +32,8 @@ export function HomeSection({
   projects,
   showProjectCreateForm
 }: HomeSectionProps) {
+  const mustCreateProject = projects.length === 0;
+  const shouldShowProjectCreateForm = mustCreateProject || showProjectCreateForm;
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <Card variant="outlined" sx={{ borderRadius: 2 }}>
@@ -40,12 +42,14 @@ export function HomeSection({
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
               プロジェクト管理
             </Typography>
-            <Button variant="contained" startIcon={<AddOutlinedIcon />} onClick={onToggleCreateForm}>
-              プロジェクトを作成
-            </Button>
+            {!mustCreateProject ? (
+              <Button variant="contained" startIcon={<AddOutlinedIcon />} onClick={onToggleCreateForm}>
+                プロジェクトを作成
+              </Button>
+            ) : null}
           </Box>
 
-          {showProjectCreateForm ? (
+          {shouldShowProjectCreateForm ? (
             <Box component="form" onSubmit={onCreateProject} sx={{ display: "grid", gap: 2, maxWidth: 560 }}>
               <TextField
                 label="プロジェクト名"
@@ -62,78 +66,84 @@ export function HomeSection({
             </Box>
           ) : null}
 
-          <Box sx={{ display: "grid", gap: 1 }}>
-            <Table size="small" sx={{ "& .MuiTableCell-root": { borderBottomColor: "rgba(148, 163, 184, 0.18)" } }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ width: { xs: 44, sm: 56 } }} />
-                  <TableCell sx={{ fontSize: 12, fontWeight: 700, color: "text.secondary" }}>名前</TableCell>
-                  <TableCell sx={{ display: { xs: "none", sm: "table-cell" }, fontSize: 12, fontWeight: 700, color: "text.secondary" }}>ID</TableCell>
-                  <TableCell sx={{ width: { xs: 92, sm: 120 } }} />
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {projects.map((project) => {
-                  const isActive = project.id === activeProjectId;
-                  const canDelete = project.name !== "default";
-                  return (
-                    <TableRow
-                      key={project.id}
-                      hover
-                      selected={isActive}
-                      sx={{
-                        minHeight: { xs: 40, sm: "auto" },
-                        "& td": {
-                          bgcolor: isActive ? alpha("#2563eb", 0.04) : "background.paper"
-                        }
-                      }}
-                    >
-                      <TableCell sx={{ py: { xs: 0.5, sm: 1.25 }, pl: { xs: 0.25, sm: 1 } }}>
-                        <Radio checked={isActive} onChange={() => onSelectProject(project.id)} value={project.id} name="project-select" size="small" />
-                      </TableCell>
-                      <TableCell sx={{ py: { xs: 0.5, sm: 1.25 }, pl: { xs: 0, sm: 1.5 } }}>
-                        <Typography sx={{ fontWeight: 700 }}>{project.name}</Typography>
-                      </TableCell>
-                      <TableCell sx={{ display: { xs: "none", sm: "table-cell" }, py: 1.25 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-all" }}>
-                          {project.id}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ py: { xs: 0.5, sm: 1.25 }, pr: { xs: 0.5, sm: 1 } }}>
-                        <Tooltip title="削除">
-                          <span>
-                            <IconButton
-                              color="error"
-                              disabled={!canDelete || deletingProjectId === project.id}
-                              onClick={() => onRequestDeleteProject(project.id, project.name)}
-                              size="small"
-                              sx={{
-                                border: "1px solid",
-                                borderColor: "error.main",
-                                bgcolor: "error.main",
-                                color: "common.white",
-                                "&:hover": {
-                                  bgcolor: "error.dark",
-                                  borderColor: "error.dark"
-                                },
-                                "&.Mui-disabled": {
-                                  bgcolor: "rgba(220, 38, 38, 0.08)",
-                                  color: "error.main",
-                                  borderColor: "rgba(220, 38, 38, 0.2)"
-                                }
-                              }}
-                            >
-                              {deletingProjectId === project.id ? <CircularProgress size={14} thickness={5} sx={{ color: "inherit" }} /> : <DeleteOutlinedIcon fontSize="small" />}
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </Box>
+          {mustCreateProject ? (
+            <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, borderStyle: "dashed", bgcolor: alpha("#ffffff", 0.7) }}>
+              <Typography color="text.secondary">まだプロジェクトがありません。上のフォームで作成してください。</Typography>
+            </Paper>
+          ) : (
+            <Box sx={{ display: "grid", gap: 1 }}>
+              <Table size="small" sx={{ "& .MuiTableCell-root": { borderBottomColor: "rgba(148, 163, 184, 0.18)" } }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ width: { xs: 44, sm: 56 } }} />
+                    <TableCell sx={{ fontSize: 12, fontWeight: 700, color: "text.secondary" }}>名前</TableCell>
+                    <TableCell sx={{ display: { xs: "none", sm: "table-cell" }, fontSize: 12, fontWeight: 700, color: "text.secondary" }}>ID</TableCell>
+                    <TableCell sx={{ width: { xs: 92, sm: 120 } }} />
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {projects.map((project) => {
+                    const isActive = project.id === activeProjectId;
+                    const canDelete = project.name !== "default";
+                    return (
+                      <TableRow
+                        key={project.id}
+                        hover
+                        selected={isActive}
+                        sx={{
+                          minHeight: { xs: 40, sm: "auto" },
+                          "& td": {
+                            bgcolor: isActive ? alpha("#2563eb", 0.04) : "background.paper"
+                          }
+                        }}
+                      >
+                        <TableCell sx={{ py: { xs: 0.5, sm: 1.25 }, pl: { xs: 0.25, sm: 1 } }}>
+                          <Radio checked={isActive} onChange={() => onSelectProject(project.id)} value={project.id} name="project-select" size="small" />
+                        </TableCell>
+                        <TableCell sx={{ py: { xs: 0.5, sm: 1.25 }, pl: { xs: 0, sm: 1.5 } }}>
+                          <Typography sx={{ fontWeight: 700 }}>{project.name}</Typography>
+                        </TableCell>
+                        <TableCell sx={{ display: { xs: "none", sm: "table-cell" }, py: 1.25 }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-all" }}>
+                            {project.id}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ py: { xs: 0.5, sm: 1.25 }, pr: { xs: 0.5, sm: 1 } }}>
+                          <Tooltip title="削除">
+                            <span>
+                              <IconButton
+                                color="error"
+                                disabled={!canDelete || deletingProjectId === project.id}
+                                onClick={() => onRequestDeleteProject(project.id, project.name)}
+                                size="small"
+                                sx={{
+                                  border: "1px solid",
+                                  borderColor: "error.main",
+                                  bgcolor: "error.main",
+                                  color: "common.white",
+                                  "&:hover": {
+                                    bgcolor: "error.dark",
+                                    borderColor: "error.dark"
+                                  },
+                                  "&.Mui-disabled": {
+                                    bgcolor: "rgba(220, 38, 38, 0.08)",
+                                    color: "error.main",
+                                    borderColor: "rgba(220, 38, 38, 0.2)"
+                                  }
+                                }}
+                              >
+                                {deletingProjectId === project.id ? <CircularProgress size={14} thickness={5} sx={{ color: "inherit" }} /> : <DeleteOutlinedIcon fontSize="small" />}
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </Box>
+          )}
         </CardContent>
       </Card>
     </Box>

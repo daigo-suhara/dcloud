@@ -36,6 +36,14 @@ func testProjectID(name string) string {
 	return prefix + "-" + testUUID
 }
 
+func testProjectManagerWithProject(name string) *memoryProjectManager {
+	return &memoryProjectManager{
+		projects: []project{
+			newProject("default-user", name, nil),
+		},
+	}
+}
+
 func TestHealthz(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	rec := httptest.NewRecorder()
@@ -99,12 +107,13 @@ func TestListServices(t *testing.T) {
 				},
 			},
 		},
-		projects:  newMemoryProjectManager(),
+		projects:  testProjectManagerWithProject("default"),
 		namespace: "dcp-system",
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "http://172.16.100.11:8080/api/v1/services", nil)
 	req.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	req.Header.Set("X-DCP-Project", testProjectID("default"))
 	rec := httptest.NewRecorder()
 
 	api.listServices(rec, req)
@@ -141,12 +150,13 @@ func TestDeployService(t *testing.T) {
 	api := &apiServer{
 		auth:      auth,
 		services:  manager,
-		projects:  newMemoryProjectManager(),
+		projects:  testProjectManagerWithProject("default"),
 		namespace: "dcp-system",
 	}
 
 	req := httptest.NewRequest(http.MethodPost, "http://172.16.100.11:8080/api/v1/services", strings.NewReader(`{"name":"hello-dcp","image":"ghcr.io/example/hello-dcp:latest","port":8080,"minScale":1,"maxScale":5}`))
 	req.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	req.Header.Set("X-DCP-Project", testProjectID("default"))
 	rec := httptest.NewRecorder()
 
 	api.deployService(rec, req)
@@ -174,10 +184,10 @@ func TestDeployService(t *testing.T) {
 	if manager.deployed[0].req.MinScale != 1 || manager.deployed[0].req.MaxScale != 5 {
 		t.Fatalf("expected minScale 1 and maxScale 5, got %+v", manager.deployed[0].req)
 	}
-	if manager.deployed[0].scope.ProjectID != testProjectID("default") {
-		t.Fatalf("expected default project scope, got %+v", manager.deployed[0].scope)
+		if manager.deployed[0].scope.ProjectID != testProjectID("default") {
+			t.Fatalf("expected project scope to match the selected project, got %+v", manager.deployed[0].scope)
+		}
 	}
-}
 
 func TestDeployServiceRejectsDuplicateName(t *testing.T) {
 	withTestUUID(t)
@@ -194,12 +204,13 @@ func TestDeployServiceRejectsDuplicateName(t *testing.T) {
 	api := &apiServer{
 		auth:      auth,
 		services:  manager,
-		projects:  newMemoryProjectManager(),
+		projects:  testProjectManagerWithProject("default"),
 		namespace: "dcp-system",
 	}
 
 	req := httptest.NewRequest(http.MethodPost, "http://172.16.100.11:8080/api/v1/services", strings.NewReader(`{"name":"hello-dcp","image":"ghcr.io/example/hello-dcp:latest","port":8080,"minScale":1,"maxScale":5}`))
 	req.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	req.Header.Set("X-DCP-Project", testProjectID("default"))
 	rec := httptest.NewRecorder()
 
 	api.deployService(rec, req)
@@ -213,17 +224,19 @@ func TestDeployServiceRejectsDuplicateName(t *testing.T) {
 }
 
 func TestDeleteService(t *testing.T) {
+	withTestUUID(t)
 	auth := testAuth()
 	manager := &fakeServiceManager{}
 	api := &apiServer{
 		auth:      auth,
 		services:  manager,
-		projects:  newMemoryProjectManager(),
+		projects:  testProjectManagerWithProject("default"),
 		namespace: "dcp-system",
 	}
 
 	req := httptest.NewRequest(http.MethodDelete, "http://172.16.100.11:8080/api/v1/services/hello-dcp", nil)
 	req.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	req.Header.Set("X-DCP-Project", testProjectID("default"))
 	rec := httptest.NewRecorder()
 
 	api.deleteService(rec, req)
@@ -453,7 +466,7 @@ func TestDeleteProjectByName(t *testing.T) {
 	}
 }
 
-func TestDeleteDefaultProjectRejected(t *testing.T) {
+func TestDeleteProjectLifecycle(t *testing.T) {
 	withTestUUID(t)
 	auth := testAuth()
 	api := &apiServer{
@@ -473,21 +486,37 @@ func TestDeleteDefaultProjectRejected(t *testing.T) {
 	}
 
 	var got struct {
-		DefaultProjectID string    `json:"defaultProjectId"`
-		Projects         []project `json:"projects"`
+		Projects []project `json:"projects"`
 	}
 	if err := json.NewDecoder(listRec.Body).Decode(&got); err != nil {
 		t.Fatalf("decode response: %v", err)
 	}
+	if len(got.Projects) != 0 {
+		t.Fatalf("expected empty project list, got %+v", got.Projects)
+	}
 
-	deleteReq := httptest.NewRequest(http.MethodDelete, "http://172.16.100.11:8080/api/v1/projects/"+got.DefaultProjectID, nil)
+	createReq := httptest.NewRequest(http.MethodPost, "http://172.16.100.11:8080/api/v1/projects", strings.NewReader(`{"name":"alpha"}`))
+	createReq.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
+	createRec := httptest.NewRecorder()
+	api.createProject(createRec, createReq)
+
+	if createRec.Code != http.StatusCreated {
+		t.Fatalf("expected status %d, got %d", http.StatusCreated, createRec.Code)
+	}
+
+	var created project
+	if err := json.NewDecoder(createRec.Body).Decode(&created); err != nil {
+		t.Fatalf("decode created project: %v", err)
+	}
+
+	deleteReq := httptest.NewRequest(http.MethodDelete, "http://172.16.100.11:8080/api/v1/projects/"+created.ID, nil)
 	deleteReq.AddCookie(testSessionCookie(t, auth, authUser{ID: "default-user", Username: "default-user"}))
-	deleteReq.SetPathValue("projectID", got.DefaultProjectID)
+	deleteReq.SetPathValue("projectID", created.ID)
 	deleteRec := httptest.NewRecorder()
 	api.deleteProject(deleteRec, deleteReq)
 
-	if deleteRec.Code != http.StatusConflict {
-		t.Fatalf("expected status %d, got %d", http.StatusConflict, deleteRec.Code)
+	if deleteRec.Code != http.StatusNoContent {
+		t.Fatalf("expected status %d, got %d", http.StatusNoContent, deleteRec.Code)
 	}
 }
 
