@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException, Request
@@ -14,9 +15,6 @@ app = FastAPI(title="DCloud API")
 
 app.include_router(project_router, prefix="/project", tags=["project"])
 app.include_router(container_router, prefix="/container", tags=["container"])
-
-repo = Repository.new()
-container_client = ContainerClient.new()
 
 
 def current_user(request: Request) -> dict[str, Any]:
@@ -40,6 +38,21 @@ def authentik_logout_url() -> str:
     return os.getenv("DCLD_AUTHENTIK_LOGOUT_URL", "/outpost.goauthentik.io/sign_out").strip() or "/outpost.goauthentik.io/sign_out"
 
 
+@app.on_event("startup")
+def startup() -> None:
+    last_error: Exception | None = None
+    for _ in range(60):
+        try:
+            app.state.repo = Repository.new()
+            app.state.container_client = ContainerClient.new()
+            return
+        except Exception as exc:  # pragma: no cover - startup retry path
+            last_error = exc
+            time.sleep(1)
+    if last_error is not None:
+        raise last_error
+
+
 @app.get("/healthz")
 def healthz() -> dict[str, str]:
     return {"status": "ok", "service": "api"}
@@ -47,6 +60,8 @@ def healthz() -> dict[str, str]:
 
 @app.get("/readyz")
 def readyz() -> dict[str, str]:
+    if not hasattr(app.state, "repo"):
+        raise HTTPException(status_code=503, detail="starting")
     return {"status": "ready", "service": "api"}
 
 
@@ -70,7 +85,7 @@ def auth_logout() -> RedirectResponse:
 @app.get("/api/v1/projects")
 def list_projects(request: Request) -> dict[str, Any]:
     user = current_user(request)
-    return {"user": user["id"], "projects": repo.list_projects(user["id"])}
+    return {"user": user["id"], "projects": app.state.repo.list_projects(user["id"])}
 
 
 @app.post("/api/v1/projects")
@@ -81,7 +96,7 @@ def create_project(body: dict[str, Any], request: Request) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="プロジェクト名は必須です")
 
     try:
-        return repo.create_project(user["id"], name)
+        return app.state.repo.create_project(user["id"], name)
     except KeyError as exc:
         raise HTTPException(status_code=409, detail="プロジェクトは既に存在します") from exc
     except ValueError as exc:
@@ -92,7 +107,7 @@ def create_project(body: dict[str, Any], request: Request) -> dict[str, Any]:
 def delete_project(project_id: str, request: Request) -> dict[str, str]:
     user = current_user(request)
     try:
-        deleted = repo.delete_project(user["id"], project_id)
+        deleted = app.state.repo.delete_project(user["id"], project_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if not deleted:
@@ -104,7 +119,7 @@ def delete_project(project_id: str, request: Request) -> dict[str, str]:
 def get_project_repository(project_id: str, request: Request) -> dict[str, Any]:
     user = current_user(request)
     try:
-        repository = repo.get_repository(user["id"], project_id)
+        repository = app.state.repo.get_repository(user["id"], project_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if repository is None:
@@ -119,7 +134,7 @@ def upsert_project_repository(project_id: str, body: dict[str, Any], request: Re
     repository_name = str(body.get("repositoryName", "")).strip()
     repository_branch = str(body.get("repositoryBranch", "main")).strip() or "main"
     try:
-        return repo.upsert_repository(
+        return app.state.repo.upsert_repository(
             user["id"],
             project_id,
             repository_owner,
@@ -142,7 +157,7 @@ def list_container(
     if not project_id:
         raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
     try:
-        containers = container_client.list_services(user["id"], project_id)
+        containers = app.state.container_client.list_services(user["id"], project_id)
         return {"namespace": containers["namespace"], "user": user["id"], "projectId": project_id, "containers": containers["containers"]}
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="サービス一覧を取得できません") from exc
@@ -165,7 +180,7 @@ def deploy_container(
     name = str(body.get("name", "")).strip()
     image = str(body.get("image", "")).strip()
     try:
-        return container_client.deploy_service(
+        return app.state.container_client.deploy_service(
             user["id"],
             project_id,
             name,
@@ -193,7 +208,7 @@ def delete_container(
     if not project_id:
         raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
     try:
-        container_client.delete_service(user["id"], project_id, name)
+        app.state.container_client.delete_service(user["id"], project_id, name)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except KeyError as exc:

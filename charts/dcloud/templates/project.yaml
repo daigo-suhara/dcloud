@@ -33,6 +33,11 @@ spec:
           livenessProbe:
             tcpSocket:
               port: grpc
+          startupProbe:
+            tcpSocket:
+              port: grpc
+            periodSeconds: 2
+            failureThreshold: 60
 ---
 apiVersion: v1
 kind: Service
