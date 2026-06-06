@@ -34,6 +34,8 @@ spec:
               value: {{ default "/outpost.goauthentik.io/sign_out" .Values.authentik.logoutUrl | quote }}
             - name: DCLD_CONTAINER_GRPC_ADDR
               value: {{ include "dcloud.fullname" . }}-container:{{ .Values.container.service.port }}
+            - name: PYTHONPATH
+              value: /app:/app/generated
           ports:
             - name: http
               containerPort: 8000
