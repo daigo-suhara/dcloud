@@ -85,7 +85,7 @@ export function ContainerSection({
                 </Paper>
                 <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: "grey.50" }}>
                   <Typography variant="caption" color="text.secondary">
-                    URL
+                    公開URL
                   </Typography>
                   <Typography sx={{ mt: 0.5, fontWeight: 600, wordBreak: "break-all" }}>
                     {selectedService.url ? (

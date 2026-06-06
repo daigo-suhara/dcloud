@@ -4,6 +4,8 @@ image:
   pullPolicy: Always
   tag: latest
 
+publicServiceDomain: drkatana.com
+
 storage:
   createClass: true
   className: ceph-rbd

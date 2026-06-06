@@ -125,7 +125,7 @@ func (s *containerServer) DeployService(ctx context.Context, req *DeployServiceR
 	}
 
 	timestamp := time.Now().UTC().Format(time.RFC3339Nano)
-	url := fmt.Sprintf("grpc://%s.%s.svc.cluster.local/%s", name, s.namespace, projectID)
+	url := fmt.Sprintf("https://%s.%s", name, publicServiceDomain())
 	created, err := s.q.UpsertContainer(ctx, dbsqlc.UpsertContainerParams{
 		ProjectID: projectID,
 		Name:      name,
@@ -229,4 +229,8 @@ func nullStringValue(value sql.NullString) string {
 		return ""
 	}
 	return value.String
+}
+
+func publicServiceDomain() string {
+	return env("DCLD_PUBLIC_SERVICE_DOMAIN", "drkatana.com")
 }

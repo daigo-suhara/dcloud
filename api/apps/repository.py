@@ -58,6 +58,10 @@ def database_url() -> str:
     )
 
 
+def public_service_domain() -> str:
+    return env("DCLD_PUBLIC_SERVICE_DOMAIN", "drkatana.com")
+
+
 def sanitize_dns_label(value: str) -> str:
     value = value.strip().lower()
     chars: list[str] = []
@@ -217,7 +221,7 @@ class Repository:
 
         namespace = env("DCLD_TARGET_NAMESPACE", "dcloud-system")
         timestamp = now()
-        url = f"grpc://{normalized_name}.{namespace}.svc.cluster.local/{normalized_project}"
+        url = f"https://{normalized_name}.{public_service_domain()}"
 
         with self.lock, self._connect() as conn, conn.cursor() as cur:
             if not self._project_exists(conn, normalized_user, normalized_project):

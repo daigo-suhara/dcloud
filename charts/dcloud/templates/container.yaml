@@ -24,6 +24,9 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ include "dcloud.fullname" . }}-database
+          env:
+            - name: DCLD_PUBLIC_SERVICE_DOMAIN
+              value: {{ .Values.publicServiceDomain | quote }}
           ports:
             - name: grpc
               containerPort: {{ .Values.container.service.port }}
