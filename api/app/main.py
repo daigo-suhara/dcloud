@@ -7,7 +7,6 @@ from typing import Any
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi import Response
-from app.routes.container import router as container_router
 from app.routes.project import router as project_router
 from app.identity_client import IdentityClient
 from app.repository import Repository
@@ -16,7 +15,6 @@ from app.container_client import ContainerClient
 app = FastAPI(title="DCloud API")
 
 app.include_router(project_router, prefix="/project", tags=["project"])
-app.include_router(container_router, prefix="/container", tags=["container"])
 
 
 def session_cookie_name() -> str:
