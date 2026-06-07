@@ -40,7 +40,7 @@ export function DeploySection({ error, form, onBack, onChange, onSubmit, submitt
           </Button>
         </Box>
 
-        <Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1.3fr) minmax(280px, 0.7fr)" }, alignItems: "start" }}>
+        <Box sx={{ display: "grid", gap: 2.5 }}>
           <Card variant="outlined" sx={{ borderRadius: 2 }}>
             <CardContent sx={{ p: { xs: 2.5, sm: 3 }, display: "grid", gap: 2.25 }}>
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
