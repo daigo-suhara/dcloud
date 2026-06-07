@@ -65,7 +65,7 @@ export function ComputeSection({
               <Box
                 sx={{
                   display: { xs: "none", sm: "grid" },
-                  gridTemplateColumns: "42px minmax(0, 1fr)",
+                  gridTemplateColumns: "42px minmax(0, 1fr) minmax(220px, max-content)",
                   alignItems: "center",
                   minHeight: 36,
                   px: 1,
@@ -80,6 +80,7 @@ export function ComputeSection({
                   <Box>名前</Box>
                   <Box>更新日時</Box>
                 </Box>
+                <Box sx={{ textAlign: "right" }}>操作</Box>
               </Box>
 
               <Box sx={{ borderTop: "1px solid rgba(148, 163, 184, 0.18)" }}>
@@ -100,8 +101,8 @@ export function ComputeSection({
                         variant="outlined"
                         sx={{
                           display: "grid",
-                          gridTemplateColumns: { xs: "42px minmax(0, 1fr)", sm: "42px minmax(0, 1fr)" },
-                          gap: { xs: 0, sm: 0 },
+                          gridTemplateColumns: { xs: "42px minmax(0, 1fr)", sm: "42px minmax(0, 1fr) minmax(220px, max-content)" },
+                          gap: 0,
                           alignItems: "center",
                           minHeight: { xs: 40, sm: 44 },
                           p: { xs: 1, sm: 0 },
@@ -126,7 +127,7 @@ export function ComputeSection({
                             {statusIcon}
                           </Box>
                         </Box>
-                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "minmax(120px, max-content) 150px" }, columnGap: 3, rowGap: 0.5, alignItems: "center", minWidth: 0 }}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "minmax(120px, 1fr) max-content" }, columnGap: 3, rowGap: 0.5, alignItems: "center", minWidth: 0 }}>
                           <Box sx={{ display: "grid", gap: 0.25, minWidth: 0 }}>
                             <Typography sx={{ fontWeight: 700, wordBreak: "break-all" }}>{machine.name}</Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-all" }}>
@@ -136,8 +137,8 @@ export function ComputeSection({
                               CPU {machine.cpu} / MEM {machine.memory}
                             </Typography>
                           </Box>
-                          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1.5, minWidth: 0 }}>
-                            <Box sx={{ display: "grid", gap: 0.25, minWidth: 0 }}>
+                          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 1.5, minWidth: 0, flexWrap: "wrap" }}>
+                            <Box sx={{ display: "grid", gap: 0.25, minWidth: 0, textAlign: { xs: "left", sm: "right" } }}>
                               <Typography variant="body2" color={isReady ? "success.main" : "text.secondary"} sx={{ fontWeight: 600 }}>
                                 {status}
                               </Typography>
