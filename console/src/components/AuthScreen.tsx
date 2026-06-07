@@ -1,7 +1,7 @@
-import { Alert, Box, Button, Card, CardContent, Container, Divider, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Card, CardContent, Container, Divider, Tab, Tabs, TextField, Typography } from "@mui/material";
 import CloudQueueOutlinedIcon from "@mui/icons-material/CloudQueueOutlined";
 import KeyOutlinedIcon from "@mui/icons-material/KeyOutlined";
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import type { AuthForm } from "../types";
 
 type AuthScreenProps = {
@@ -14,6 +14,13 @@ type AuthScreenProps = {
 };
 
 export function AuthScreen({ error, loading, form, onChange, onLogin, onRegister }: AuthScreenProps) {
+  const [mode, setMode] = useState<"login" | "register">("login");
+
+  function handleRegisterSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onRegister();
+  }
+
   return (
     <Box className="auth-page" sx={{ minHeight: "100vh" }}>
       <Container maxWidth="lg" className="auth-shell">
@@ -35,7 +42,7 @@ export function AuthScreen({ error, loading, form, onChange, onLogin, onRegister
                 gap: 4
               }}
             >
-              <Box sx={{ display: "grid", gap: 2.5 }}>
+              <Box sx={{ display: "grid", gap: 2.25 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                   <CloudQueueOutlinedIcon sx={{ fontSize: 30, color: "#ffffff" }} />
                   <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1, letterSpacing: "0.02em" }}>
@@ -43,91 +50,53 @@ export function AuthScreen({ error, loading, form, onChange, onLogin, onRegister
                   </Typography>
                 </Box>
 
-                <Box sx={{ display: "grid", gap: 0.9 }}>
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    <Box
-                      sx={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        minHeight: 30,
-                        px: 1.5,
-                        borderRadius: 999,
-                        border: "1px solid rgba(255,255,255,0.24)",
-                        background: "rgba(255,255,255,0.12)",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        letterSpacing: "0.04em",
-                        textTransform: "uppercase"
-                      }}
-                    >
-                      identity
-                    </Box>
-                    <Box
-                      sx={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        minHeight: 30,
-                        px: 1.5,
-                        borderRadius: 999,
-                        border: "1px solid rgba(255,255,255,0.24)",
-                        background: "rgba(255,255,255,0.12)",
-                        fontSize: 12,
-                        fontWeight: 700
-                      }}
-                    >
-                      local account
-                    </Box>
-                  </Box>
+                <Box sx={{ display: "grid", gap: 0.7 }}>
                   <Typography variant="h3" sx={{ fontWeight: 800, lineHeight: 1.08, letterSpacing: "-0.03em" }}>
-                    DCloud にサインイン
+                    DCloud
                   </Typography>
-                  <Typography sx={{ maxWidth: 440, color: "rgba(255,255,255,0.78)", fontSize: 15, lineHeight: 1.8 }}>
-                    ローカルの identity サービスで認証します。ここからプロジェクト、コンテナ、リポジトリ接続を管理できます。
+                  <Typography sx={{ maxWidth: 420, color: "rgba(255,255,255,0.78)", fontSize: 15, lineHeight: 1.8 }}>
+                    ローカルの identity でログインして、プロジェクトとコンテナを管理します。
                   </Typography>
                 </Box>
 
-                <Stack spacing={1.2}>
-                  {[
-                    "ユーザ単位でプロジェクトを分けて管理",
-                    "パスワードは identity で検証",
-                    "登録後すぐ console に入れる"
-                  ].map((text) => (
-                    <Box key={text} sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
-                      <Box
-                        sx={{
-                          width: 9,
-                          height: 9,
-                          borderRadius: 999,
-                          background: "#ffffff",
-                          boxShadow: "0 0 0 5px rgba(255,255,255,0.14)"
-                        }}
-                      />
-                      <Typography sx={{ color: "rgba(255,255,255,0.86)", fontSize: 14 }}>{text}</Typography>
-                    </Box>
-                  ))}
-                </Stack>
+                <Typography sx={{ color: "rgba(255,255,255,0.66)", fontSize: 12, lineHeight: 1.7 }}>
+                  アカウント作成とログインは右側のタブで切り替えます。
+                </Typography>
               </Box>
 
               <Typography sx={{ color: "rgba(255,255,255,0.62)", fontSize: 12, lineHeight: 1.7 }}>
-                DCloud Console は auth provider を外部に委ねず、identity を直接使う構成です。
+                DCloud Console は外部 auth provider を使わず、identity を直接使う構成です。
               </Typography>
             </Box>
 
             <CardContent sx={{ p: { xs: 3, sm: 4, md: 5 } }}>
               <Box sx={{ display: "grid", gap: 2.5 }}>
-                <Box sx={{ display: "grid", gap: 0.9 }}>
+                <Box sx={{ display: "grid", gap: 1.1 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <KeyOutlinedIcon sx={{ fontSize: 22, color: "primary.main" }} />
                     <Typography variant="h5" sx={{ fontWeight: 800, lineHeight: 1.15 }}>
-                      ログイン
+                      identity
                     </Typography>
                   </Box>
-                  <Typography color="text.secondary">
-                    既存アカウントでログインするか、新規アカウントを作成してください。
-                  </Typography>
+                  <Typography color="text.secondary">ログインかアカウント作成を選んでください。</Typography>
                 </Box>
 
-                <Box component="form" onSubmit={onLogin} sx={{ display: "grid", gap: 1.5 }}>
+                <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                  <Tabs
+                    value={mode}
+                    onChange={(_, value: "login" | "register") => setMode(value)}
+                    variant="fullWidth"
+                  >
+                    <Tab value="login" label="ログイン" />
+                    <Tab value="register" label="アカウント作成" />
+                  </Tabs>
+                </Box>
+
+                <Box
+                  component="form"
+                  onSubmit={mode === "login" ? onLogin : handleRegisterSubmit}
+                  sx={{ display: "grid", gap: 1.5 }}
+                >
                   <TextField
                     label="ユーザ名"
                     value={form.username}
@@ -144,40 +113,45 @@ export function AuthScreen({ error, loading, form, onChange, onLogin, onRegister
                     fullWidth
                   />
 
-                  <Divider sx={{ my: 0.5 }} />
-
-                  <Box sx={{ display: "grid", gap: 0.6 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                      新規登録用の追加情報
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      アカウント作成時だけ入力してください。ログインだけなら空欄のままで構いません。
-                    </Typography>
-                  </Box>
-
-                  <TextField
-                    label="メールアドレス"
-                    type="email"
-                    value={form.email}
-                    onChange={(event) => onChange({ email: event.target.value })}
-                    autoComplete="email"
-                    fullWidth
-                  />
-                  <TextField
-                    label="表示名"
-                    value={form.name}
-                    onChange={(event) => onChange({ name: event.target.value })}
-                    autoComplete="name"
-                    fullWidth
-                  />
+                  {mode === "register" ? (
+                    <>
+                      <Divider sx={{ my: 0.5 }} />
+                      <Box sx={{ display: "grid", gap: 0.6 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                          アカウント作成の追加情報
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          作成時だけ入力してください。ログイン時は不要です。
+                        </Typography>
+                      </Box>
+                      <TextField
+                        label="メールアドレス"
+                        type="email"
+                        value={form.email}
+                        onChange={(event) => onChange({ email: event.target.value })}
+                        autoComplete="email"
+                        fullWidth
+                      />
+                      <TextField
+                        label="表示名"
+                        value={form.name}
+                        onChange={(event) => onChange({ name: event.target.value })}
+                        autoComplete="name"
+                        fullWidth
+                      />
+                    </>
+                  ) : null}
 
                   <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 1.5, pt: 0.5 }}>
-                    <Button type="submit" variant="contained" size="large" disabled={loading} fullWidth>
-                      ログイン
-                    </Button>
-                    <Button type="button" variant="outlined" size="large" onClick={onRegister} disabled={loading} fullWidth>
-                      アカウント作成
-                    </Button>
+                    {mode === "login" ? (
+                      <Button type="submit" variant="contained" size="large" disabled={loading} fullWidth>
+                        ログイン
+                      </Button>
+                    ) : (
+                      <Button type="submit" variant="contained" size="large" disabled={loading} fullWidth>
+                        アカウント作成
+                      </Button>
+                    )}
                   </Box>
                 </Box>
 
