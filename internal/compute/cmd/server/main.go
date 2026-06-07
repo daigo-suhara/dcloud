@@ -362,8 +362,8 @@ type kubeVM struct {
 		Namespace         string            `json:"namespace"`
 		Labels            map[string]string `json:"labels"`
 		Annotations       map[string]string `json:"annotations"`
-		CreationTimestamp string            `json:"creationTimestamp"`
-		Generation        int64             `json:"generation"`
+		CreationTimestamp string            `json:"creationTimestamp,omitempty"`
+		Generation        int64             `json:"generation,omitempty"`
 	} `json:"metadata"`
 	Spec struct {
 		Running  bool `json:"running"`
@@ -408,6 +408,54 @@ type kubeVM struct {
 	} `json:"status"`
 }
 
+type kubeVMCreate struct {
+	APIVersion string `json:"apiVersion,omitempty"`
+	Kind       string `json:"kind,omitempty"`
+	Metadata   struct {
+		Name        string            `json:"name"`
+		Namespace   string            `json:"namespace,omitempty"`
+		Labels      map[string]string `json:"labels,omitempty"`
+		Annotations map[string]string `json:"annotations,omitempty"`
+	} `json:"metadata"`
+	Spec struct {
+		Running  bool `json:"running"`
+		Template struct {
+			Metadata struct {
+				Labels map[string]string `json:"labels,omitempty"`
+			} `json:"metadata"`
+			Spec struct {
+				Domain struct {
+					Resources struct {
+						Requests map[string]string `json:"requests"`
+					} `json:"resources"`
+					Devices struct {
+						Disks []struct {
+							Name string `json:"name"`
+							Disk struct {
+								Bus string `json:"bus,omitempty"`
+							} `json:"disk"`
+						} `json:"disks"`
+						Interfaces []struct {
+							Name       string   `json:"name"`
+							Masquerade struct{} `json:"masquerade,omitempty"`
+						} `json:"interfaces"`
+					} `json:"devices"`
+				} `json:"domain"`
+				Networks []struct {
+					Name string   `json:"name"`
+					Pod  struct{} `json:"pod,omitempty"`
+				} `json:"networks"`
+				Volumes []struct {
+					Name          string `json:"name"`
+					ContainerDisk *struct {
+						Image string `json:"image"`
+					} `json:"containerDisk,omitempty"`
+				} `json:"volumes"`
+			} `json:"spec"`
+		} `json:"template"`
+	} `json:"spec"`
+}
+
 type kubeStatus struct {
 	Message string `json:"message"`
 	Reason  string `json:"reason"`
@@ -435,7 +483,7 @@ func (c *kubevirtClient) list(ctx context.Context, namespace, userID, projectID 
 
 func (c *kubevirtClient) create(ctx context.Context, namespace string, scope projectScope, req createRequest) (machineRecord, error) {
 	resourceName := machineResourceName(scope.UserID, scope.ProjectID, req.Name)
-	payload := kubeVM{
+	payload := kubeVMCreate{
 		APIVersion: "kubevirt.io/v1",
 		Kind:       "VirtualMachine",
 	}
