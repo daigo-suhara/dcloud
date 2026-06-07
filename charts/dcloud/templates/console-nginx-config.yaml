@@ -29,15 +29,6 @@ data:
         proxy_set_header X-Forwarded-Port 443;
       }
 
-      location /container/ {
-        proxy_pass http://{{ include "dcloud.fullname" . }}-api:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-Host $host;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Port 443;
-      }
-
     }
 
     server {
