@@ -63,8 +63,6 @@ database:
   auth:
     database: dcloud
     username: dcloud
-    password: dcloud-database-password-please-change
-    repmgrPassword: dcloud-repmgr-password-please-change
 
 postgresql-ha:
   global:
@@ -74,8 +72,7 @@ postgresql-ha:
     postgresql:
       username: dcloud
       database: dcloud
-      password: dcloud-database-password-please-change
-      repmgrPassword: dcloud-repmgr-password-please-change
+      existingSecret: dcloud-database
       repmgrUsername: repmgr
   postgresql:
     image:

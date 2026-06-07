@@ -21,6 +21,6 @@ spec:
         - name: db-migrate
           image: {{ include "dcloud.image" (dict "root" . "repository" "db-migrate") }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          env:
-            - name: DCLD_DATABASE_MIGRATION_URL
-              value: {{ printf "postgresql://%s:%s@%s-postgresql-ha-postgresql:%d/%s?sslmode=disable" .Values.database.auth.username .Values.database.auth.password (include "dcloud.fullname" .) (.Values.database.service.port | int) .Values.database.auth.database | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ include "dcloud.fullname" . }}-database
