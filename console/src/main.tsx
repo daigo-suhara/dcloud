@@ -51,7 +51,14 @@ function AppContent() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Box sx={{ minHeight: "100vh" }}>
-          <AuthScreen error={controller.error} onLogin={controller.startLogin} />
+          <AuthScreen
+            error={controller.error}
+            loading={controller.authSubmitting}
+            form={controller.authForm}
+            onChange={controller.handleAuthFormChange}
+            onLogin={controller.startLogin}
+            onRegister={controller.startRegister}
+          />
         </Box>
       </ThemeProvider>
     );

@@ -1,36 +1,35 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "dcloud.fullname" . }}-container
+  name: {{ include "dcloud.fullname" . }}-identity
   labels:
     {{- include "dcloud.labels" . | nindent 4 }}
-    app.kubernetes.io/component: container
+    app.kubernetes.io/component: identity
 spec:
-  replicas: {{ .Values.container.replicaCount }}
+  replicas: {{ .Values.identity.replicaCount }}
   selector:
     matchLabels:
       app.kubernetes.io/instance: {{ .Release.Name }}
-      app.kubernetes.io/component: container
+      app.kubernetes.io/component: identity
   template:
     metadata:
       labels:
         app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: container
+        app.kubernetes.io/component: identity
     spec:
-      serviceAccountName: {{ include "dcloud.fullname" . }}-internal
       containers:
-        - name: container
-          image: {{ include "dcloud.image" (dict "root" . "repository" .Values.container.image.repository) }}
+        - name: identity
+          image: {{ include "dcloud.image" (dict "root" . "repository" .Values.identity.image.repository) }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
             - secretRef:
                 name: {{ include "dcloud.fullname" . }}-database
           env:
-            - name: DCLD_PUBLIC_SERVICE_DOMAIN
-              value: {{ .Values.publicServiceDomain | quote }}
+            - name: DCLD_IDENTITY_ADDR
+              value: :{{ .Values.identity.service.port }}
           ports:
             - name: grpc
-              containerPort: {{ .Values.container.service.port }}
+              containerPort: {{ .Values.identity.service.port }}
           readinessProbe:
             tcpSocket:
               port: grpc
@@ -38,15 +37,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "dcloud.fullname" . }}-container
+  name: {{ include "dcloud.fullname" . }}-identity
   labels:
     {{- include "dcloud.labels" . | nindent 4 }}
-    app.kubernetes.io/component: container
+    app.kubernetes.io/component: identity
 spec:
   ports:
     - name: grpc
-      port: {{ .Values.container.service.port }}
+      port: {{ .Values.identity.service.port }}
       targetPort: grpc
   selector:
     app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: container
+    app.kubernetes.io/component: identity

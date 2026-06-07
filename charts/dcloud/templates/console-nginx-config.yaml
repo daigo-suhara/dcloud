@@ -27,10 +27,6 @@ data:
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Forwarded-Port 443;
-        proxy_set_header X-authentik-username $http_x_authentik_username;
-        proxy_set_header X-authentik-email $http_x_authentik_email;
-        proxy_set_header X-authentik-uid $http_x_authentik_uid;
-        proxy_set_header X-authentik-name $http_x_authentik_name;
       }
 
       location /container/ {
@@ -40,10 +36,6 @@ data:
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Forwarded-Port 443;
-        proxy_set_header X-authentik-username $http_x_authentik_username;
-        proxy_set_header X-authentik-email $http_x_authentik_email;
-        proxy_set_header X-authentik-uid $http_x_authentik_uid;
-        proxy_set_header X-authentik-name $http_x_authentik_name;
       }
 
     }
@@ -61,9 +53,5 @@ data:
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Forwarded-Port 443;
-        proxy_set_header X-authentik-username $http_x_authentik_username;
-        proxy_set_header X-authentik-email $http_x_authentik_email;
-        proxy_set_header X-authentik-uid $http_x_authentik_uid;
-        proxy_set_header X-authentik-name $http_x_authentik_name;
       }
     }

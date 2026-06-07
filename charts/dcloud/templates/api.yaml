@@ -26,12 +26,12 @@ spec:
             - secretRef:
                 name: {{ include "dcloud.fullname" . }}-database
           env:
-            - name: DCLD_PUBLIC_SERVICE_DOMAIN
-              value: {{ .Values.publicServiceDomain | quote }}
-            - name: DCLD_CONSOLE_PUBLIC_URL
-              value: {{ printf "https://%s" .Values.console.publicHostname | quote }}
-            - name: DCLD_AUTHENTIK_BASE_URL
-              value: {{ .Values.authentik.baseUrl | quote }}
+            - name: DCLD_IDENTITY_GRPC_ADDR
+              value: {{ include "dcloud.fullname" . }}-identity:{{ .Values.identity.service.port }}
+            - name: DCLD_SESSION_COOKIE_NAME
+              value: dcloud_session
+            - name: DCLD_COOKIE_SECURE
+              value: "true"
             - name: DCLD_CONTAINER_GRPC_ADDR
               value: {{ include "dcloud.fullname" . }}-container:{{ .Values.container.service.port }}
             - name: PYTHONPATH
@@ -43,16 +43,6 @@ spec:
             httpGet:
               path: /readyz
               port: http
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: http
-          startupProbe:
-            httpGet:
-              path: /readyz
-              port: http
-            periodSeconds: 2
-            failureThreshold: 60
 ---
 apiVersion: v1
 kind: Service

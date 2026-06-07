@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { initialForm, type AuthUser, type DeployedService, type PlatformResponse, type Project, type ProjectsResponse, type RepositoryConfig, type RepositoryForm, type RouteState } from "../types";
+import { initialAuthForm, initialForm, type AuthForm, type AuthUser, type DeployedService, type PlatformResponse, type Project, type ProjectsResponse, type RepositoryConfig, type RepositoryForm, type RouteState } from "../types";
 import { getServiceStatus, parseRoute } from "../utils";
 
 type LoadServicesOptions = {
@@ -42,6 +42,8 @@ export function useConsoleController() {
   const [pendingProjectDeleteId, setPendingProjectDeleteId] = useState("");
   const [pendingProjectDeleteName, setPendingProjectDeleteName] = useState("");
   const [authLoading, setAuthLoading] = useState(true);
+  const [authSubmitting, setAuthSubmitting] = useState(false);
+  const [authForm, setAuthForm] = useState<AuthForm>(initialAuthForm);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [repositoryLoading, setRepositoryLoading] = useState(true);
@@ -182,12 +184,69 @@ export function useConsoleController() {
     }
   }
 
-  async function startLogin() {
-    window.location.href = "/api/v1/auth/login";
+  function handleAuthFormChange(patch: Partial<AuthForm>) {
+    setAuthForm((current) => ({ ...current, ...patch }));
+  }
+
+  async function authenticate(path: string) {
+    setAuthSubmitting(true);
+    setError("");
+    try {
+      const response = await fetch(path, {
+        credentials: "include",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username: authForm.username.trim(),
+          password: authForm.password,
+          email: authForm.email.trim(),
+          name: authForm.name.trim()
+        })
+      });
+      const data = (await readJsonResponse(response)) as { user?: AuthUser } | ApiErrorResponse;
+      if (!response.ok) {
+        throw new Error(getApiErrorMessage(data, path.endsWith("register") ? "アカウントを作成できませんでした" : "ログインできませんでした"));
+      }
+      if (data && typeof data === "object" && "user" in data && data.user) {
+        setAuthForm((current) => ({ ...current, password: "" }));
+        setCurrentUser(data.user);
+      } else {
+        await loadCurrentUser();
+      }
+    } catch (authError) {
+      setCurrentUser(null);
+      setError(authError instanceof Error ? authError.message : "認証に失敗しました");
+    } finally {
+      setAuthSubmitting(false);
+    }
+  }
+
+  async function startLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await authenticate("/api/v1/auth/login");
+  }
+
+  async function startRegister() {
+    await authenticate("/api/v1/auth/register");
   }
 
   async function startLogout() {
-    window.location.href = "/api/v1/auth/logout";
+    try {
+      await fetch("/api/v1/auth/logout", {
+        credentials: "include",
+        method: "POST"
+      });
+    } finally {
+      setCurrentUser(null);
+      setProjects([]);
+      setContainers([]);
+      setActiveProjectId("");
+      setProjectName("");
+      setRepositoryConfig(null);
+      setAuthForm((current) => ({ ...current, password: "" }));
+    }
   }
 
   function projectStorageKey(userId: string) {
@@ -507,7 +566,9 @@ export function useConsoleController() {
 
   return {
     activeProjectId,
+    authForm,
     authLoading,
+    authSubmitting,
     cancelDelete,
     cancelProjectDelete,
     confirmDelete,
@@ -520,6 +581,7 @@ export function useConsoleController() {
     form,
     handleCreateProject,
     handleFormChange,
+    handleAuthFormChange,
     handleOpenRepository,
     handleRepositoryFormChange,
     handleProjectSelect,
@@ -549,6 +611,7 @@ export function useConsoleController() {
     containers,
     startLogin,
     startLogout,
+    startRegister,
     submitting,
     setMessage
   } as const;

@@ -1,3 +1,14 @@
+{{- $secretName := printf "%s-database" (include "dcloud.fullname" .) -}}
+{{- $existing := lookup "v1" "Secret" .Release.Namespace $secretName -}}
+{{- $appPassword := "" -}}
+{{- $repmgrPassword := "" -}}
+{{- if $existing -}}
+{{- $appPassword = index $existing.data "password" | b64dec -}}
+{{- $repmgrPassword = index $existing.data "repmgr-password" | b64dec -}}
+{{- else -}}
+{{- $appPassword = randAlphaNum 24 -}}
+{{- $repmgrPassword = randAlphaNum 24 -}}
+{{- end -}}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -6,77 +17,6 @@ metadata:
     {{- include "dcloud.labels" . | nindent 4 }}
     app.kubernetes.io/component: database
 stringData:
-  POSTGRES_DB: {{ .Values.database.auth.database | quote }}
-  POSTGRES_USER: {{ .Values.database.auth.username | quote }}
-  POSTGRES_PASSWORD: {{ .Values.database.auth.password | quote }}
-  DCLD_DATABASE_URL: {{ printf "postgresql://%s:%s@%s-database:%d/%s?sslmode=disable" .Values.database.auth.username .Values.database.auth.password (include "dcloud.fullname" .) (.Values.database.service.port | int) .Values.database.auth.database | quote }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "dcloud.fullname" . }}-database
-  labels:
-    {{- include "dcloud.labels" . | nindent 4 }}
-    app.kubernetes.io/component: database
-spec:
-  ports:
-    - name: postgres
-      port: {{ .Values.database.service.port }}
-      targetPort: postgres
-  selector:
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: database
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: {{ include "dcloud.fullname" . }}-database
-  labels:
-    {{- include "dcloud.labels" . | nindent 4 }}
-    app.kubernetes.io/component: database
-spec:
-  serviceName: {{ include "dcloud.fullname" . }}-database
-  replicas: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      app.kubernetes.io/component: database
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: database
-    spec:
-      containers:
-        - name: database
-          image: {{ .Values.database.image }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          envFrom:
-            - secretRef:
-                name: {{ include "dcloud.fullname" . }}-database
-          env:
-            - name: PGDATA
-              value: /var/lib/postgresql/data/pgdata
-          ports:
-            - name: postgres
-              containerPort: {{ .Values.database.service.port }}
-          readinessProbe:
-            tcpSocket:
-              port: postgres
-          livenessProbe:
-            tcpSocket:
-              port: postgres
-          volumeMounts:
-            - name: data
-              mountPath: /var/lib/postgresql/data
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-      apiVersion: v1
-      kind: PersistentVolumeClaim
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        storageClassName: {{ .Values.database.persistence.storageClassName | quote }}
-        resources:
-          requests:
-            storage: {{ .Values.database.persistence.size | quote }}
+  password: {{ $appPassword | quote }}
+  repmgr-password: {{ $repmgrPassword | quote }}
+  DCLD_DATABASE_URL: {{ printf "postgresql://%s:%s@%s-postgresql-ha-pgpool:%d/%s?sslmode=disable" .Values.database.auth.username $appPassword (include "dcloud.fullname" .) (.Values.database.service.port | int) .Values.database.auth.database | quote }}

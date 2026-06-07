@@ -8,6 +8,7 @@
 | --- | --- | --- |
 | current user | `GET /api/v1/auth/me` | implemented |
 | login | `GET/POST /api/v1/auth/login` | implemented |
+| register | `GET/POST /api/v1/auth/register` | implemented |
 | logout | `GET/POST /api/v1/auth/logout` | implemented |
 
 ## Projects
@@ -32,13 +33,13 @@
 | --- | --- | --- |
 | project selection | not needed | stored locally in the browser |
 | repo connect button | implemented | opens a project-scoped repository settings form |
-| auth page | implemented | `/login` is a launcher into authentik |
+| auth page | implemented | `/login` is the local identity login/register page |
 
 ## Notes
 
 - `console` sends `X-DCP-Project` when a project is selected.
-- `console` forwards `X-authentik-*` headers from the front proxy to `api`.
+- `api` forwards identity session checks to the `identity` gRPC service.
 - `api` forwards container operations to the `container` gRPC service.
 - `api` persists projects in PostgreSQL through the shared `Repository`.
 - `api` also persists repository connection settings per project in PostgreSQL.
-- `api` reads authenticated user identity from `X-authentik-*` headers.
+- `api` reads authenticated user identity from the `dcloud_session` cookie and verifies it via `identity`.

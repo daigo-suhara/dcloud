@@ -6,8 +6,12 @@ image:
 
 publicServiceDomain: drkatana.com
 
-authentik:
-  baseUrl: https://auth.daigo-suhara.com
+identity:
+  replicaCount: 2
+  image:
+    repository: identity
+  service:
+    port: 8083
 
 storage:
   createClass: true
@@ -16,7 +20,7 @@ storage:
   pool: rbd
 
 console:
-  replicaCount: 1
+  replicaCount: 2
   image:
     repository: console
   service:
@@ -26,34 +30,41 @@ console:
   publicHostname: cloud.daigo-suhara.com
 
 api:
-  replicaCount: 1
+  replicaCount: 2
   image:
     repository: api
   service:
     port: 8000
 
 project:
-  replicaCount: 1
+  replicaCount: 2
   image:
     repository: project
   service:
     port: 8081
 
 container:
-  replicaCount: 1
+  replicaCount: 2
   image:
     repository: container
   service:
     port: 8082
 
 database:
-  image: postgres:16-alpine
   service:
     port: 5432
   auth:
     database: dcloud
     username: dcloud
-    password: dcloud
-  persistence:
-    size: 1Gi
-    storageClassName: ceph-rbd
+
+postgresql-ha:
+  global:
+    postgresql:
+      username: dcloud
+      database: dcloud
+      existingSecret: dcloud-database
+      repmgrUsername: repmgr
+  postgresql:
+    database: dcloud
+    username: dcloud
+    replicaCount: 2

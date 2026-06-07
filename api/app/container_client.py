@@ -6,7 +6,6 @@ from typing import Any
 import grpc
 
 from generated import container_pb2
-from generated import container_pb2_grpc
 
 
 def env(key: str, fallback: str) -> str:
@@ -25,7 +24,21 @@ def _rpc_error_message(error: grpc.RpcError) -> str:
 
 class ContainerClient:
     def __init__(self, channel: grpc.Channel) -> None:
-        self._stub = container_pb2_grpc.ContainerServiceStub(channel)
+        self._list_services = channel.unary_unary(
+            "/dcloud.container.v1.ContainerService/ListServices",
+            request_serializer=container_pb2.ListServicesRequest.SerializeToString,
+            response_deserializer=container_pb2.ListServicesResponse.FromString,
+        )
+        self._deploy_service = channel.unary_unary(
+            "/dcloud.container.v1.ContainerService/DeployService",
+            request_serializer=container_pb2.DeployServiceRequest.SerializeToString,
+            response_deserializer=container_pb2.DeployServiceResponse.FromString,
+        )
+        self._delete_service = channel.unary_unary(
+            "/dcloud.container.v1.ContainerService/DeleteService",
+            request_serializer=container_pb2.DeleteServiceRequest.SerializeToString,
+            response_deserializer=container_pb2.DeleteServiceResponse.FromString,
+        )
 
     @classmethod
     def new(cls) -> "ContainerClient":
@@ -33,7 +46,7 @@ class ContainerClient:
 
     def list_services(self, user_id: str, project_id: str) -> dict[str, Any]:
         try:
-            response = self._stub.ListServices(
+            response = self._list_services(
                 container_pb2.ListServicesRequest(user_id=user_id, project_id=project_id)
             )
         except grpc.RpcError as error:
@@ -56,7 +69,7 @@ class ContainerClient:
         max_scale: int,
     ) -> dict[str, Any]:
         try:
-            response = self._stub.DeployService(
+            response = self._deploy_service(
                 container_pb2.DeployServiceRequest(
                     user_id=user_id,
                     project_id=project_id,
@@ -73,7 +86,7 @@ class ContainerClient:
 
     def delete_service(self, user_id: str, project_id: str, name: str) -> None:
         try:
-            self._stub.DeleteService(
+            self._delete_service(
                 container_pb2.DeleteServiceRequest(
                     user_id=user_id,
                     project_id=project_id,

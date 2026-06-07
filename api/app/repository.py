@@ -36,6 +36,27 @@ CREATE TABLE IF NOT EXISTS project_repositories (
 CREATE INDEX IF NOT EXISTS idx_project_repositories_user_project
     ON project_repositories (user_id, project_id);
 
+CREATE TABLE IF NOT EXISTS identity_users (
+    id TEXT PRIMARY KEY,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    email TEXT,
+    name TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS identity_sessions (
+    token_hash TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES identity_users(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_identity_sessions_user_expires
+    ON identity_sessions (user_id, expires_at, token_hash);
+
 """
 
 

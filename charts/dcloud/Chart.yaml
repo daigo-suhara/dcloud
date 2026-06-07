@@ -4,3 +4,8 @@ description: A GCP-like cloud platform running on Kubernetes.
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
+
+dependencies:
+  - name: postgresql-ha
+    version: 16.3.2
+    repository: oci://registry-1.docker.io/bitnamicharts

@@ -17,6 +17,13 @@ export type AuthUser = {
   name?: string;
 };
 
+export type AuthForm = {
+  username: string;
+  password: string;
+  email: string;
+  name: string;
+};
+
 export type Project = {
   id: string;
   name: string;
@@ -72,6 +79,13 @@ export const initialForm: DeployForm = {
   port: "8080",
   minScale: "0",
   maxScale: "20"
+};
+
+export const initialAuthForm: AuthForm = {
+  username: "",
+  password: "",
+  email: "",
+  name: ""
 };
 
 export const navItems = [

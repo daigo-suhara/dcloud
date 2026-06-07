@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import os
 import time
-from urllib.parse import quote
 from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import RedirectResponse
+from fastapi import Response
 from app.routes.container import router as container_router
 from app.routes.project import router as project_router
+from app.identity_client import IdentityClient
 from app.repository import Repository
 from app.container_client import ContainerClient
 
@@ -18,31 +19,41 @@ app.include_router(project_router, prefix="/project", tags=["project"])
 app.include_router(container_router, prefix="/container", tags=["container"])
 
 
+def session_cookie_name() -> str:
+    return os.getenv("DCLD_SESSION_COOKIE_NAME", "dcloud_session").strip() or "dcloud_session"
+
+
+def session_cookie_secure() -> bool:
+    value = os.getenv("DCLD_COOKIE_SECURE", "false").strip().lower()
+    return value not in {"0", "false", "no", "off"}
+
+
 def current_user(request: Request) -> dict[str, Any]:
-    uid = request.headers.get("X-authentik-uid", "").strip()
-    username = request.headers.get("X-authentik-username", "").strip()
-    if not uid or not username:
+    session_token = request.cookies.get(session_cookie_name(), "").strip()
+    if not session_token:
         raise HTTPException(status_code=401, detail="ログインが必要です")
-    return {
-        "id": uid,
-        "username": username,
-        "email": request.headers.get("X-authentik-email", "").strip() or None,
-        "name": request.headers.get("X-authentik-name", "").strip() or None,
-    }
+    try:
+        return app.state.identity_client.me(session_token)
+    except PermissionError as exc:
+        raise HTTPException(status_code=401, detail="ログインが必要です") from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
-def authentik_login_url() -> str:
-    base_url = os.getenv("DCLD_AUTHENTIK_BASE_URL", "https://auth.daigo-suhara.com").strip() or "https://auth.daigo-suhara.com"
-    console_url = os.getenv("DCLD_CONSOLE_PUBLIC_URL", "https://cloud.daigo-suhara.com").strip() or "https://cloud.daigo-suhara.com"
-    rd = quote(f"{console_url}/login", safe="")
-    return f"{base_url}/outpost.goauthentik.io/start?rd={rd}"
+def set_session_cookie(response: Response, session_token: str) -> None:
+    response.set_cookie(
+        key=session_cookie_name(),
+        value=session_token,
+        httponly=True,
+        secure=session_cookie_secure(),
+        samesite="lax",
+        path="/",
+        max_age=60 * 60 * 24 * 30,
+    )
 
 
-def authentik_logout_url() -> str:
-    base_url = os.getenv("DCLD_AUTHENTIK_BASE_URL", "https://auth.daigo-suhara.com").strip() or "https://auth.daigo-suhara.com"
-    console_url = os.getenv("DCLD_CONSOLE_PUBLIC_URL", "https://cloud.daigo-suhara.com").strip() or "https://cloud.daigo-suhara.com"
-    rd = quote(console_url, safe="")
-    return f"{base_url}/outpost.goauthentik.io/sign_out?rd={rd}"
+def clear_session_cookie(response: Response) -> None:
+    response.delete_cookie(key=session_cookie_name(), path="/")
 
 
 @app.on_event("startup")
@@ -50,6 +61,7 @@ def startup() -> None:
     last_error: Exception | None = None
     for _ in range(60):
         try:
+            app.state.identity_client = IdentityClient.new()
             app.state.repo = Repository.new()
             app.state.container_client = ContainerClient.new()
             return
@@ -67,7 +79,7 @@ def healthz() -> dict[str, str]:
 
 @app.get("/readyz")
 def readyz() -> dict[str, str]:
-    if not hasattr(app.state, "repo"):
+    if not hasattr(app.state, "repo") or not hasattr(app.state, "identity_client"):
         raise HTTPException(status_code=503, detail="starting")
     return {"status": "ready", "service": "api"}
 
@@ -78,15 +90,66 @@ def auth_me(request: Request) -> dict[str, Any]:
 
 
 @app.get("/api/v1/auth/login")
+def auth_login_page() -> RedirectResponse:
+    return RedirectResponse(url="/login", status_code=302)
+
+
 @app.post("/api/v1/auth/login")
-def auth_login() -> RedirectResponse:
-    return RedirectResponse(url=authentik_login_url(), status_code=302)
+def auth_login(body: dict[str, Any], response: Response) -> dict[str, Any]:
+    username = str(body.get("username", "")).strip()
+    password = str(body.get("password", "")).strip()
+    try:
+        auth = app.state.identity_client.login(username, password)
+    except PermissionError as exc:
+        raise HTTPException(status_code=401, detail="ユーザ名またはパスワードが違います") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    set_session_cookie(response, auth["sessionToken"])
+    return {"user": auth["user"]}
+
+
+@app.get("/api/v1/auth/register")
+def auth_register_page() -> RedirectResponse:
+    return RedirectResponse(url="/login", status_code=302)
+
+
+@app.post("/api/v1/auth/register")
+def auth_register(body: dict[str, Any], response: Response) -> dict[str, Any]:
+    username = str(body.get("username", "")).strip()
+    password = str(body.get("password", "")).strip()
+    email = str(body.get("email", "")).strip()
+    name = str(body.get("name", "")).strip()
+    try:
+        auth = app.state.identity_client.register(username, password, email, name)
+    except PermissionError as exc:
+        raise HTTPException(status_code=401, detail="アカウントを作成できませんでした") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    set_session_cookie(response, auth["sessionToken"])
+    return {"user": auth["user"]}
 
 
 @app.get("/api/v1/auth/logout")
+def auth_logout_page() -> RedirectResponse:
+    return RedirectResponse(url="/login", status_code=302)
+
+
 @app.post("/api/v1/auth/logout")
-def auth_logout() -> RedirectResponse:
-    return RedirectResponse(url=authentik_logout_url(), status_code=302)
+def auth_logout(request: Request, response: Response) -> dict[str, str]:
+    session_token = request.cookies.get(session_cookie_name(), "").strip()
+    if session_token:
+        try:
+            app.state.identity_client.logout(session_token)
+        except RuntimeError:
+            pass
+    clear_session_cookie(response)
+    return {"status": "ok"}
 
 
 @app.get("/api/v1/projects")
