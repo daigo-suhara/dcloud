@@ -49,6 +49,8 @@ jobs:
             dockerfile: internal/identity/Dockerfile
           - name: compute
             dockerfile: internal/compute/Dockerfile
+          - name: db-migrate
+            dockerfile: internal/db/Dockerfile
           - name: console
             dockerfile: console/Dockerfile
     steps:

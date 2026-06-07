@@ -32,18 +32,44 @@ func OpenWithURL(databaseURL string) (*sql.DB, error) {
 		_ = db.Close()
 		return nil, err
 	}
-	if err := initSchema(db); err != nil {
+	if err := ensureSchema(db); err != nil {
 		_ = db.Close()
 		return nil, err
 	}
 	return db, nil
 }
 
-func initSchema(db *sql.DB) error {
+func Migrate(databaseURL string) error {
+	if databaseURL == "" {
+		return errors.New("database URL is required")
+	}
+	return initSchema(databaseURL)
+}
+
+func initSchema(databaseURL string) error {
+	db, err := sql.Open("pgx", databaseURL)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	if err := db.Ping(); err != nil {
+		return err
+	}
 	for _, stmt := range splitStatements(schemaSQL) {
 		if _, err := db.Exec(stmt); err != nil {
 			return fmt.Errorf("init schema: %w", err)
 		}
+	}
+	return nil
+}
+
+func ensureSchema(db *sql.DB) error {
+	var ready bool
+	if err := db.QueryRow("SELECT to_regclass('public.identity_sessions') IS NOT NULL").Scan(&ready); err != nil {
+		return err
+	}
+	if !ready {
+		return errors.New("database schema is not ready")
 	}
 	return nil
 }
