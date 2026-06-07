@@ -6,6 +6,7 @@ import "./styles.css";
 import { AuthScreen } from "./components/AuthScreen";
 import { AppShell } from "./components/AppShell";
 import { ContainerSection } from "./components/ContainerSection";
+import { ComputeDetailSection } from "./components/ComputeDetailSection";
 import { ComputeSection } from "./components/ComputeSection";
 import { DeploySection } from "./components/DeploySection";
 import { RepositorySection } from "./components/RepositorySection";
@@ -29,6 +30,9 @@ function AppContent() {
   const location = useLocation();
   const forceProjectCreate = Boolean(controller.currentUser && controller.projectsLoaded && controller.projects.length === 0);
   const visibleSection = forceProjectCreate ? "project-create" : controller.route.section;
+  const selectedComputeMachine = controller.route.selectedComputeMachineName
+    ? controller.computeMachines.find((machine) => machine.name === controller.route.selectedComputeMachineName) ?? null
+    : null;
 
   React.useEffect(() => {
     if (!controller.authLoading && !controller.currentUser && location.pathname !== "/login") {
@@ -132,6 +136,14 @@ function AppContent() {
             selectedService={controller.selectedService}
             selectedStatus={controller.selectedStatus}
             containers={controller.containers}
+          />
+        ) : visibleSection === "compute" && controller.route.selectedComputeMachineName ? (
+          <ComputeDetailSection
+            machine={selectedComputeMachine}
+            machineName={controller.route.selectedComputeMachineName}
+            loading={controller.computeLoading}
+            projectId={controller.activeProjectId}
+            onBack={() => navigate("/compute")}
           />
         ) : visibleSection === "compute" ? (
           <ComputeSection

@@ -5,33 +5,41 @@ export function parseRoute(pathname: string): RouteState {
   const route = pathname.replace(/^\/+/, "");
 
   if (!route) {
-    return { section: "home", selectedServiceName: null };
+    return { section: "home", selectedServiceName: null, selectedComputeMachineName: null };
   }
 
   const [section, ...rest] = route.split("/");
   const normalizedSection = section;
 
   if (normalizedSection === "container" && rest[0] === "deploy") {
-    return { section: "deploy", selectedServiceName: null };
+    return { section: "deploy", selectedServiceName: null, selectedComputeMachineName: null };
   }
   if (normalizedSection === "compute") {
-    return { section: "compute", selectedServiceName: null };
+    if (rest.length > 0) {
+      return {
+        section: "compute",
+        selectedServiceName: null,
+        selectedComputeMachineName: decodeURIComponent(rest.join("/"))
+      };
+    }
+    return { section: "compute", selectedServiceName: null, selectedComputeMachineName: null };
   }
   if (normalizedSection === "container" && rest[0] === "repository") {
-    return { section: "repository", selectedServiceName: null };
+    return { section: "repository", selectedServiceName: null, selectedComputeMachineName: null };
   }
   if (normalizedSection === "container" && rest.length > 0) {
     return {
       section: "container",
-      selectedServiceName: decodeURIComponent(rest.join("/"))
+      selectedServiceName: decodeURIComponent(rest.join("/")),
+      selectedComputeMachineName: null
     };
   }
 
   if (normalizedSection === "home" || normalizedSection === "container" || normalizedSection === "deploy" || normalizedSection === "compute" || normalizedSection === "project-create" || normalizedSection === "repository") {
-    return { section: normalizedSection, selectedServiceName: null };
+    return { section: normalizedSection, selectedServiceName: null, selectedComputeMachineName: null };
   }
 
-  return { section: "home", selectedServiceName: null };
+  return { section: "home", selectedServiceName: null, selectedComputeMachineName: null };
 }
 
 export function getServiceStatus(service: DeployedService) {

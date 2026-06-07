@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import asyncio
+import ssl
 import os
 import time
+from hashlib import sha256
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.responses import RedirectResponse
 from fastapi import Response
 from app.routes.project import router as project_router
@@ -28,7 +33,10 @@ def session_cookie_secure() -> bool:
 
 
 def current_user(request: Request) -> dict[str, Any]:
-    session_token = request.cookies.get(session_cookie_name(), "").strip()
+    return current_user_from_session(request.cookies.get(session_cookie_name(), "").strip())
+
+
+def current_user_from_session(session_token: str) -> dict[str, Any]:
     if not session_token:
         raise HTTPException(status_code=401, detail="ログインが必要です")
     try:
@@ -60,6 +68,19 @@ def exception_detail(exc: Exception, fallback: str) -> str:
     if message.startswith("'") and message.endswith("'") and len(message) >= 2:
         message = message[1:-1].strip()
     return message or fallback
+
+
+def compute_machine_resource_name(user_id: str, project_id: str, name: str) -> str:
+    digest = sha256(f"{user_id.strip()}:{project_id.strip()}:{name.strip()}".encode("utf-8")).hexdigest()
+    return f"vm-{digest[:16]}"
+
+
+def resolve_compute_machine(user_id: str, project_id: str, name: str) -> dict[str, Any]:
+    machines = app.state.compute_client.list_machines(user_id, project_id)
+    for machine in machines["machines"]:
+        if machine["name"] == name:
+            return {"namespace": machines["namespace"], "machine": machine}
+    raise HTTPException(status_code=404, detail="仮想マシンが見つかりません")
 
 
 @app.on_event("startup")
@@ -313,6 +334,29 @@ def list_compute(
         raise HTTPException(status_code=502, detail=exception_detail(exc, "仮想マシン一覧を取得できません")) from exc
 
 
+@app.get("/api/v1/compute/{name}")
+def get_compute(
+    name: str,
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, Any]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    try:
+        resolved = resolve_compute_machine(user["id"], project_id, name)
+        return {"namespace": resolved["namespace"], "user": user["id"], "projectId": project_id, "machine": resolved["machine"]}
+    except HTTPException:
+        raise
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=exception_detail(exc, "仮想マシンを取得できません")) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=exception_detail(exc, "仮想マシンを取得できません")) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=exception_detail(exc, "仮想マシンを取得できません")) from exc
+
+
 @app.post("/api/v1/compute")
 def create_compute(
     body: dict[str, Any],
@@ -356,3 +400,99 @@ def delete_compute(
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=exception_detail(exc, "仮想マシンを削除できません")) from exc
     return {"status": "deleted"}
+
+
+@app.websocket("/api/v1/compute/{name}/console")
+async def compute_console(websocket: WebSocket, name: str) -> None:
+    import websockets
+
+    session_token = websocket.cookies.get(session_cookie_name(), "").strip()
+    project_id = (websocket.query_params.get("projectId") or "").strip()
+    if not session_token:
+        await websocket.close(code=4401, reason="ログインが必要です")
+        return
+    if not project_id:
+        await websocket.close(code=4400, reason="プロジェクトを選択してください")
+        return
+
+    try:
+        user = current_user_from_session(session_token)
+        resolved = resolve_compute_machine(user["id"], project_id, name)
+    except HTTPException as exc:
+        await websocket.close(code=4404 if exc.status_code == 404 else 4400, reason=str(exc.detail))
+        return
+    except RuntimeError as exc:
+        await websocket.close(code=4502, reason=str(exc))
+        return
+
+    namespace = resolved["namespace"]
+    resource_name = compute_machine_resource_name(user["id"], project_id, name)
+    upstream_url = (
+        "wss://kubernetes.default.svc"
+        f"/apis/subresources.kubevirt.io/v1/namespaces/{quote(namespace)}/virtualmachineinstances/{quote(resource_name)}/console"
+    )
+    ca_path = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+    token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    try:
+        with open(token_path, "r", encoding="utf-8") as handle:
+            token = handle.read().strip()
+        ca_context = ssl.create_default_context(cafile=ca_path)
+    except OSError as exc:
+        await websocket.close(code=4500, reason=str(exc))
+        return
+
+    await websocket.accept()
+    try:
+        async with websockets.connect(
+            upstream_url,
+            additional_headers={"Authorization": f"Bearer {token}"},
+            subprotocols=["v5.channel.k8s.io", "v4.channel.k8s.io", "v3.channel.k8s.io", "v2.channel.k8s.io", "channel.k8s.io"],
+            ssl=ca_context,
+            ping_interval=None,
+            close_timeout=5,
+            max_size=None,
+        ) as upstream:
+            async def forward_client_to_upstream() -> None:
+                try:
+                    while True:
+                        message = await websocket.receive()
+                        if message["type"] == "websocket.disconnect":
+                            break
+                        text = message.get("text")
+                        if text is not None:
+                            await upstream.send(bytes([0]) + text.encode("utf-8"))
+                            continue
+                        data = message.get("bytes")
+                        if data is not None:
+                            await upstream.send(bytes([0]) + data)
+                except WebSocketDisconnect:
+                    return
+
+            async def forward_upstream_to_client() -> None:
+                try:
+                    async for message in upstream:
+                        if isinstance(message, bytes):
+                            payload = message[1:] if len(message) > 1 else b""
+                            if not payload:
+                                continue
+                            await websocket.send_text(payload.decode("utf-8", errors="ignore"))
+                        else:
+                            await websocket.send_text(message)
+                except websockets.ConnectionClosed:
+                    return
+
+            client_task = asyncio.create_task(forward_client_to_upstream())
+            upstream_task = asyncio.create_task(forward_upstream_to_client())
+            done, pending = await asyncio.wait(
+                {client_task, upstream_task},
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            for task in pending:
+                task.cancel()
+            await asyncio.gather(*pending, return_exceptions=True)
+            for task in done:
+                task.result()
+    except Exception as exc:
+        if websocket.client_state.name != "DISCONNECTED":
+            await websocket.send_text(f"\r\n[console disconnected] {exc}\r\n")
+            await websocket.close(code=1011, reason=str(exc))

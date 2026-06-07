@@ -2,4 +2,5 @@ fastapi==0.115.6
 grpcio==1.81.0
 psycopg[binary]>=3.2,<4
 protobuf>=7.35.0,<8
+websockets>=15,<16
 uvicorn[standard]==0.34.0

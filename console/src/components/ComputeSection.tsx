@@ -3,6 +3,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { alpha } from "@mui/material/styles";
 import { Alert, Box, Button, Card, CardContent, CircularProgress, Paper, TextField, Typography } from "@mui/material";
 import type { FormEvent } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import type { ComputeForm, ComputeMachine } from "../types";
 import { actionLinkButtonSx } from "../theme";
 import { formatComputeStatus, formatComputeTimestamp } from "../utils";
@@ -55,9 +56,6 @@ export function ComputeSection({
                 <Typography variant="h5" sx={{ fontWeight: 700 }}>
                   仮想マシン
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  KubeVirt で作成された VM の一覧です。
-                </Typography>
               </Box>
             </Box>
 
@@ -65,7 +63,7 @@ export function ComputeSection({
               <Box
                 sx={{
                   display: { xs: "none", sm: "grid" },
-                  gridTemplateColumns: "42px minmax(0, 1fr) minmax(220px, max-content)",
+                  gridTemplateColumns: "42px minmax(0, 1fr) 160px max-content",
                   alignItems: "center",
                   minHeight: 36,
                   px: 1,
@@ -76,10 +74,8 @@ export function ComputeSection({
                 }}
               >
                 <Box />
-                <Box sx={{ display: "grid", gridTemplateColumns: "minmax(120px, max-content) 150px", columnGap: 3 }}>
-                  <Box>名前</Box>
-                  <Box>更新日時</Box>
-                </Box>
+                <Box>名前</Box>
+                <Box>更新日時</Box>
                 <Box sx={{ textAlign: "right" }}>操作</Box>
               </Box>
 
@@ -101,7 +97,7 @@ export function ComputeSection({
                         variant="outlined"
                         sx={{
                           display: "grid",
-                          gridTemplateColumns: { xs: "42px minmax(0, 1fr)", sm: "42px minmax(0, 1fr) minmax(220px, max-content)" },
+                          gridTemplateColumns: "42px minmax(0, 1fr) 160px max-content",
                           gap: 0,
                           alignItems: "center",
                           minHeight: { xs: 40, sm: 44 },
@@ -127,28 +123,47 @@ export function ComputeSection({
                             {statusIcon}
                           </Box>
                         </Box>
-                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "minmax(120px, 1fr) max-content" }, columnGap: 3, rowGap: 0.5, alignItems: "center", minWidth: 0 }}>
-                          <Box sx={{ display: "grid", gap: 0.25, minWidth: 0 }}>
-                            <Typography sx={{ fontWeight: 700, wordBreak: "break-all" }}>{machine.name}</Typography>
-                          </Box>
-                          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 1.5, minWidth: 0, flexWrap: "wrap" }}>
-                            <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
-                              {formatComputeTimestamp(machine.updatedAt || machine.createdAt)}
-                            </Typography>
-                            <Button
-                              variant="text"
-                              size="small"
-                              color="error"
-                              startIcon={
-                                deletingMachineName === machine.name ? <CircularProgress size={14} thickness={5} sx={{ color: "inherit" }} /> : <DeleteOutlinedIcon fontSize="small" />
-                              }
-                              onClick={() => onDeleteMachine(machine.name)}
-                              disabled={deletingMachineName === machine.name}
-                              sx={{ minWidth: 0, whiteSpace: "nowrap" }}
-                            >
-                              {deletingMachineName === machine.name ? "削除中..." : "削除"}
-                            </Button>
-                          </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Button
+                            component={RouterLink}
+                            to={`/compute/${encodeURIComponent(machine.name)}`}
+                            variant="text"
+                            size="small"
+                            sx={{
+                              justifyContent: "flex-start",
+                              minWidth: 0,
+                              px: 0,
+                              py: 0,
+                              fontSize: "0.95rem",
+                              fontWeight: 700,
+                              textTransform: "none",
+                              color: "text.primary",
+                              wordBreak: "break-all",
+                              "&:hover": { backgroundColor: "transparent", textDecoration: "underline" }
+                            }}
+                          >
+                            {machine.name}
+                          </Button>
+                        </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+                            {formatComputeTimestamp(machine.updatedAt || machine.createdAt)}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: "flex", justifyContent: "flex-end", minWidth: 0 }}>
+                          <Button
+                            variant="text"
+                            size="small"
+                            color="error"
+                            startIcon={
+                              deletingMachineName === machine.name ? <CircularProgress size={14} thickness={5} sx={{ color: "inherit" }} /> : <DeleteOutlinedIcon fontSize="small" />
+                            }
+                            onClick={() => onDeleteMachine(machine.name)}
+                            disabled={deletingMachineName === machine.name}
+                            sx={{ minWidth: 0, whiteSpace: "nowrap" }}
+                          >
+                            {deletingMachineName === machine.name ? "削除中..." : "削除"}
+                          </Button>
                         </Box>
                       </Paper>
                     );
