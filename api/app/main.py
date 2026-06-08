@@ -475,7 +475,7 @@ async def compute_console(websocket: WebSocket, name: str) -> None:
                             payload = message[1:] if len(message) > 1 else b""
                             if not payload:
                                 continue
-                            await websocket.send_text(payload.decode("utf-8", errors="ignore"))
+                            await websocket.send_bytes(payload)
                         else:
                             await websocket.send_text(message)
                 except websockets.ConnectionClosed:

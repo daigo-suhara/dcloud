@@ -79,6 +79,7 @@ export function ComputeDetailSection({ machine, machineName, loading, projectId,
     resize();
     const observer = new ResizeObserver(() => resize());
     observer.observe(container);
+    const decoder = new TextDecoder();
     const dataDisposable = terminal.onData((data) => {
       if (socketRef.current?.readyState === WebSocket.OPEN) {
         socketRef.current.send(data);
@@ -131,7 +132,7 @@ export function ComputeDetailSection({ machine, machineName, loading, projectId,
         if (payload.length === 0) {
           return;
         }
-        terminal.write(new TextDecoder().decode(payload));
+        terminal.write(decoder.decode(payload, { stream: true }));
       };
 
       socket.onerror = () => {
@@ -150,6 +151,7 @@ export function ComputeDetailSection({ machine, machineName, loading, projectId,
         }
         socketReadyRef.current = false;
         socketRef.current = null;
+        terminal.write(decoder.decode());
         setTerminalStatus(machine.ready ? "再接続待ち" : "起動待ち");
         terminal.writeln("");
         terminal.writeln(machine.ready ? "[disconnected: retrying]" : "[waiting for vm to start]");
