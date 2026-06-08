@@ -190,9 +190,14 @@ export function ComputeDetailSection({ machine, machineName, loading, projectId,
               <Typography variant="overline" color="primary">
                 仮想マシン詳細
               </Typography>
-              <Typography variant="h5" sx={{ fontWeight: 700, wordBreak: "break-word" }}>
-                {machine?.name ?? machineName}
-              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0 }}>
+                <Box sx={{ width: 34, height: 34, borderRadius: "999px", display: "grid", placeItems: "center", bgcolor: isReady ? "transparent" : alpha("#2563eb", 0.12), color: isReady ? "success.main" : "primary.main" }}>
+                  {isReady ? <CheckCircleIcon fontSize="small" /> : <CircularProgress size={16} thickness={5} sx={{ color: "inherit" }} />}
+                </Box>
+                <Typography variant="h5" sx={{ fontWeight: 700, wordBreak: "break-word" }}>
+                  {machine?.name ?? machineName}
+                </Typography>
+              </Box>
             </Box>
             <Button startIcon={<ArrowBackIcon />} onClick={onBack}>
               一覧に戻る
