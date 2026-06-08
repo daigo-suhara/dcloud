@@ -2,7 +2,8 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { alpha } from "@mui/material/styles";
 import { Alert, Box, Button, Card, CardContent, Paper, TextField, Typography } from "@mui/material";
 import type { FormEvent } from "react";
-import { SiCentos, SiDebian, SiFedora, SiOpensuse, SiUbuntu } from "react-icons/si";
+import { BiImageAdd } from "react-icons/bi";
+import { SiCentos, SiDebian, SiFedora, SiUbuntu } from "react-icons/si";
 import type { ComputeForm } from "../types";
 import { actionLinkButtonSx } from "../theme";
 
@@ -41,20 +42,16 @@ const imagePresets = [
     icon: SiCentos
   },
   {
-    label: "openSUSE Leap",
-    image: "quay.io/containerdisks/opensuse-leap:latest",
-    icon: SiOpensuse
-  },
-  {
-    label: "openSUSE Tumbleweed",
-    image: "quay.io/containerdisks/opensuse-tumbleweed:latest",
-    icon: SiOpensuse
+    label: "カスタム",
+    image: "",
+    icon: BiImageAdd
   }
 ] as const;
 
 export function ComputeCreateSection({ error, form, onBack, onChange, onSubmit, submitting }: ComputeCreateSectionProps) {
   const machineName = form.name.trim();
   const machineNameError = machineName.length > 0 && !isDnsLabel(machineName);
+  const isCustomImage = !imagePresets.some((preset) => preset.image === form.image);
 
   function fillSample() {
     onChange({
@@ -83,9 +80,6 @@ export function ComputeCreateSection({ error, form, onBack, onChange, onSubmit, 
                 <Typography variant="h6" sx={{ fontWeight: 800 }}>
                   イメージを選ぶ
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  公式の containerdisk から選択できます。必要なら右側でそのままカスタム image も入力できます。
-                </Typography>
               </Box>
               <Button type="button" variant="text" size="small" onClick={fillSample} sx={actionLinkButtonSx}>
                 サンプルVMを使用
@@ -95,20 +89,20 @@ export function ComputeCreateSection({ error, form, onBack, onChange, onSubmit, 
             <Box
               sx={{
                 display: "grid",
-                gap: 1.25,
+                gap: 1,
                 gridTemplateColumns: {
                   xs: "1fr",
                   sm: "repeat(2, minmax(0, 1fr))",
-                  lg: "repeat(3, minmax(0, 1fr))"
+                  lg: "repeat(5, minmax(0, 1fr))"
                 }
               }}
             >
               {imagePresets.map((preset) => {
-                const selected = preset.image === form.image;
                 const Icon = preset.icon;
+                const selected = preset.image === form.image || (preset.image === "" && isCustomImage);
                 return (
                   <Paper
-                    key={preset.image}
+                    key={preset.image || "custom"}
                     component="button"
                     type="button"
                     onClick={() => onChange({ image: preset.image })}
@@ -116,13 +110,14 @@ export function ComputeCreateSection({ error, form, onBack, onChange, onSubmit, 
                     sx={{
                       textAlign: "center",
                       width: "100%",
-                      p: 1.5,
-                      borderRadius: 2,
+                      minHeight: 106,
+                      p: 1.25,
+                      borderRadius: 1.75,
                       borderColor: selected ? "primary.main" : "rgba(148, 163, 184, 0.18)",
                       bgcolor: selected ? alpha("#2563eb", 0.08) : "background.paper",
                       cursor: "pointer",
                       display: "grid",
-                      gap: 1,
+                      gap: 0.75,
                       justifyItems: "center",
                       transition: "border-color 120ms ease, background-color 120ms ease, transform 120ms ease",
                       "&:hover": {
@@ -134,8 +129,8 @@ export function ComputeCreateSection({ error, form, onBack, onChange, onSubmit, 
                   >
                     <Box
                       sx={{
-                        width: 52,
-                        height: 52,
+                        width: 46,
+                        height: 46,
                         display: "grid",
                         placeItems: "center",
                         borderRadius: "999px",
@@ -143,13 +138,31 @@ export function ComputeCreateSection({ error, form, onBack, onChange, onSubmit, 
                         bgcolor: selected ? alpha("#2563eb", 0.12) : alpha("#0f172a", 0.04)
                       }}
                     >
-                      <Icon size={28} />
+                      <Icon size={24} />
                     </Box>
-                    <Typography sx={{ fontWeight: 800, lineHeight: 1.2 }}>{preset.label}</Typography>
+                    <Typography sx={{ fontWeight: 800, lineHeight: 1.2, fontSize: "0.92rem" }}>{preset.label}</Typography>
                   </Paper>
                 );
               })}
             </Box>
+
+            {isCustomImage ? (
+              <TextField
+                label="イメージ URL"
+                value={form.image}
+                onChange={(event) => onChange({ image: event.target.value })}
+                placeholder="quay.io/containerdisks/custom:latest"
+                fullWidth
+                slotProps={{
+                  htmlInput: {
+                    autoCapitalize: "none",
+                    autoComplete: "off",
+                    autoCorrect: "off",
+                    spellCheck: false
+                  }
+                }}
+              />
+            ) : null}
           </CardContent>
         </Card>
 
@@ -183,22 +196,6 @@ export function ComputeCreateSection({ error, form, onBack, onChange, onSubmit, 
                   }
                 }}
                 fullWidth
-              />
-
-              <TextField
-                label="イメージ"
-                value={form.image}
-                onChange={(event) => onChange({ image: event.target.value })}
-                placeholder="quay.io/containerdisks/fedora:latest"
-                fullWidth
-                slotProps={{
-                  htmlInput: {
-                    autoComplete: "off",
-                    autoCorrect: "off",
-                    autoCapitalize: "none",
-                    spellCheck: false
-                  }
-                }}
               />
 
               <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" } }}>
