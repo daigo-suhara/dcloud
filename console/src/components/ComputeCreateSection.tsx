@@ -1,8 +1,8 @@
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { alpha } from "@mui/material/styles";
-import { Alert, Box, Button, Card, CardContent, CircularProgress, Paper, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Card, CardContent, Paper, TextField, Typography } from "@mui/material";
 import type { FormEvent } from "react";
+import { SiCentos, SiDebian, SiFedora, SiOpensuse, SiUbuntu } from "react-icons/si";
 import type { ComputeForm } from "../types";
 import { actionLinkButtonSx } from "../theme";
 
@@ -22,34 +22,39 @@ type ComputeCreateSectionProps = {
 const imagePresets = [
   {
     label: "Fedora",
-    image: "quay.io/containerdisks/fedora:latest"
+    image: "quay.io/containerdisks/fedora:latest",
+    icon: SiFedora
   },
   {
     label: "Ubuntu",
-    image: "quay.io/containerdisks/ubuntu:latest"
+    image: "quay.io/containerdisks/ubuntu:latest",
+    icon: SiUbuntu
   },
   {
     label: "Debian",
-    image: "quay.io/containerdisks/debian:latest"
+    image: "quay.io/containerdisks/debian:latest",
+    icon: SiDebian
   },
   {
     label: "CentOS Stream",
-    image: "quay.io/containerdisks/centos-stream:latest"
+    image: "quay.io/containerdisks/centos-stream:latest",
+    icon: SiCentos
   },
   {
     label: "openSUSE Leap",
-    image: "quay.io/containerdisks/opensuse-leap:latest"
+    image: "quay.io/containerdisks/opensuse-leap:latest",
+    icon: SiOpensuse
   },
   {
     label: "openSUSE Tumbleweed",
-    image: "quay.io/containerdisks/opensuse-tumbleweed:latest"
+    image: "quay.io/containerdisks/opensuse-tumbleweed:latest",
+    icon: SiOpensuse
   }
 ] as const;
 
 export function ComputeCreateSection({ error, form, onBack, onChange, onSubmit, submitting }: ComputeCreateSectionProps) {
   const machineName = form.name.trim();
   const machineNameError = machineName.length > 0 && !isDnsLabel(machineName);
-  const selectedPreset = imagePresets.find((preset) => preset.image === form.image);
 
   function fillSample() {
     onChange({
@@ -90,7 +95,7 @@ export function ComputeCreateSection({ error, form, onBack, onChange, onSubmit, 
             <Box
               sx={{
                 display: "grid",
-                gap: 1,
+                gap: 1.25,
                 gridTemplateColumns: {
                   xs: "1fr",
                   sm: "repeat(2, minmax(0, 1fr))",
@@ -100,6 +105,7 @@ export function ComputeCreateSection({ error, form, onBack, onChange, onSubmit, 
             >
               {imagePresets.map((preset) => {
                 const selected = preset.image === form.image;
+                const Icon = preset.icon;
                 return (
                   <Paper
                     key={preset.image}
@@ -108,13 +114,16 @@ export function ComputeCreateSection({ error, form, onBack, onChange, onSubmit, 
                     onClick={() => onChange({ image: preset.image })}
                     variant="outlined"
                     sx={{
-                      textAlign: "left",
+                      textAlign: "center",
                       width: "100%",
-                      p: 1.25,
-                      borderRadius: 1.75,
+                      p: 1.5,
+                      borderRadius: 2,
                       borderColor: selected ? "primary.main" : "rgba(148, 163, 184, 0.18)",
-                      bgcolor: selected ? alpha("#2563eb", 0.06) : "background.paper",
+                      bgcolor: selected ? alpha("#2563eb", 0.08) : "background.paper",
                       cursor: "pointer",
+                      display: "grid",
+                      gap: 1,
+                      justifyItems: "center",
                       transition: "border-color 120ms ease, background-color 120ms ease, transform 120ms ease",
                       "&:hover": {
                         transform: "translateY(-1px)",
@@ -123,33 +132,24 @@ export function ComputeCreateSection({ error, form, onBack, onChange, onSubmit, 
                       }
                     }}
                   >
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1.5, minWidth: 0 }}>
-                      <Typography sx={{ fontWeight: 800, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{preset.label}</Typography>
-                      <Box
-                        sx={{
-                          width: 28,
-                          height: 28,
-                          display: "grid",
-                          placeItems: "center",
-                          borderRadius: "999px",
-                          color: selected ? "primary.main" : "text.secondary",
-                          bgcolor: selected ? alpha("#2563eb", 0.12) : alpha("#0f172a", 0.04)
-                        }}
-                      >
-                        {selected ? <CheckCircleIcon fontSize="small" /> : <CircularProgress size={14} thickness={6} sx={{ color: "inherit" }} />}
-                      </Box>
+                    <Box
+                      sx={{
+                        width: 52,
+                        height: 52,
+                        display: "grid",
+                        placeItems: "center",
+                        borderRadius: "999px",
+                        color: selected ? "primary.main" : "text.secondary",
+                        bgcolor: selected ? alpha("#2563eb", 0.12) : alpha("#0f172a", 0.04)
+                      }}
+                    >
+                      <Icon size={28} />
                     </Box>
+                    <Typography sx={{ fontWeight: 800, lineHeight: 1.2 }}>{preset.label}</Typography>
                   </Paper>
                 );
               })}
             </Box>
-
-            <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, display: "grid", gap: 1 }}>
-              <Typography variant="caption" color="text.secondary">
-                選択中のイメージ
-              </Typography>
-              <Typography sx={{ fontWeight: 700, wordBreak: "break-all" }}>{(selectedPreset?.label ?? form.image) || "-"}</Typography>
-            </Paper>
           </CardContent>
         </Card>
 
