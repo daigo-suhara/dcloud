@@ -75,7 +75,12 @@ export function ContainerSection({
                   <Typography variant="caption" color="text.secondary">
                     状態
                   </Typography>
-                  <Typography sx={{ mt: 0.5, fontWeight: 600 }}>{formatServiceStatus(selectedService)}</Typography>
+                  <Box sx={{ mt: 0.75, display: "flex", alignItems: "center", gap: 1, color: selectedStatus === "ready" ? "success.main" : "text.secondary" }}>
+                    <Box sx={{ width: 22, height: 22, display: "grid", placeItems: "center", borderRadius: "999px", bgcolor: selectedStatus === "ready" ? "transparent" : selectedStatus === "loading" ? alpha("#2563eb", 0.12) : alpha("#dc2626", 0.12), color: selectedStatus === "ready" ? "success.main" : selectedStatus === "loading" ? "primary.main" : "error.main" }}>
+                      {selectedStatusIcon}
+                    </Box>
+                    <Typography sx={{ fontWeight: 700 }}>{formatServiceStatus(selectedService)}</Typography>
+                  </Box>
                 </Paper>
                 <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: "grey.50" }}>
                   <Typography variant="caption" color="text.secondary">
