@@ -92,8 +92,8 @@ postgresql-ha:
       tag: 4.6.3-debian-12-r0
     resources:
       requests:
-        memory: 128Mi
-        cpu: 50m
-      limits:
         memory: 256Mi
-        cpu: 200m
+        cpu: 250m
+      limits:
+        memory: 512Mi
+        cpu: 375m
