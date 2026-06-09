@@ -188,7 +188,7 @@ export function ComputeDetailSection({ machine, machineName, loading, projectId,
     <Box sx={{ display: "grid", gap: 3 }}>
       <Card variant="outlined" sx={{ borderRadius: 2 }}>
         <CardContent sx={{ p: { xs: 2.5, sm: 3 }, display: "grid", gap: 2.5 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2, flexWrap: "wrap" }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
             <Box sx={{ display: "grid", gap: 0.75, minWidth: 0 }}>
               <Typography variant="overline" color="primary">
                 仮想マシン詳細
