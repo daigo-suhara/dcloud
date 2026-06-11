@@ -160,15 +160,17 @@ export function ContainerSection({
                 <Box sx={{ borderTop: "1px solid rgba(148, 163, 184, 0.18)" }}>
                   {containers.length > 0 ? (
                     containers.map((service) => {
+                      const isDeleting = deletingServiceName === service.name;
                       const status = getServiceStatus(service);
-                      const statusIcon =
-                        status === "ready" ? (
-                          <CheckCircleIcon fontSize="small" />
-                        ) : status === "loading" ? (
-                          <CircularProgress size={14} thickness={5.5} sx={{ color: "inherit" }} />
-                        ) : (
-                          <ErrorOutlinedIcon fontSize="small" />
-                        );
+                      const statusIcon = isDeleting || status === "loading" ? (
+                        <CircularProgress size={14} thickness={5.5} sx={{ color: "inherit" }} />
+                      ) : status === "ready" ? (
+                        <CheckCircleIcon fontSize="small" />
+                      ) : (
+                        <ErrorOutlinedIcon fontSize="small" />
+                      );
+                      const statusColor = isDeleting || status === "loading" ? alpha("#2563eb", 0.12) : status === "ready" ? "transparent" : alpha("#dc2626", 0.12);
+                      const statusTextColor = isDeleting || status === "loading" ? "primary.main" : status === "ready" ? "success.main" : "error.main";
                       return (
                         <Paper
                           key={service.name}
@@ -187,7 +189,7 @@ export function ContainerSection({
                           }}
                           >
                           <Box sx={{ display: "grid", placeItems: "center" }}>
-                            <Box sx={{ width: 22, height: 22, display: "grid", placeItems: "center", borderRadius: "999px", bgcolor: status === "ready" ? "transparent" : status === "loading" ? alpha("#2563eb", 0.12) : alpha("#dc2626", 0.12), color: status === "ready" ? "success.main" : status === "loading" ? "primary.main" : "error.main" }}>
+                            <Box sx={{ width: 22, height: 22, display: "grid", placeItems: "center", borderRadius: "999px", bgcolor: statusColor, color: statusTextColor }}>
                               {statusIcon}
                             </Box>
                           </Box>
@@ -204,7 +206,7 @@ export function ContainerSection({
                               <span>
                                 <IconButton
                                   color="error"
-                                  disabled={deletingServiceName === service.name}
+                                  disabled={isDeleting}
                                   onClick={() => onDeleteService(service.name)}
                                   size="small"
                                   sx={{
@@ -223,7 +225,7 @@ export function ContainerSection({
                                     }
                                   }}
                                 >
-                                  {deletingServiceName === service.name ? <CircularProgress size={14} thickness={5} sx={{ color: "inherit" }} /> : <DeleteOutlinedIcon fontSize="small" />}
+                                  <DeleteOutlinedIcon fontSize="small" />
                                 </IconButton>
                               </span>
                             </Tooltip>
