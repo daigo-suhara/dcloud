@@ -651,10 +651,12 @@ export function useConsoleController() {
         credentials: "include",
         headers: apiHeaders()
       });
-      if (!response.ok && response.status !== 204) {
+      if (!response.ok) {
         const data = (await readJsonResponse(response)) as ApiErrorResponse;
         throw new Error(getApiErrorMessage(data, "仮想マシンの削除に失敗しました"));
       }
+      const { operationId } = await response.json() as { operationId: string };
+      await pollOperation(operationId);
       setMessage(`${name} を削除しました`);
       if (route.selectedComputeMachineName === name) {
         navigate("/compute");

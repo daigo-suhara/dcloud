@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rcompute.proto\x12\x11\x64\x63loud.compute.v1\"\x07\n\x05\x45mpty\"\x0f\n\rHealthRequest\"D\n\x0eHealthResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x0f\n\x07service\x18\x02 \x01(\t\x12\x11\n\ttimestamp\x18\x03 \x01(\t\"\xd5\x01\n\x07Machine\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05image\x18\x02 \x01(\t\x12\x0b\n\x03\x63pu\x18\x03 \x01(\t\x12\x0e\n\x06memory\x18\x04 \x01(\t\x12\r\n\x05ready\x18\x05 \x01(\x08\x12\x0e\n\x06status\x18\x06 \x01(\t\x12\x0e\n\x06reason\x18\x07 \x01(\t\x12\x12\n\ncreated_at\x18\x08 \x01(\t\x12\x12\n\nupdated_at\x18\t \x01(\t\x12\x11\n\tnamespace\x18\n \x01(\t\x12\x12\n\nproject_id\x18\x0b \x01(\t\x12\x12\n\ngeneration\x18\x0c \x01(\x03\":\n\x13ListMachinesRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\"|\n\x14ListMachinesResponse\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x11\n\tnamespace\x18\x03 \x01(\t\x12,\n\x08machines\x18\x04 \x03(\x0b\x32\x1a.dcloud.compute.v1.Machine\"u\n\x14\x43reateMachineRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\r\n\x05image\x18\x04 \x01(\t\x12\x0b\n\x03\x63pu\x18\x05 \x01(\t\x12\x0e\n\x06memory\x18\x06 \x01(\t\"D\n\x15\x43reateMachineResponse\x12+\n\x07machine\x18\x01 \x01(\x0b\x32\x1a.dcloud.compute.v1.Machine\"I\n\x14\x44\x65leteMachineRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\"\x17\n\x15\x44\x65leteMachineResponse2\x88\x03\n\x0e\x43omputeService\x12M\n\x06Health\x12 .dcloud.compute.v1.HealthRequest\x1a!.dcloud.compute.v1.HealthResponse\x12_\n\x0cListMachines\x12&.dcloud.compute.v1.ListMachinesRequest\x1a\'.dcloud.compute.v1.ListMachinesResponse\x12\x62\n\rCreateMachine\x12\'.dcloud.compute.v1.CreateMachineRequest\x1a(.dcloud.compute.v1.CreateMachineResponse\x12\x62\n\rDeleteMachine\x12\'.dcloud.compute.v1.DeleteMachineRequest\x1a(.dcloud.compute.v1.DeleteMachineResponseB@Z>github.com/daigo-suhara/dcloud/internal/pb/computepb;computepbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rcompute.proto\x12\x11\x64\x63loud.compute.v1\"\x07\n\x05\x45mpty\"\x0f\n\rHealthRequest\"D\n\x0eHealthResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x0f\n\x07service\x18\x02 \x01(\t\x12\x11\n\ttimestamp\x18\x03 \x01(\t\"\xd5\x01\n\x07Machine\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05image\x18\x02 \x01(\t\x12\x0b\n\x03\x63pu\x18\x03 \x01(\t\x12\x0e\n\x06memory\x18\x04 \x01(\t\x12\r\n\x05ready\x18\x05 \x01(\x08\x12\x0e\n\x06status\x18\x06 \x01(\t\x12\x0e\n\x06reason\x18\x07 \x01(\t\x12\x12\n\ncreated_at\x18\x08 \x01(\t\x12\x12\n\nupdated_at\x18\t \x01(\t\x12\x11\n\tnamespace\x18\n \x01(\t\x12\x12\n\nproject_id\x18\x0b \x01(\t\x12\x12\n\ngeneration\x18\x0c \x01(\x03\":\n\x13ListMachinesRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\"|\n\x14ListMachinesResponse\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x11\n\tnamespace\x18\x03 \x01(\t\x12,\n\x08machines\x18\x04 \x03(\x0b\x32\x1a.dcloud.compute.v1.Machine\"u\n\x14\x43reateMachineRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\r\n\x05image\x18\x04 \x01(\t\x12\x0b\n\x03\x63pu\x18\x05 \x01(\t\x12\x0e\n\x06memory\x18\x06 \x01(\t\"D\n\x15\x43reateMachineResponse\x12+\n\x07machine\x18\x01 \x01(\x0b\x32\x1a.dcloud.compute.v1.Machine\"I\n\x14\x44\x65leteMachineRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\"-\n\x15\x44\x65leteMachineResponse\x12\x14\n\x0coperation_id\x18\x01 \x01(\t\"+\n\x13GetOperationRequest\x12\x14\n\x0coperation_id\x18\x01 \x01(\t\"K\n\x14GetOperationResponse\x12\x14\n\x0coperation_id\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\r\n\x05\x65rror\x18\x03 \x01(\t2\xe9\x03\n\x0e\x43omputeService\x12M\n\x06Health\x12 .dcloud.compute.v1.HealthRequest\x1a!.dcloud.compute.v1.HealthResponse\x12_\n\x0cListMachines\x12&.dcloud.compute.v1.ListMachinesRequest\x1a\'.dcloud.compute.v1.ListMachinesResponse\x12\x62\n\rCreateMachine\x12\'.dcloud.compute.v1.CreateMachineRequest\x1a(.dcloud.compute.v1.CreateMachineResponse\x12\x62\n\rDeleteMachine\x12\'.dcloud.compute.v1.DeleteMachineRequest\x1a(.dcloud.compute.v1.DeleteMachineResponse\x12_\n\x0cGetOperation\x12&.dcloud.compute.v1.GetOperationRequest\x1a\'.dcloud.compute.v1.GetOperationResponseB@Z>github.com/daigo-suhara/dcloud/internal/pb/computepb;computepbb\x06proto3')
 
 
 
@@ -28,6 +28,8 @@ _CREATEMACHINEREQUEST = DESCRIPTOR.message_types_by_name['CreateMachineRequest']
 _CREATEMACHINERESPONSE = DESCRIPTOR.message_types_by_name['CreateMachineResponse']
 _DELETEMACHINEREQUEST = DESCRIPTOR.message_types_by_name['DeleteMachineRequest']
 _DELETEMACHINERESPONSE = DESCRIPTOR.message_types_by_name['DeleteMachineResponse']
+_GETOPERATIONREQUEST = DESCRIPTOR.message_types_by_name['GetOperationRequest']
+_GETOPERATIONRESPONSE = DESCRIPTOR.message_types_by_name['GetOperationResponse']
 Empty = _reflection.GeneratedProtocolMessageType('Empty', (_message.Message,), {
   'DESCRIPTOR' : _EMPTY,
   '__module__' : 'compute_pb2'
@@ -98,6 +100,20 @@ DeleteMachineResponse = _reflection.GeneratedProtocolMessageType('DeleteMachineR
   })
 _sym_db.RegisterMessage(DeleteMachineResponse)
 
+GetOperationRequest = _reflection.GeneratedProtocolMessageType('GetOperationRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETOPERATIONREQUEST,
+  '__module__' : 'compute_pb2'
+  # @@protoc_insertion_point(class_scope:dcloud.compute.v1.GetOperationRequest)
+  })
+_sym_db.RegisterMessage(GetOperationRequest)
+
+GetOperationResponse = _reflection.GeneratedProtocolMessageType('GetOperationResponse', (_message.Message,), {
+  'DESCRIPTOR' : _GETOPERATIONRESPONSE,
+  '__module__' : 'compute_pb2'
+  # @@protoc_insertion_point(class_scope:dcloud.compute.v1.GetOperationResponse)
+  })
+_sym_db.RegisterMessage(GetOperationResponse)
+
 _COMPUTESERVICE = DESCRIPTOR.services_by_name['ComputeService']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
@@ -122,7 +138,11 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _DELETEMACHINEREQUEST._serialized_start=723
   _DELETEMACHINEREQUEST._serialized_end=796
   _DELETEMACHINERESPONSE._serialized_start=798
-  _DELETEMACHINERESPONSE._serialized_end=821
-  _COMPUTESERVICE._serialized_start=824
-  _COMPUTESERVICE._serialized_end=1216
+  _DELETEMACHINERESPONSE._serialized_end=843
+  _GETOPERATIONREQUEST._serialized_start=845
+  _GETOPERATIONREQUEST._serialized_end=888
+  _GETOPERATIONRESPONSE._serialized_start=890
+  _GETOPERATIONRESPONSE._serialized_end=965
+  _COMPUTESERVICE._serialized_start=968
+  _COMPUTESERVICE._serialized_end=1457
 # @@protoc_insertion_point(module_scope)

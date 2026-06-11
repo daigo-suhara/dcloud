@@ -326,12 +326,14 @@ def delete_container(
 @app.get("/api/v1/operations/{operation_id}")
 def get_operation(operation_id: str, request: Request) -> dict[str, str]:
     current_user(request)
-    try:
-        return app.state.container_client.get_operation(operation_id)
-    except KeyError as exc:
-        raise HTTPException(status_code=404, detail="オペレーションが見つかりません") from exc
-    except RuntimeError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    for client in [app.state.container_client, app.state.compute_client]:
+        try:
+            return client.get_operation(operation_id)
+        except KeyError:
+            continue
+        except RuntimeError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+    raise HTTPException(status_code=404, detail="オペレーションが見つかりません")
 
 
 @app.get("/api/v1/compute")
@@ -412,14 +414,14 @@ def delete_compute(
     if not project_id:
         raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
     try:
-        app.state.compute_client.delete_machine(user["id"], project_id, name)
+        operation_id = app.state.compute_client.delete_machine(user["id"], project_id, name)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=exception_detail(exc, "仮想マシンを削除できません")) from exc
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=exception_detail(exc, "仮想マシンが見つかりません")) from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=exception_detail(exc, "仮想マシンを削除できません")) from exc
-    return {"status": "deleted"}
+    return {"status": "deleting", "operationId": operation_id}
 
 
 @app.websocket("/api/v1/compute/{name}/console")

@@ -595,6 +595,7 @@ func (x *DeleteMachineRequest) GetName() string {
 
 type DeleteMachineResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	OperationId   string                 `protobuf:"bytes,1,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -627,6 +628,117 @@ func (x *DeleteMachineResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use DeleteMachineResponse.ProtoReflect.Descriptor instead.
 func (*DeleteMachineResponse) Descriptor() ([]byte, []int) {
 	return file_compute_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *DeleteMachineResponse) GetOperationId() string {
+	if x != nil {
+		return x.OperationId
+	}
+	return ""
+}
+
+type GetOperationRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OperationId   string                 `protobuf:"bytes,1,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetOperationRequest) Reset() {
+	*x = GetOperationRequest{}
+	mi := &file_compute_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetOperationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetOperationRequest) ProtoMessage() {}
+
+func (x *GetOperationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_compute_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetOperationRequest.ProtoReflect.Descriptor instead.
+func (*GetOperationRequest) Descriptor() ([]byte, []int) {
+	return file_compute_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *GetOperationRequest) GetOperationId() string {
+	if x != nil {
+		return x.OperationId
+	}
+	return ""
+}
+
+type GetOperationResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OperationId   string                 `protobuf:"bytes,1,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetOperationResponse) Reset() {
+	*x = GetOperationResponse{}
+	mi := &file_compute_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetOperationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetOperationResponse) ProtoMessage() {}
+
+func (x *GetOperationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_compute_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetOperationResponse.ProtoReflect.Descriptor instead.
+func (*GetOperationResponse) Descriptor() ([]byte, []int) {
+	return file_compute_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *GetOperationResponse) GetOperationId() string {
+	if x != nil {
+		return x.OperationId
+	}
+	return ""
+}
+
+func (x *GetOperationResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *GetOperationResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
 }
 
 var File_compute_proto protoreflect.FileDescriptor
@@ -683,13 +795,21 @@ const file_compute_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x02 \x01(\tR\tprojectId\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\"\x17\n" +
-	"\x15DeleteMachineResponse2\x88\x03\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\":\n" +
+	"\x15DeleteMachineResponse\x12!\n" +
+	"\foperation_id\x18\x01 \x01(\tR\voperationId\"8\n" +
+	"\x13GetOperationRequest\x12!\n" +
+	"\foperation_id\x18\x01 \x01(\tR\voperationId\"g\n" +
+	"\x14GetOperationResponse\x12!\n" +
+	"\foperation_id\x18\x01 \x01(\tR\voperationId\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12\x14\n" +
+	"\x05error\x18\x03 \x01(\tR\x05error2\xe9\x03\n" +
 	"\x0eComputeService\x12M\n" +
 	"\x06Health\x12 .dcloud.compute.v1.HealthRequest\x1a!.dcloud.compute.v1.HealthResponse\x12_\n" +
 	"\fListMachines\x12&.dcloud.compute.v1.ListMachinesRequest\x1a'.dcloud.compute.v1.ListMachinesResponse\x12b\n" +
 	"\rCreateMachine\x12'.dcloud.compute.v1.CreateMachineRequest\x1a(.dcloud.compute.v1.CreateMachineResponse\x12b\n" +
-	"\rDeleteMachine\x12'.dcloud.compute.v1.DeleteMachineRequest\x1a(.dcloud.compute.v1.DeleteMachineResponseB@Z>github.com/daigo-suhara/dcloud/internal/pb/computepb;computepbb\x06proto3"
+	"\rDeleteMachine\x12'.dcloud.compute.v1.DeleteMachineRequest\x1a(.dcloud.compute.v1.DeleteMachineResponse\x12_\n" +
+	"\fGetOperation\x12&.dcloud.compute.v1.GetOperationRequest\x1a'.dcloud.compute.v1.GetOperationResponseB@Z>github.com/daigo-suhara/dcloud/internal/pb/computepb;computepbb\x06proto3"
 
 var (
 	file_compute_proto_rawDescOnce sync.Once
@@ -703,7 +823,7 @@ func file_compute_proto_rawDescGZIP() []byte {
 	return file_compute_proto_rawDescData
 }
 
-var file_compute_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_compute_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_compute_proto_goTypes = []any{
 	(*Empty)(nil),                 // 0: dcloud.compute.v1.Empty
 	(*HealthRequest)(nil),         // 1: dcloud.compute.v1.HealthRequest
@@ -715,23 +835,27 @@ var file_compute_proto_goTypes = []any{
 	(*CreateMachineResponse)(nil), // 7: dcloud.compute.v1.CreateMachineResponse
 	(*DeleteMachineRequest)(nil),  // 8: dcloud.compute.v1.DeleteMachineRequest
 	(*DeleteMachineResponse)(nil), // 9: dcloud.compute.v1.DeleteMachineResponse
+	(*GetOperationRequest)(nil),   // 10: dcloud.compute.v1.GetOperationRequest
+	(*GetOperationResponse)(nil),  // 11: dcloud.compute.v1.GetOperationResponse
 }
 var file_compute_proto_depIdxs = []int32{
-	3, // 0: dcloud.compute.v1.ListMachinesResponse.machines:type_name -> dcloud.compute.v1.Machine
-	3, // 1: dcloud.compute.v1.CreateMachineResponse.machine:type_name -> dcloud.compute.v1.Machine
-	1, // 2: dcloud.compute.v1.ComputeService.Health:input_type -> dcloud.compute.v1.HealthRequest
-	4, // 3: dcloud.compute.v1.ComputeService.ListMachines:input_type -> dcloud.compute.v1.ListMachinesRequest
-	6, // 4: dcloud.compute.v1.ComputeService.CreateMachine:input_type -> dcloud.compute.v1.CreateMachineRequest
-	8, // 5: dcloud.compute.v1.ComputeService.DeleteMachine:input_type -> dcloud.compute.v1.DeleteMachineRequest
-	2, // 6: dcloud.compute.v1.ComputeService.Health:output_type -> dcloud.compute.v1.HealthResponse
-	5, // 7: dcloud.compute.v1.ComputeService.ListMachines:output_type -> dcloud.compute.v1.ListMachinesResponse
-	7, // 8: dcloud.compute.v1.ComputeService.CreateMachine:output_type -> dcloud.compute.v1.CreateMachineResponse
-	9, // 9: dcloud.compute.v1.ComputeService.DeleteMachine:output_type -> dcloud.compute.v1.DeleteMachineResponse
-	6, // [6:10] is the sub-list for method output_type
-	2, // [2:6] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	3,  // 0: dcloud.compute.v1.ListMachinesResponse.machines:type_name -> dcloud.compute.v1.Machine
+	3,  // 1: dcloud.compute.v1.CreateMachineResponse.machine:type_name -> dcloud.compute.v1.Machine
+	1,  // 2: dcloud.compute.v1.ComputeService.Health:input_type -> dcloud.compute.v1.HealthRequest
+	4,  // 3: dcloud.compute.v1.ComputeService.ListMachines:input_type -> dcloud.compute.v1.ListMachinesRequest
+	6,  // 4: dcloud.compute.v1.ComputeService.CreateMachine:input_type -> dcloud.compute.v1.CreateMachineRequest
+	8,  // 5: dcloud.compute.v1.ComputeService.DeleteMachine:input_type -> dcloud.compute.v1.DeleteMachineRequest
+	10, // 6: dcloud.compute.v1.ComputeService.GetOperation:input_type -> dcloud.compute.v1.GetOperationRequest
+	2,  // 7: dcloud.compute.v1.ComputeService.Health:output_type -> dcloud.compute.v1.HealthResponse
+	5,  // 8: dcloud.compute.v1.ComputeService.ListMachines:output_type -> dcloud.compute.v1.ListMachinesResponse
+	7,  // 9: dcloud.compute.v1.ComputeService.CreateMachine:output_type -> dcloud.compute.v1.CreateMachineResponse
+	9,  // 10: dcloud.compute.v1.ComputeService.DeleteMachine:output_type -> dcloud.compute.v1.DeleteMachineResponse
+	11, // 11: dcloud.compute.v1.ComputeService.GetOperation:output_type -> dcloud.compute.v1.GetOperationResponse
+	7,  // [7:12] is the sub-list for method output_type
+	2,  // [2:7] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_compute_proto_init() }
@@ -745,7 +869,7 @@ func file_compute_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_compute_proto_rawDesc), len(file_compute_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

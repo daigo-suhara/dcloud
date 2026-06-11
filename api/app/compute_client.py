@@ -39,6 +39,11 @@ class ComputeClient:
             request_serializer=compute_pb2.DeleteMachineRequest.SerializeToString,
             response_deserializer=compute_pb2.DeleteMachineResponse.FromString,
         )
+        self._get_operation = channel.unary_unary(
+            "/dcloud.compute.v1.ComputeService/GetOperation",
+            request_serializer=compute_pb2.GetOperationRequest.SerializeToString,
+            response_deserializer=compute_pb2.GetOperationResponse.FromString,
+        )
 
     @classmethod
     def new(cls) -> "ComputeClient":
@@ -82,15 +87,25 @@ class ComputeClient:
             raise self._map_error(error) from error
         return self._machine_to_dict(response.machine)
 
-    def delete_machine(self, user_id: str, project_id: str, name: str) -> None:
+    def delete_machine(self, user_id: str, project_id: str, name: str) -> str:
         try:
-            self._delete_machine(
+            response = self._delete_machine(
                 compute_pb2.DeleteMachineRequest(
                     user_id=user_id,
                     project_id=project_id,
                     name=name,
                 )
             )
+            return response.operation_id
+        except grpc.RpcError as error:
+            raise self._map_error(error) from error
+
+    def get_operation(self, operation_id: str) -> dict[str, Any]:
+        try:
+            response = self._get_operation(
+                compute_pb2.GetOperationRequest(operation_id=operation_id)
+            )
+            return {"operationId": response.operation_id, "status": response.status, "error": response.error}
         except grpc.RpcError as error:
             raise self._map_error(error) from error
 

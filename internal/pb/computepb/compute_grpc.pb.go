@@ -23,6 +23,7 @@ const (
 	ComputeService_ListMachines_FullMethodName  = "/dcloud.compute.v1.ComputeService/ListMachines"
 	ComputeService_CreateMachine_FullMethodName = "/dcloud.compute.v1.ComputeService/CreateMachine"
 	ComputeService_DeleteMachine_FullMethodName = "/dcloud.compute.v1.ComputeService/DeleteMachine"
+	ComputeService_GetOperation_FullMethodName  = "/dcloud.compute.v1.ComputeService/GetOperation"
 )
 
 // ComputeServiceClient is the client API for ComputeService service.
@@ -33,6 +34,7 @@ type ComputeServiceClient interface {
 	ListMachines(ctx context.Context, in *ListMachinesRequest, opts ...grpc.CallOption) (*ListMachinesResponse, error)
 	CreateMachine(ctx context.Context, in *CreateMachineRequest, opts ...grpc.CallOption) (*CreateMachineResponse, error)
 	DeleteMachine(ctx context.Context, in *DeleteMachineRequest, opts ...grpc.CallOption) (*DeleteMachineResponse, error)
+	GetOperation(ctx context.Context, in *GetOperationRequest, opts ...grpc.CallOption) (*GetOperationResponse, error)
 }
 
 type computeServiceClient struct {
@@ -83,6 +85,16 @@ func (c *computeServiceClient) DeleteMachine(ctx context.Context, in *DeleteMach
 	return out, nil
 }
 
+func (c *computeServiceClient) GetOperation(ctx context.Context, in *GetOperationRequest, opts ...grpc.CallOption) (*GetOperationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetOperationResponse)
+	err := c.cc.Invoke(ctx, ComputeService_GetOperation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ComputeServiceServer is the server API for ComputeService service.
 // All implementations must embed UnimplementedComputeServiceServer
 // for forward compatibility.
@@ -91,6 +103,7 @@ type ComputeServiceServer interface {
 	ListMachines(context.Context, *ListMachinesRequest) (*ListMachinesResponse, error)
 	CreateMachine(context.Context, *CreateMachineRequest) (*CreateMachineResponse, error)
 	DeleteMachine(context.Context, *DeleteMachineRequest) (*DeleteMachineResponse, error)
+	GetOperation(context.Context, *GetOperationRequest) (*GetOperationResponse, error)
 	mustEmbedUnimplementedComputeServiceServer()
 }
 
@@ -112,6 +125,9 @@ func (UnimplementedComputeServiceServer) CreateMachine(context.Context, *CreateM
 }
 func (UnimplementedComputeServiceServer) DeleteMachine(context.Context, *DeleteMachineRequest) (*DeleteMachineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteMachine not implemented")
+}
+func (UnimplementedComputeServiceServer) GetOperation(context.Context, *GetOperationRequest) (*GetOperationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOperation not implemented")
 }
 func (UnimplementedComputeServiceServer) mustEmbedUnimplementedComputeServiceServer() {}
 func (UnimplementedComputeServiceServer) testEmbeddedByValue()                        {}
@@ -206,6 +222,24 @@ func _ComputeService_DeleteMachine_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ComputeService_GetOperation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOperationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ComputeServiceServer).GetOperation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ComputeService_GetOperation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ComputeServiceServer).GetOperation(ctx, req.(*GetOperationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ComputeService_ServiceDesc is the grpc.ServiceDesc for ComputeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -228,6 +262,10 @@ var ComputeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteMachine",
 			Handler:    _ComputeService_DeleteMachine_Handler,
+		},
+		{
+			MethodName: "GetOperation",
+			Handler:    _ComputeService_GetOperation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

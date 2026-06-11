@@ -9,6 +9,7 @@ service ComputeService {
   rpc ListMachines(ListMachinesRequest) returns (ListMachinesResponse);
   rpc CreateMachine(CreateMachineRequest) returns (CreateMachineResponse);
   rpc DeleteMachine(DeleteMachineRequest) returns (DeleteMachineResponse);
+  rpc GetOperation(GetOperationRequest) returns (GetOperationResponse);
 }
 
 message Empty {}
@@ -67,4 +68,16 @@ message DeleteMachineRequest {
   string name = 3;
 }
 
-message DeleteMachineResponse {}
+message DeleteMachineResponse {
+  string operation_id = 1;
+}
+
+message GetOperationRequest {
+  string operation_id = 1;
+}
+
+message GetOperationResponse {
+  string operation_id = 1;
+  string status = 2;
+  string error = 3;
+}
