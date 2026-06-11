@@ -34,6 +34,7 @@ export type Project = {
   name: string;
   owner: string;
   createdAt: string;
+  deleting?: boolean;
 };
 
 export type DeployedService = {

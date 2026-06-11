@@ -51,23 +51,28 @@ export function HomeSection({
                 <TableBody>
                   {projects.map((project) => {
                     const isActive = project.id === activeProjectId;
+                    const isDeleting = project.deleting === true || deletingProjectId === project.id;
                     return (
                       <TableRow
                         key={project.id}
-                        hover
+                        hover={!isDeleting}
                         selected={isActive}
                         sx={{
                           minHeight: { xs: 40, sm: "auto" },
+                          opacity: isDeleting ? 0.55 : 1,
                           "& td": {
                             bgcolor: isActive ? alpha("#2563eb", 0.04) : "background.paper"
                           }
                         }}
                       >
                         <TableCell sx={{ py: { xs: 0.5, sm: 1.25 }, pl: { xs: 0.25, sm: 1 } }}>
-                          <Radio checked={isActive} onChange={() => onSelectProject(project.id)} value={project.id} name="project-select" size="small" />
+                          <Radio checked={isActive} disabled={isDeleting} onChange={() => onSelectProject(project.id)} value={project.id} name="project-select" size="small" />
                         </TableCell>
                         <TableCell sx={{ py: { xs: 0.5, sm: 1.25 }, pl: { xs: 0, sm: 1.5 } }}>
-                          <Typography sx={{ fontWeight: 700 }}>{project.name}</Typography>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <Typography sx={{ fontWeight: 700 }}>{project.name}</Typography>
+                            {isDeleting && <Typography variant="caption" color="error.main" sx={{ fontWeight: 600 }}>削除中</Typography>}
+                          </Box>
                         </TableCell>
                         <TableCell sx={{ display: { xs: "none", sm: "table-cell" }, py: 1.25 }}>
                           <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-all" }}>
@@ -75,11 +80,11 @@ export function HomeSection({
                           </Typography>
                         </TableCell>
                         <TableCell sx={{ py: { xs: 0.5, sm: 1.25 }, pr: { xs: 0.5, sm: 1 } }}>
-                          <Tooltip title="削除">
+                          <Tooltip title={isDeleting ? "削除中" : "削除"}>
                             <span>
                               <IconButton
                                 color="error"
-                                disabled={deletingProjectId === project.id}
+                                disabled={isDeleting}
                                 onClick={() => onRequestDeleteProject(project.id, project.name)}
                                 size="small"
                                 sx={{
@@ -98,7 +103,7 @@ export function HomeSection({
                                   }
                                 }}
                               >
-                                {deletingProjectId === project.id ? <CircularProgress size={14} thickness={5} sx={{ color: "inherit" }} /> : <DeleteOutlinedIcon fontSize="small" />}
+                                {isDeleting ? <CircularProgress size={14} thickness={5} sx={{ color: "inherit" }} /> : <DeleteOutlinedIcon fontSize="small" />}
                               </IconButton>
                             </span>
                           </Tooltip>

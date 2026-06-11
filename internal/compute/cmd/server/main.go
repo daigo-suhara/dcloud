@@ -308,7 +308,7 @@ func (s *computeServer) reconcileDeletions(ctx context.Context) {
 					}
 				}
 				return true
-			})
+			}, nil)
 			s.reconcileResourceType(ctx, "project", func(op dbsqlc.Operation) bool {
 				if !op.UserID.Valid || !op.ProjectID.Valid {
 					return false
@@ -317,19 +317,40 @@ func (s *computeServer) reconcileDeletions(ctx context.Context) {
 				if err != nil {
 					return false
 				}
-				return len(records) == 0
+				if len(records) > 0 {
+					return false
+				}
+				containers, err := s.q.ListContainers(ctx, op.ProjectID.String)
+				if err != nil {
+					return false
+				}
+				return len(containers) == 0
+			}, func(op dbsqlc.Operation) error {
+				if !op.UserID.Valid || !op.ProjectID.Valid {
+					return fmt.Errorf("missing user/project on operation %s", op.ID)
+				}
+				_, err := s.q.DeleteProject(ctx, dbsqlc.DeleteProjectParams{
+					UserID: op.UserID.String,
+					ID:     op.ProjectID.String,
+				})
+				return err
 			})
 		}
 	}
 }
 
-func (s *computeServer) reconcileResourceType(ctx context.Context, resourceType string, isDone func(dbsqlc.Operation) bool) {
+func (s *computeServer) reconcileResourceType(ctx context.Context, resourceType string, isDone func(dbsqlc.Operation) bool, onDone func(dbsqlc.Operation) error) {
 	ops, err := s.q.ListPendingOperationsByResourceType(ctx, sql.NullString{String: resourceType, Valid: true})
 	if err != nil || len(ops) == 0 {
 		return
 	}
 	for _, op := range ops {
 		if isDone(op) {
+			if onDone != nil {
+				if err := onDone(op); err != nil {
+					continue
+				}
+			}
 			_ = s.q.UpdateOperation(ctx, dbsqlc.UpdateOperationParams{
 				ID:        op.ID,
 				Status:    "done",

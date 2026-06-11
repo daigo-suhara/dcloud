@@ -70,6 +70,11 @@ def exception_detail(exc: Exception, fallback: str) -> str:
     return message or fallback
 
 
+def ensure_project_not_deleting(project_id: str) -> None:
+    if app.state.repo.is_project_deleting(project_id):
+        raise HTTPException(status_code=409, detail="プロジェクトは削除中のためリソース操作は受け付けられません")
+
+
 def compute_machine_resource_name(user_id: str, project_id: str, name: str) -> str:
     digest = sha256(f"{user_id.strip()}:{project_id.strip()}:{name.strip()}".encode("utf-8")).hexdigest()
     return f"vm-{digest[:16]}"
@@ -203,6 +208,9 @@ def create_project(body: dict[str, Any], request: Request) -> dict[str, Any]:
 def delete_project(project_id: str, request: Request) -> dict[str, str]:
     import secrets
     user = current_user(request)
+    if not app.state.repo.project_exists(user["id"], project_id):
+        raise HTTPException(status_code=404, detail="プロジェクトが見つかりません")
+    ensure_project_not_deleting(project_id)
     try:
         machines = app.state.compute_client.list_machines(user["id"], project_id)
         for machine in machines.get("machines", []):
@@ -226,12 +234,6 @@ def delete_project(project_id: str, request: Request) -> dict[str, str]:
         app.state.repo.create_operation(op_id, "project", project_id, user["id"], project_id)
     except Exception:
         pass
-    try:
-        deleted = app.state.repo.delete_project(user["id"], project_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    if not deleted:
-        raise HTTPException(status_code=404, detail="プロジェクトが見つかりません")
     return {"status": "deleting", "operationId": op_id}
 
 
@@ -250,6 +252,7 @@ def get_project_repository(project_id: str, request: Request) -> dict[str, Any]:
 @app.put("/api/v1/projects/{project_id}/repository")
 def upsert_project_repository(project_id: str, body: dict[str, Any], request: Request) -> dict[str, Any]:
     user = current_user(request)
+    ensure_project_not_deleting(project_id)
     repository_owner = str(body.get("repositoryOwner", "")).strip()
     repository_name = str(body.get("repositoryName", "")).strip()
     repository_branch = str(body.get("repositoryBranch", "main")).strip() or "main"
@@ -297,6 +300,7 @@ def deploy_container(
     project_id = (x_dcp_project or "").strip()
     if not project_id:
         raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    ensure_project_not_deleting(project_id)
     name = str(body.get("name", "")).strip()
     image = str(body.get("image", "")).strip()
     try:
@@ -408,6 +412,7 @@ def create_compute(
     project_id = (x_dcp_project or "").strip()
     if not project_id:
         raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    ensure_project_not_deleting(project_id)
     name = str(body.get("name", "")).strip()
     image = str(body.get("image", "")).strip()
     cpu = str(body.get("cpu", "1")).strip() or "1"

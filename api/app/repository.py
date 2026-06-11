@@ -175,14 +175,31 @@ class Repository:
         with self._connect() as conn, conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT id, name, user_id AS owner, created_at AS "createdAt"
-                FROM projects
-                WHERE user_id = %s
-                ORDER BY created_at, id
+                SELECT p.id, p.name, p.user_id AS owner, p.created_at AS "createdAt",
+                       EXISTS (
+                           SELECT 1 FROM operations o
+                           WHERE o.project_id = p.id
+                             AND o.resource_type = 'project'
+                             AND o.status = 'pending'
+                       ) AS deleting
+                FROM projects p
+                WHERE p.user_id = %s
+                ORDER BY p.created_at, p.id
                 """,
                 (normalized_user,),
             )
             return [dict(row) for row in cur.fetchall()]
+
+    def is_project_deleting(self, project_id: str) -> bool:
+        normalized_project = project_id.strip()
+        if not normalized_project:
+            return False
+        with self._connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                "SELECT 1 FROM operations WHERE project_id = %s AND resource_type = 'project' AND status = 'pending' LIMIT 1",
+                (normalized_project,),
+            )
+            return cur.fetchone() is not None
 
     def create_project(self, user_id: str, name: str) -> dict[str, Any]:
         normalized_user = user_id.strip()

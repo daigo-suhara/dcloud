@@ -137,13 +137,14 @@ export function useConsoleController() {
   }, [activeProjectId, currentUser, projectsLoaded]);
 
   useEffect(() => {
-    if (!currentUser || !projectsLoaded || projects.length > 0 || route.section === "project-create") {
+    const hasSelectable = projects.some((p) => !p.deleting);
+    if (!currentUser || !projectsLoaded || hasSelectable || route.section === "project-create") {
       return;
     }
     if (location.pathname !== "/project-create") {
       navigate("/project-create", { replace: true });
     }
-  }, [currentUser, location.pathname, navigate, projects.length, projectsLoaded, route.section]);
+  }, [currentUser, location.pathname, navigate, projects, projectsLoaded, route.section]);
 
   function apiHeaders(extra?: HeadersInit) {
     const headers = new Headers(extra);
@@ -300,15 +301,18 @@ export function useConsoleController() {
       if ("projects" in data) {
         setProjects(data.projects);
         setProjectsLoaded(true);
-        if (data.projects.length === 0) {
+        const selectable = data.projects.filter((p) => !p.deleting);
+        if (selectable.length === 0) {
           localStorage.removeItem(projectStorageKey(currentUser.id));
           setActiveProjectId("");
-          navigate("/project-create", { replace: true });
+          if (data.projects.length === 0) {
+            navigate("/project-create", { replace: true });
+          }
           return;
         }
 
         const saved = localStorage.getItem(projectStorageKey(currentUser.id));
-        const nextProject = data.projects.find((project) => project.id === saved)?.id ?? data.projects[0].id;
+        const nextProject = selectable.find((p) => p.id === saved)?.id ?? selectable[0].id;
         handleProjectSelect(nextProject);
       }
     } catch (projectError) {
@@ -686,12 +690,13 @@ export function useConsoleController() {
         throw new Error(getApiErrorMessage(data, "プロジェクトの削除に失敗しました"));
       }
       const { operationId } = await response.json() as { operationId: string };
-      await pollOperation(operationId);
-      setMessage("プロジェクトを削除しました");
       if (activeProjectId === projectId) {
         localStorage.removeItem(projectStorageKey(currentUser!.id));
         setActiveProjectId("");
+        navigate("/home", { replace: true });
       }
+      await pollOperation(operationId);
+      setMessage("プロジェクトを削除しました");
       await loadProjects();
     } catch (projectError) {
       setError(projectError instanceof Error ? projectError.message : "プロジェクトの削除に失敗しました");

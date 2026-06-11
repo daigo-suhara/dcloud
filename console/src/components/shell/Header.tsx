@@ -57,8 +57,8 @@ export function Header({ activeProjectId, hasProjects, onLogout, onProjectSelect
           slotProps={{ htmlInput: { "aria-label": "プロジェクトを切り替え" } }}
         >
           {projects.map((project) => (
-            <MenuItem key={project.id} value={project.id}>
-              {project.name}
+            <MenuItem key={project.id} value={project.id} disabled={project.deleting === true}>
+              {project.name}{project.deleting ? " (削除中)" : ""}
             </MenuItem>
           ))}
         </TextField>
