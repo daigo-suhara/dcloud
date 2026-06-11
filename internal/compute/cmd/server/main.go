@@ -253,6 +253,24 @@ func (s *computeServer) DeleteMachine(ctx context.Context, req *DeleteMachineReq
 		if err := s.kubevirt.delete(bgCtx, s.namespace, projectScope{UserID: userID, ProjectID: projectID}, name); err != nil {
 			newStatus = "error"
 			errMsg = sql.NullString{String: err.Error(), Valid: true}
+		} else {
+			for i := 0; i < 60; i++ {
+				time.Sleep(2 * time.Second)
+				records, err := s.kubevirt.list(bgCtx, s.namespace, userID, projectID)
+				if err != nil {
+					break
+				}
+				found := false
+				for _, r := range records {
+					if r.Name == name {
+						found = true
+						break
+					}
+				}
+				if !found {
+					break
+				}
+			}
 		}
 		_ = s.q.UpdateOperation(bgCtx, dbsqlc.UpdateOperationParams{
 			ID:        opID,
