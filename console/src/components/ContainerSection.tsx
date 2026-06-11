@@ -5,7 +5,7 @@ import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import ErrorOutlinedIcon from "@mui/icons-material/ErrorOutlined";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import { Box, Button, Card, CardContent, CircularProgress, IconButton, Paper, TextField, Tooltip, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Chip, CircularProgress, IconButton, Paper, TextField, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import type { DeployedService } from "../types";
@@ -123,30 +123,55 @@ export function ContainerSection({
                   カスタムドメイン
                 </Typography>
                 {selectedService.customDomain ? (
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
-                    <Button
-                      component="a"
-                      href={`https://${selectedService.customDomain}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      variant="text"
-                      size="small"
-                      sx={{ ...actionLinkButtonSx, fontWeight: 700 }}
-                    >
-                      {selectedService.customDomain}
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="small"
-                      disabled={savingDomain}
-                      onClick={async () => {
-                        setSavingDomain(true);
-                        try { await onSetDomain(selectedService.name, ""); } finally { setSavingDomain(false); }
-                      }}
-                    >
-                      {savingDomain ? <CircularProgress size={14} thickness={5} sx={{ color: "inherit" }} /> : "削除"}
-                    </Button>
+                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, display: "grid", gap: 1.5 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+                      <Button
+                        component="a"
+                        href={`https://${selectedService.customDomain}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        variant="text"
+                        size="small"
+                        sx={{ ...actionLinkButtonSx, fontWeight: 700 }}
+                      >
+                        {selectedService.customDomain}
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        disabled={savingDomain}
+                        onClick={async () => {
+                          setSavingDomain(true);
+                          try { await onSetDomain(selectedService.name, ""); } finally { setSavingDomain(false); }
+                        }}
+                      >
+                        {savingDomain ? <CircularProgress size={14} thickness={5} sx={{ color: "inherit" }} /> : "削除"}
+                      </Button>
+                    </Box>
+                    {selectedService.domainStatus === "ready" && (
+                      <Chip label="有効" color="success" size="small" icon={<CheckCircleIcon />} sx={{ width: "fit-content" }} />
+                    )}
+                    {selectedService.domainStatus === "pending" && (
+                      <Tooltip title={selectedService.domainStatusReason ?? "DNS または TLS の設定を待機中"}>
+                        <Chip
+                          label="DNS 待機中"
+                          size="small"
+                          icon={<CircularProgress size={12} thickness={5} sx={{ color: "inherit !important" }} />}
+                          sx={{ width: "fit-content", bgcolor: alpha("#f59e0b", 0.12), color: "warning.dark", "& .MuiChip-icon": { color: "warning.dark" } }}
+                        />
+                      </Tooltip>
+                    )}
+                    {selectedService.domainStatus === "error" && (
+                      <Tooltip title={selectedService.domainStatusReason ?? ""}>
+                        <Chip label="エラー" color="error" size="small" icon={<ErrorOutlinedIcon />} sx={{ width: "fit-content" }} />
+                      </Tooltip>
+                    )}
+                    {selectedService.domainStatus === "pending" && (
+                      <Typography variant="caption" color="text.secondary">
+                        ドメインの CNAME レコードを <Box component="code" sx={{ bgcolor: "grey.100", px: 0.5, borderRadius: 0.5 }}>{selectedService.name}.{window.location.hostname.replace(/^[^.]+\./, "")}</Box> に向けてください
+                      </Typography>
+                    )}
                   </Paper>
                 ) : (
                   <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>

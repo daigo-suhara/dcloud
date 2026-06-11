@@ -140,21 +140,26 @@ func (s *containerServer) ListServices(ctx context.Context, req *ListServicesReq
 	for _, record := range records {
 		cd := customDomains[record.Name]
 		url := record.URL
+		domainStatus := ""
+		domainStatusReason := ""
 		if cd != "" {
 			url = s.knative.customURL(cd)
+			domainStatus, domainStatusReason = s.knative.getDomainMappingStatus(ctx, cd)
 		}
 		items = append(items, &Service{
-			Name:         record.Name,
-			Image:        record.Image,
-			Url:          url,
-			Ready:        record.Ready,
-			Reason:       record.Reason,
-			CreatedAt:    record.CreatedAt,
-			UpdatedAt:    record.UpdatedAt,
-			Namespace:    record.Namespace,
-			ProjectId:    record.ProjectID,
-			Generation:   record.Generation,
-			CustomDomain: cd,
+			Name:               record.Name,
+			Image:              record.Image,
+			Url:                url,
+			Ready:              record.Ready,
+			Reason:             record.Reason,
+			CreatedAt:          record.CreatedAt,
+			UpdatedAt:          record.UpdatedAt,
+			Namespace:          record.Namespace,
+			ProjectId:          record.ProjectID,
+			Generation:         record.Generation,
+			CustomDomain:       cd,
+			DomainStatus:       domainStatus,
+			DomainStatusReason: domainStatusReason,
 		})
 	}
 	return &ListServicesResponse{UserId: userID, ProjectId: projectID, Namespace: s.namespace, Containers: items}, nil
@@ -342,21 +347,26 @@ func (s *containerServer) SetServiceDomain(ctx context.Context, req *SetServiceD
 		return nil, status.Error(codes.Internal, "failed to update container domain")
 	}
 	url := s.knative.publicURL(serviceResourceName(projectID, name))
+	domainStatus := ""
+	domainStatusReason := ""
 	if customDomain != "" {
 		url = s.knative.customURL(customDomain)
+		domainStatus, domainStatusReason = s.knative.getDomainMappingStatus(ctx, customDomain)
 	}
 	svc := &Service{
-		Name:         name,
-		Image:        dbRecord.Image,
-		Url:          url,
-		Ready:        dbRecord.Ready,
-		Reason:       dbRecord.Reason.String,
-		CreatedAt:    dbRecord.CreatedAt,
-		UpdatedAt:    now,
-		Namespace:    dbRecord.Namespace,
-		ProjectId:    projectID,
-		Generation:   dbRecord.Generation,
-		CustomDomain: customDomain,
+		Name:               name,
+		Image:              dbRecord.Image,
+		Url:                url,
+		Ready:              dbRecord.Ready,
+		Reason:             dbRecord.Reason.String,
+		CreatedAt:          dbRecord.CreatedAt,
+		UpdatedAt:          now,
+		Namespace:          dbRecord.Namespace,
+		ProjectId:          projectID,
+		Generation:         dbRecord.Generation,
+		CustomDomain:       customDomain,
+		DomainStatus:       domainStatus,
+		DomainStatusReason: domainStatusReason,
 	}
 	return &SetServiceDomainResponse{Service: svc}, nil
 }

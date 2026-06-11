@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x63ontainer.proto\x12\x13\x64\x63loud.container.v1\"\x07\n\x05\x45mpty\"\x0f\n\rHealthRequest\"D\n\x0eHealthResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x0f\n\x07service\x18\x02 \x01(\t\x12\x11\n\ttimestamp\x18\x03 \x01(\t\"\xcc\x01\n\x07Service\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05image\x18\x02 \x01(\t\x12\x0b\n\x03url\x18\x03 \x01(\t\x12\r\n\x05ready\x18\x04 \x01(\x08\x12\x0e\n\x06reason\x18\x05 \x01(\t\x12\x12\n\ncreated_at\x18\x06 \x01(\t\x12\x12\n\nupdated_at\x18\x07 \x01(\t\x12\x11\n\tnamespace\x18\x08 \x01(\t\x12\x12\n\nproject_id\x18\t \x01(\t\x12\x12\n\ngeneration\x18\n \x01(\x03\x12\x15\n\rcustom_domain\x18\x0b \x01(\t\":\n\x13ListServicesRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\"\x80\x01\n\x14ListServicesResponse\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x11\n\tnamespace\x18\x03 \x01(\t\x12\x30\n\ncontainers\x18\x04 \x03(\x0b\x32\x1c.dcloud.container.v1.Service\"\x8c\x01\n\x14\x44\x65ployServiceRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\r\n\x05image\x18\x04 \x01(\t\x12\x0c\n\x04port\x18\x05 \x01(\x05\x12\x11\n\tmin_scale\x18\x06 \x01(\x05\x12\x11\n\tmax_scale\x18\x07 \x01(\x05\"F\n\x15\x44\x65ployServiceResponse\x12-\n\x07service\x18\x01 \x01(\x0b\x32\x1c.dcloud.container.v1.Service\"I\n\x14\x44\x65leteServiceRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\"-\n\x15\x44\x65leteServiceResponse\x12\x14\n\x0coperation_id\x18\x01 \x01(\t\"+\n\x13GetOperationRequest\x12\x14\n\x0coperation_id\x18\x01 \x01(\t\"K\n\x14GetOperationResponse\x12\x14\n\x0coperation_id\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\r\n\x05\x65rror\x18\x03 \x01(\t\"c\n\x17SetServiceDomainRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x15\n\rcustom_domain\x18\x04 \x01(\t\"I\n\x18SetServiceDomainResponse\x12-\n\x07service\x18\x01 \x01(\x0b\x32\x1c.dcloud.container.v1.Service2\xf0\x04\n\x10\x43ontainerService\x12Q\n\x06Health\x12\".dcloud.container.v1.HealthRequest\x1a#.dcloud.container.v1.HealthResponse\x12\x63\n\x0cListServices\x12(.dcloud.container.v1.ListServicesRequest\x1a).dcloud.container.v1.ListServicesResponse\x12\x66\n\rDeployService\x12).dcloud.container.v1.DeployServiceRequest\x1a*.dcloud.container.v1.DeployServiceResponse\x12\x66\n\rDeleteService\x12).dcloud.container.v1.DeleteServiceRequest\x1a*.dcloud.container.v1.DeleteServiceResponse\x12\x63\n\x0cGetOperation\x12(.dcloud.container.v1.GetOperationRequest\x1a).dcloud.container.v1.GetOperationResponse\x12o\n\x10SetServiceDomain\x12,.dcloud.container.v1.SetServiceDomainRequest\x1a-.dcloud.container.v1.SetServiceDomainResponseBDZBgithub.com/daigo-suhara/dcloud/internal/pb/containerpb;containerpbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x63ontainer.proto\x12\x13\x64\x63loud.container.v1\"\x07\n\x05\x45mpty\"\x0f\n\rHealthRequest\"D\n\x0eHealthResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x0f\n\x07service\x18\x02 \x01(\t\x12\x11\n\ttimestamp\x18\x03 \x01(\t\"\x81\x02\n\x07Service\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05image\x18\x02 \x01(\t\x12\x0b\n\x03url\x18\x03 \x01(\t\x12\r\n\x05ready\x18\x04 \x01(\x08\x12\x0e\n\x06reason\x18\x05 \x01(\t\x12\x12\n\ncreated_at\x18\x06 \x01(\t\x12\x12\n\nupdated_at\x18\x07 \x01(\t\x12\x11\n\tnamespace\x18\x08 \x01(\t\x12\x12\n\nproject_id\x18\t \x01(\t\x12\x12\n\ngeneration\x18\n \x01(\x03\x12\x15\n\rcustom_domain\x18\x0b \x01(\t\x12\x15\n\rdomain_status\x18\x0c \x01(\t\x12\x1c\n\x14\x64omain_status_reason\x18\r \x01(\t\":\n\x13ListServicesRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\"\x80\x01\n\x14ListServicesResponse\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x11\n\tnamespace\x18\x03 \x01(\t\x12\x30\n\ncontainers\x18\x04 \x03(\x0b\x32\x1c.dcloud.container.v1.Service\"\x8c\x01\n\x14\x44\x65ployServiceRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\r\n\x05image\x18\x04 \x01(\t\x12\x0c\n\x04port\x18\x05 \x01(\x05\x12\x11\n\tmin_scale\x18\x06 \x01(\x05\x12\x11\n\tmax_scale\x18\x07 \x01(\x05\"F\n\x15\x44\x65ployServiceResponse\x12-\n\x07service\x18\x01 \x01(\x0b\x32\x1c.dcloud.container.v1.Service\"I\n\x14\x44\x65leteServiceRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\"-\n\x15\x44\x65leteServiceResponse\x12\x14\n\x0coperation_id\x18\x01 \x01(\t\"+\n\x13GetOperationRequest\x12\x14\n\x0coperation_id\x18\x01 \x01(\t\"K\n\x14GetOperationResponse\x12\x14\n\x0coperation_id\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\r\n\x05\x65rror\x18\x03 \x01(\t\"c\n\x17SetServiceDomainRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x12\n\nproject_id\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x15\n\rcustom_domain\x18\x04 \x01(\t\"I\n\x18SetServiceDomainResponse\x12-\n\x07service\x18\x01 \x01(\x0b\x32\x1c.dcloud.container.v1.Service2\xf0\x04\n\x10\x43ontainerService\x12Q\n\x06Health\x12\".dcloud.container.v1.HealthRequest\x1a#.dcloud.container.v1.HealthResponse\x12\x63\n\x0cListServices\x12(.dcloud.container.v1.ListServicesRequest\x1a).dcloud.container.v1.ListServicesResponse\x12\x66\n\rDeployService\x12).dcloud.container.v1.DeployServiceRequest\x1a*.dcloud.container.v1.DeployServiceResponse\x12\x66\n\rDeleteService\x12).dcloud.container.v1.DeleteServiceRequest\x1a*.dcloud.container.v1.DeleteServiceResponse\x12\x63\n\x0cGetOperation\x12(.dcloud.container.v1.GetOperationRequest\x1a).dcloud.container.v1.GetOperationResponse\x12o\n\x10SetServiceDomain\x12,.dcloud.container.v1.SetServiceDomainRequest\x1a-.dcloud.container.v1.SetServiceDomainResponseBDZBgithub.com/daigo-suhara/dcloud/internal/pb/containerpb;containerpbb\x06proto3')
 
 
 
@@ -142,27 +142,27 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _HEALTHRESPONSE._serialized_start=66
   _HEALTHRESPONSE._serialized_end=134
   _SERVICE._serialized_start=137
-  _SERVICE._serialized_end=341
-  _LISTSERVICESREQUEST._serialized_start=343
-  _LISTSERVICESREQUEST._serialized_end=401
-  _LISTSERVICESRESPONSE._serialized_start=404
-  _LISTSERVICESRESPONSE._serialized_end=532
-  _DEPLOYSERVICEREQUEST._serialized_start=535
-  _DEPLOYSERVICEREQUEST._serialized_end=675
-  _DEPLOYSERVICERESPONSE._serialized_start=677
-  _DEPLOYSERVICERESPONSE._serialized_end=747
-  _DELETESERVICEREQUEST._serialized_start=749
-  _DELETESERVICEREQUEST._serialized_end=822
-  _DELETESERVICERESPONSE._serialized_start=824
-  _DELETESERVICERESPONSE._serialized_end=869
-  _GETOPERATIONREQUEST._serialized_start=871
-  _GETOPERATIONREQUEST._serialized_end=914
-  _GETOPERATIONRESPONSE._serialized_start=916
-  _GETOPERATIONRESPONSE._serialized_end=991
-  _SETSERVICEDOMAINREQUEST._serialized_start=993
-  _SETSERVICEDOMAINREQUEST._serialized_end=1092
-  _SETSERVICEDOMAINRESPONSE._serialized_start=1094
-  _SETSERVICEDOMAINRESPONSE._serialized_end=1167
-  _CONTAINERSERVICE._serialized_start=1170
-  _CONTAINERSERVICE._serialized_end=1794
+  _SERVICE._serialized_end=394
+  _LISTSERVICESREQUEST._serialized_start=396
+  _LISTSERVICESREQUEST._serialized_end=454
+  _LISTSERVICESRESPONSE._serialized_start=457
+  _LISTSERVICESRESPONSE._serialized_end=585
+  _DEPLOYSERVICEREQUEST._serialized_start=588
+  _DEPLOYSERVICEREQUEST._serialized_end=728
+  _DEPLOYSERVICERESPONSE._serialized_start=730
+  _DEPLOYSERVICERESPONSE._serialized_end=800
+  _DELETESERVICEREQUEST._serialized_start=802
+  _DELETESERVICEREQUEST._serialized_end=875
+  _DELETESERVICERESPONSE._serialized_start=877
+  _DELETESERVICERESPONSE._serialized_end=922
+  _GETOPERATIONREQUEST._serialized_start=924
+  _GETOPERATIONREQUEST._serialized_end=967
+  _GETOPERATIONRESPONSE._serialized_start=969
+  _GETOPERATIONRESPONSE._serialized_end=1044
+  _SETSERVICEDOMAINREQUEST._serialized_start=1046
+  _SETSERVICEDOMAINREQUEST._serialized_end=1145
+  _SETSERVICEDOMAINRESPONSE._serialized_start=1147
+  _SETSERVICEDOMAINRESPONSE._serialized_end=1220
+  _CONTAINERSERVICE._serialized_start=1223
+  _CONTAINERSERVICE._serialized_end=1847
 # @@protoc_insertion_point(module_scope)

@@ -144,6 +144,8 @@ class ContainerClient:
             "projectId": service.project_id,
             "generation": service.generation,
             "customDomain": service.custom_domain or None,
+            "domainStatus": service.domain_status or None,
+            "domainStatusReason": service.domain_status_reason or None,
         }
 
     @staticmethod

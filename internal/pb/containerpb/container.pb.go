@@ -154,20 +154,22 @@ func (x *HealthResponse) GetTimestamp() string {
 }
 
 type Service struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Image         string                 `protobuf:"bytes,2,opt,name=image,proto3" json:"image,omitempty"`
-	Url           string                 `protobuf:"bytes,3,opt,name=url,proto3" json:"url,omitempty"`
-	Ready         bool                   `protobuf:"varint,4,opt,name=ready,proto3" json:"ready,omitempty"`
-	Reason        string                 `protobuf:"bytes,5,opt,name=reason,proto3" json:"reason,omitempty"`
-	CreatedAt     string                 `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     string                 `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Namespace     string                 `protobuf:"bytes,8,opt,name=namespace,proto3" json:"namespace,omitempty"`
-	ProjectId     string                 `protobuf:"bytes,9,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
-	Generation    int64                  `protobuf:"varint,10,opt,name=generation,proto3" json:"generation,omitempty"`
-	CustomDomain  string                 `protobuf:"bytes,11,opt,name=custom_domain,json=customDomain,proto3" json:"custom_domain,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Name               string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Image              string                 `protobuf:"bytes,2,opt,name=image,proto3" json:"image,omitempty"`
+	Url                string                 `protobuf:"bytes,3,opt,name=url,proto3" json:"url,omitempty"`
+	Ready              bool                   `protobuf:"varint,4,opt,name=ready,proto3" json:"ready,omitempty"`
+	Reason             string                 `protobuf:"bytes,5,opt,name=reason,proto3" json:"reason,omitempty"`
+	CreatedAt          string                 `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt          string                 `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Namespace          string                 `protobuf:"bytes,8,opt,name=namespace,proto3" json:"namespace,omitempty"`
+	ProjectId          string                 `protobuf:"bytes,9,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	Generation         int64                  `protobuf:"varint,10,opt,name=generation,proto3" json:"generation,omitempty"`
+	CustomDomain       string                 `protobuf:"bytes,11,opt,name=custom_domain,json=customDomain,proto3" json:"custom_domain,omitempty"`
+	DomainStatus       string                 `protobuf:"bytes,12,opt,name=domain_status,json=domainStatus,proto3" json:"domain_status,omitempty"`
+	DomainStatusReason string                 `protobuf:"bytes,13,opt,name=domain_status_reason,json=domainStatusReason,proto3" json:"domain_status_reason,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *Service) Reset() {
@@ -273,6 +275,20 @@ func (x *Service) GetGeneration() int64 {
 func (x *Service) GetCustomDomain() string {
 	if x != nil {
 		return x.CustomDomain
+	}
+	return ""
+}
+
+func (x *Service) GetDomainStatus() string {
+	if x != nil {
+		return x.DomainStatus
+	}
+	return ""
+}
+
+func (x *Service) GetDomainStatusReason() string {
+	if x != nil {
+		return x.DomainStatusReason
 	}
 	return ""
 }
@@ -863,7 +879,7 @@ const file_container_proto_rawDesc = "" +
 	"\x0eHealthResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
 	"\aservice\x18\x02 \x01(\tR\aservice\x12\x1c\n" +
-	"\ttimestamp\x18\x03 \x01(\tR\ttimestamp\"\xb3\x02\n" +
+	"\ttimestamp\x18\x03 \x01(\tR\ttimestamp\"\x8a\x03\n" +
 	"\aService\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05image\x18\x02 \x01(\tR\x05image\x12\x10\n" +
@@ -881,7 +897,9 @@ const file_container_proto_rawDesc = "" +
 	"generation\x18\n" +
 	" \x01(\x03R\n" +
 	"generation\x12#\n" +
-	"\rcustom_domain\x18\v \x01(\tR\fcustomDomain\"M\n" +
+	"\rcustom_domain\x18\v \x01(\tR\fcustomDomain\x12#\n" +
+	"\rdomain_status\x18\f \x01(\tR\fdomainStatus\x120\n" +
+	"\x14domain_status_reason\x18\r \x01(\tR\x12domainStatusReason\"M\n" +
 	"\x13ListServicesRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +

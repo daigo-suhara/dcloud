@@ -132,6 +132,63 @@ func (m *knativeServiceManager) deleteDomainMapping(ctx context.Context, domainN
 	return nil
 }
 
+// getDomainMappingStatus returns ("ready"|"pending"|"error", reason).
+func (m *knativeServiceManager) getDomainMappingStatus(ctx context.Context, domainName string) (string, string) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
+		fmt.Sprintf("%s/apis/serving.knative.dev/v1beta1/namespaces/%s/domainmappings/%s", m.baseURL, m.namespace, domainName),
+		nil)
+	if err != nil {
+		return "error", err.Error()
+	}
+	m.authorize(req)
+	req.Header.Set("Accept", "application/json")
+	res, err := m.client.Do(req)
+	if err != nil {
+		return "error", err.Error()
+	}
+	defer res.Body.Close()
+	if res.StatusCode == http.StatusNotFound {
+		return "pending", "DomainMapping not found"
+	}
+	if res.StatusCode >= 300 {
+		return "error", fmt.Sprintf("HTTP %d", res.StatusCode)
+	}
+	var payload struct {
+		Status struct {
+			Conditions []struct {
+				Type    string `json:"type"`
+				Status  string `json:"status"`
+				Reason  string `json:"reason"`
+				Message string `json:"message"`
+			} `json:"conditions"`
+		} `json:"status"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+		return "error", err.Error()
+	}
+	for _, c := range payload.Status.Conditions {
+		if c.Type == "Ready" {
+			switch c.Status {
+			case "True":
+				return "ready", ""
+			case "False":
+				reason := c.Reason
+				if c.Message != "" {
+					reason = c.Message
+				}
+				return "error", reason
+			default:
+				reason := c.Reason
+				if reason == "" {
+					reason = "DNS または TLS の設定を待機中"
+				}
+				return "pending", reason
+			}
+		}
+	}
+	return "pending", "DNS または TLS の設定を待機中"
+}
+
 func (m *knativeServiceManager) setCustomDomain(ctx context.Context, scope projectScope, name, customDomain string) error {
 	resourceName := serviceResourceName(scope.ProjectID, name)
 	labels := map[string]string{

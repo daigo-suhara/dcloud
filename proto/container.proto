@@ -35,6 +35,8 @@ message Service {
   string project_id = 9;
   int64 generation = 10;
   string custom_domain = 11;
+  string domain_status = 12;
+  string domain_status_reason = 13;
 }
 
 message ListServicesRequest {
