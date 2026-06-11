@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -132,61 +133,50 @@ func (m *knativeServiceManager) deleteDomainMapping(ctx context.Context, domainN
 	return nil
 }
 
-// getDomainMappingStatus returns ("ready"|"pending"|"error", reason).
-func (m *knativeServiceManager) getDomainMappingStatus(ctx context.Context, domainName string) (string, string) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/apis/serving.knative.dev/v1beta1/namespaces/%s/domainmappings/%s", m.baseURL, m.namespace, domainName),
-		nil)
-	if err != nil {
-		return "error", err.Error()
+// getDomainMappingStatus checks whether customDomain's DNS actually points to
+// the cluster by using an external resolver (8.8.8.8), then falls back to IP
+// comparison against defaultMapping (resourceName.publicDomain).
+// Returns ("ready"|"pending"|"error", reason).
+func (m *knativeServiceManager) getDomainMappingStatus(ctx context.Context, customDomain, defaultMapping string) (string, string) {
+	resolver := &net.Resolver{
+		PreferGo: true,
+		Dial: func(rctx context.Context, network, _ string) (net.Conn, error) {
+			return (&net.Dialer{Timeout: 5 * time.Second}).DialContext(rctx, "udp", "8.8.8.8:53")
+		},
 	}
-	m.authorize(req)
-	req.Header.Set("Accept", "application/json")
-	res, err := m.client.Do(req)
-	if err != nil {
-		return "error", err.Error()
-	}
-	defer res.Body.Close()
-	if res.StatusCode == http.StatusNotFound {
-		return "pending", "DomainMapping not found"
-	}
-	if res.StatusCode >= 300 {
-		return "error", fmt.Sprintf("HTTP %d", res.StatusCode)
-	}
-	var payload struct {
-		Status struct {
-			Conditions []struct {
-				Type    string `json:"type"`
-				Status  string `json:"status"`
-				Reason  string `json:"reason"`
-				Message string `json:"message"`
-			} `json:"conditions"`
-		} `json:"status"`
-	}
-	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-		return "error", err.Error()
-	}
-	for _, c := range payload.Status.Conditions {
-		if c.Type == "Ready" {
-			switch c.Status {
-			case "True":
-				return "ready", ""
-			case "False":
-				reason := c.Reason
-				if c.Message != "" {
-					reason = c.Message
-				}
-				return "error", reason
-			default:
-				reason := c.Reason
-				if reason == "" {
-					reason = "DNS または TLS の設定を待機中"
-				}
-				return "pending", reason
-			}
+	dnsCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
+	defer cancel()
+
+	// Check CNAME chain: the canonical way is a CNAME → *.publicDomain.
+	if cname, err := resolver.LookupCNAME(dnsCtx, customDomain); err == nil {
+		target := strings.TrimSuffix(cname, ".")
+		if strings.HasSuffix(target, "."+m.publicDomain) || target == m.publicDomain {
+			return "ready", ""
 		}
 	}
-	return "pending", "DNS または TLS の設定を待機中"
+
+	// Fallback: compare resolved IPs against the default mapping IPs.
+	customIPs, err := resolver.LookupHost(dnsCtx, customDomain)
+	if err != nil || len(customIPs) == 0 {
+		return "pending", fmt.Sprintf("DNS が解決できません。%s の CNAME を %s に設定してください", customDomain, defaultMapping)
+	}
+	if defaultMapping != "" {
+		clusterIPs, err := resolver.LookupHost(dnsCtx, defaultMapping)
+		if err == nil && len(clusterIPs) > 0 {
+			clusterSet := make(map[string]bool, len(clusterIPs))
+			for _, ip := range clusterIPs {
+				clusterSet[ip] = true
+			}
+			for _, ip := range customIPs {
+				if clusterSet[ip] {
+					return "ready", ""
+				}
+			}
+			return "pending", fmt.Sprintf("DNS が別の IP を向いています。%s の CNAME を %s に設定してください", customDomain, defaultMapping)
+		}
+	}
+	// defaultMapping couldn't be resolved — just accept that customDomain resolves.
+	return "ready", ""
 }
 
 func (m *knativeServiceManager) setCustomDomain(ctx context.Context, scope projectScope, name, customDomain string) error {
