@@ -243,41 +243,26 @@ func (s *computeServer) DeleteMachine(ctx context.Context, req *DeleteMachineReq
 		return nil, status.Error(codes.Internal, "failed to create operation")
 	}
 	now := time.Now().UTC().Format(time.RFC3339Nano)
-	if _, err := s.q.CreateOperation(ctx, dbsqlc.CreateOperationParams{ID: opID, CreatedAt: now}); err != nil {
+	if _, err := s.q.CreateOperation(ctx, dbsqlc.CreateOperationParams{
+		ID:           opID,
+		ResourceType: sql.NullString{String: "vm", Valid: true},
+		ResourceName: sql.NullString{String: name, Valid: true},
+		UserID:       sql.NullString{String: userID, Valid: true},
+		ProjectID:    sql.NullString{String: projectID, Valid: true},
+		CreatedAt:    now,
+	}); err != nil {
 		return nil, status.Error(codes.Internal, "failed to create operation")
 	}
 	go func() {
 		bgCtx := context.Background()
-		newStatus := "done"
-		errMsg := sql.NullString{}
 		if err := s.kubevirt.delete(bgCtx, s.namespace, projectScope{UserID: userID, ProjectID: projectID}, name); err != nil {
-			newStatus = "error"
-			errMsg = sql.NullString{String: err.Error(), Valid: true}
-		} else {
-			for i := 0; i < 60; i++ {
-				time.Sleep(2 * time.Second)
-				records, err := s.kubevirt.list(bgCtx, s.namespace, userID, projectID)
-				if err != nil {
-					break
-				}
-				found := false
-				for _, r := range records {
-					if r.Name == name {
-						found = true
-						break
-					}
-				}
-				if !found {
-					break
-				}
-			}
+			_ = s.q.UpdateOperation(bgCtx, dbsqlc.UpdateOperationParams{
+				ID:        opID,
+				Status:    "error",
+				Error:     sql.NullString{String: err.Error(), Valid: true},
+				UpdatedAt: time.Now().UTC().Format(time.RFC3339Nano),
+			})
 		}
-		_ = s.q.UpdateOperation(bgCtx, dbsqlc.UpdateOperationParams{
-			ID:        opID,
-			Status:    newStatus,
-			Error:     errMsg,
-			UpdatedAt: time.Now().UTC().Format(time.RFC3339Nano),
-		})
 	}()
 	return &DeleteMachineResponse{OperationId: opID}, nil
 }
@@ -299,6 +284,45 @@ func (s *computeServer) GetOperation(ctx context.Context, req *GetOperationReque
 		errStr = op.Error.String
 	}
 	return &GetOperationResponse{OperationId: op.ID, Status: op.Status, Error: errStr}, nil
+}
+
+func (s *computeServer) reconcileVMDeletions(ctx context.Context) {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			ops, err := s.q.ListPendingOperationsByResourceType(ctx, sql.NullString{String: "vm", Valid: true})
+			if err != nil || len(ops) == 0 {
+				continue
+			}
+			for _, op := range ops {
+				if !op.UserID.Valid || !op.ProjectID.Valid || !op.ResourceName.Valid {
+					continue
+				}
+				records, err := s.kubevirt.list(ctx, s.namespace, op.UserID.String, op.ProjectID.String)
+				if err != nil {
+					continue
+				}
+				found := false
+				for _, r := range records {
+					if r.Name == op.ResourceName.String {
+						found = true
+						break
+					}
+				}
+				if !found {
+					_ = s.q.UpdateOperation(ctx, dbsqlc.UpdateOperationParams{
+						ID:        op.ID,
+						Status:    "done",
+						UpdatedAt: time.Now().UTC().Format(time.RFC3339Nano),
+					})
+				}
+			}
+		}
+	}
 }
 
 func RegisterComputeServer(server *grpc.Server, impl ComputeServer) {
@@ -327,10 +351,14 @@ func main() {
 		logger.Info("compute grpc listening", "addr", addr)
 		errc <- grpcServer.Serve(lis)
 	}()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go server.reconcileVMDeletions(ctx)
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM)
 	select {
 	case <-sigc:
+		cancel()
 		grpcServer.GracefulStop()
 	case err := <-errc:
 		if err != nil && !errors.Is(err, grpc.ErrServerStopped) {

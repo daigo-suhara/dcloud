@@ -11,23 +11,38 @@ import (
 )
 
 const createOperation = `-- name: CreateOperation :one
-INSERT INTO operations (id, status, created_at, updated_at)
-VALUES ($1, 'pending', $2, $2)
-RETURNING id, status, error, created_at, updated_at
+INSERT INTO operations (id, status, resource_type, resource_name, user_id, project_id, created_at, updated_at)
+VALUES ($1, 'pending', $2, $3, $4, $5, $6, $6)
+RETURNING id, status, error, resource_type, resource_name, user_id, project_id, created_at, updated_at
 `
 
 type CreateOperationParams struct {
-	ID        string
-	CreatedAt string
+	ID           string
+	ResourceType sql.NullString
+	ResourceName sql.NullString
+	UserID       sql.NullString
+	ProjectID    sql.NullString
+	CreatedAt    string
 }
 
 func (q *Queries) CreateOperation(ctx context.Context, arg CreateOperationParams) (Operation, error) {
-	row := q.db.QueryRowContext(ctx, createOperation, arg.ID, arg.CreatedAt)
+	row := q.db.QueryRowContext(ctx, createOperation,
+		arg.ID,
+		arg.ResourceType,
+		arg.ResourceName,
+		arg.UserID,
+		arg.ProjectID,
+		arg.CreatedAt,
+	)
 	var i Operation
 	err := row.Scan(
 		&i.ID,
 		&i.Status,
 		&i.Error,
+		&i.ResourceType,
+		&i.ResourceName,
+		&i.UserID,
+		&i.ProjectID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -102,7 +117,7 @@ func (q *Queries) DeleteProject(ctx context.Context, arg DeleteProjectParams) (i
 }
 
 const getOperation = `-- name: GetOperation :one
-SELECT id, status, error, created_at, updated_at
+SELECT id, status, error, resource_type, resource_name, user_id, project_id, created_at, updated_at
 FROM operations
 WHERE id = $1
 `
@@ -114,6 +129,10 @@ func (q *Queries) GetOperation(ctx context.Context, id string) (Operation, error
 		&i.ID,
 		&i.Status,
 		&i.Error,
+		&i.ResourceType,
+		&i.ResourceName,
+		&i.UserID,
+		&i.ProjectID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -147,6 +166,45 @@ func (q *Queries) ListContainers(ctx context.Context, projectID string) ([]Conta
 			&i.UpdatedAt,
 			&i.Namespace,
 			&i.Generation,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPendingOperationsByResourceType = `-- name: ListPendingOperationsByResourceType :many
+SELECT id, status, error, resource_type, resource_name, user_id, project_id, created_at, updated_at
+FROM operations
+WHERE status = 'pending' AND resource_type = $1
+`
+
+func (q *Queries) ListPendingOperationsByResourceType(ctx context.Context, resourceType sql.NullString) ([]Operation, error) {
+	rows, err := q.db.QueryContext(ctx, listPendingOperationsByResourceType, resourceType)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Operation
+	for rows.Next() {
+		var i Operation
+		if err := rows.Scan(
+			&i.ID,
+			&i.Status,
+			&i.Error,
+			&i.ResourceType,
+			&i.ResourceName,
+			&i.UserID,
+			&i.ProjectID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}

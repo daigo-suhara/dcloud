@@ -224,7 +224,14 @@ func (s *containerServer) DeleteService(ctx context.Context, req *DeleteServiceR
 		return nil, status.Error(codes.Internal, "failed to create operation")
 	}
 	now := time.Now().UTC().Format(time.RFC3339Nano)
-	if _, err := s.q.CreateOperation(ctx, dbsqlc.CreateOperationParams{ID: opID, CreatedAt: now}); err != nil {
+	if _, err := s.q.CreateOperation(ctx, dbsqlc.CreateOperationParams{
+		ID:           opID,
+		ResourceType: sql.NullString{String: "container", Valid: true},
+		ResourceName: sql.NullString{String: name, Valid: true},
+		UserID:       sql.NullString{String: userID, Valid: true},
+		ProjectID:    sql.NullString{String: projectID, Valid: true},
+		CreatedAt:    now,
+	}); err != nil {
 		return nil, status.Error(codes.Internal, "failed to create operation")
 	}
 	go func() {

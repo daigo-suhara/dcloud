@@ -48,9 +48,14 @@ DELETE FROM containers
 WHERE project_id = $1 AND name = $2;
 
 -- name: CreateOperation :one
-INSERT INTO operations (id, status, created_at, updated_at)
-VALUES ($1, 'pending', $2, $2)
-RETURNING id, status, error, created_at, updated_at;
+INSERT INTO operations (id, status, resource_type, resource_name, user_id, project_id, created_at, updated_at)
+VALUES ($1, 'pending', $2, $3, $4, $5, $6, $6)
+RETURNING id, status, error, resource_type, resource_name, user_id, project_id, created_at, updated_at;
+
+-- name: ListPendingOperationsByResourceType :many
+SELECT id, status, error, resource_type, resource_name, user_id, project_id, created_at, updated_at
+FROM operations
+WHERE status = 'pending' AND resource_type = $1;
 
 -- name: UpdateOperation :exec
 UPDATE operations
@@ -58,6 +63,6 @@ SET status = $2, error = $3, updated_at = $4
 WHERE id = $1;
 
 -- name: GetOperation :one
-SELECT id, status, error, created_at, updated_at
+SELECT id, status, error, resource_type, resource_name, user_id, project_id, created_at, updated_at
 FROM operations
 WHERE id = $1;

@@ -40,11 +40,15 @@ type IdentityUser struct {
 }
 
 type Operation struct {
-	ID        string
-	Status    string
-	Error     sql.NullString
-	CreatedAt string
-	UpdatedAt string
+	ID           string
+	Status       string
+	Error        sql.NullString
+	ResourceType sql.NullString
+	ResourceName sql.NullString
+	UserID       sql.NullString
+	ProjectID    sql.NullString
+	CreatedAt    string
+	UpdatedAt    string
 }
 
 type Project struct {
