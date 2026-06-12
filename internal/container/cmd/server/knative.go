@@ -138,30 +138,24 @@ func (m *knativeServiceManager) deleteDomainMapping(ctx context.Context, domainN
 // comparison against defaultMapping (resourceName.publicDomain).
 // Returns ("ready"|"pending"|"error", reason).
 func (m *knativeServiceManager) getDomainMappingStatus(ctx context.Context, customDomain, defaultMapping string) (string, string) {
-	resolver := &net.Resolver{
-		PreferGo: true,
-		Dial: func(rctx context.Context, network, _ string) (net.Conn, error) {
-			return (&net.Dialer{Timeout: 5 * time.Second}).DialContext(rctx, "udp", "8.8.8.8:53")
-		},
-	}
 	dnsCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
 	defer cancel()
 
-	// Check CNAME chain: the canonical way is a CNAME → *.publicDomain.
-	if cname, err := resolver.LookupCNAME(dnsCtx, customDomain); err == nil {
+	// Check CNAME chain first (CNAME → *.publicDomain).
+	if cname, err := net.DefaultResolver.LookupCNAME(dnsCtx, customDomain); err == nil {
 		target := strings.TrimSuffix(cname, ".")
 		if strings.HasSuffix(target, "."+m.publicDomain) || target == m.publicDomain {
 			return "ready", ""
 		}
 	}
 
-	// Fallback: compare resolved IPs against the default mapping IPs.
-	customIPs, err := resolver.LookupHost(dnsCtx, customDomain)
+	// Fallback: compare A/AAAA records against the default mapping IPs.
+	customIPs, err := net.DefaultResolver.LookupHost(dnsCtx, customDomain)
 	if err != nil || len(customIPs) == 0 {
-		return "pending", fmt.Sprintf("DNS が解決できません。%s の CNAME を %s に設定してください", customDomain, defaultMapping)
+		return "pending", fmt.Sprintf("DNS が解決できません。CNAME を %s に設定してください", defaultMapping)
 	}
 	if defaultMapping != "" {
-		clusterIPs, err := resolver.LookupHost(dnsCtx, defaultMapping)
+		clusterIPs, err := net.DefaultResolver.LookupHost(dnsCtx, defaultMapping)
 		if err == nil && len(clusterIPs) > 0 {
 			clusterSet := make(map[string]bool, len(clusterIPs))
 			for _, ip := range clusterIPs {
@@ -172,10 +166,9 @@ func (m *knativeServiceManager) getDomainMappingStatus(ctx context.Context, cust
 					return "ready", ""
 				}
 			}
-			return "pending", fmt.Sprintf("DNS が別の IP を向いています。%s の CNAME を %s に設定してください", customDomain, defaultMapping)
+			return "pending", fmt.Sprintf("DNS が別の宛先を向いています。CNAME を %s に設定してください", defaultMapping)
 		}
 	}
-	// defaultMapping couldn't be resolved — just accept that customDomain resolves.
 	return "ready", ""
 }
 
