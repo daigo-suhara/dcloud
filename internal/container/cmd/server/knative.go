@@ -200,6 +200,22 @@ func (m *knativeServiceManager) getDomainMappingStatus(ctx context.Context, cust
 				if strings.HasSuffix(target, "."+m.publicDomain) || target == m.publicDomain {
 					return "ready", ""
 				}
+				// Apex domains use Cloudflare CNAME flattening: the CNAME is
+				// transparently resolved to A records, so LookupCNAME returns
+				// the domain itself. Compare A records with the default mapping.
+				if target == strings.TrimSuffix(customDomain, ".") {
+					if domainAddrs, e1 := net.DefaultResolver.LookupHost(dnsCtx, customDomain); e1 == nil {
+						if targetAddrs, e2 := net.DefaultResolver.LookupHost(dnsCtx, defaultMapping); e2 == nil {
+							for _, a := range domainAddrs {
+								for _, b := range targetAddrs {
+									if a == b {
+										return "ready", ""
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 			// Routing set up but DNS not yet visible from cluster — treat as pending.
 			return "pending", fmt.Sprintf("CNAME を %s に設定してください", defaultMapping)
