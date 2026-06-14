@@ -169,6 +169,9 @@ type Service struct {
 	DomainStatus       string                 `protobuf:"bytes,12,opt,name=domain_status,json=domainStatus,proto3" json:"domain_status,omitempty"`
 	DomainStatusReason string                 `protobuf:"bytes,13,opt,name=domain_status_reason,json=domainStatusReason,proto3" json:"domain_status_reason,omitempty"`
 	DomainCnameTarget  string                 `protobuf:"bytes,14,opt,name=domain_cname_target,json=domainCnameTarget,proto3" json:"domain_cname_target,omitempty"`
+	Port               int32                  `protobuf:"varint,15,opt,name=port,proto3" json:"port,omitempty"`
+	MinScale           int32                  `protobuf:"varint,16,opt,name=min_scale,json=minScale,proto3" json:"min_scale,omitempty"`
+	MaxScale           int32                  `protobuf:"varint,17,opt,name=max_scale,json=maxScale,proto3" json:"max_scale,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -299,6 +302,27 @@ func (x *Service) GetDomainCnameTarget() string {
 		return x.DomainCnameTarget
 	}
 	return ""
+}
+
+func (x *Service) GetPort() int32 {
+	if x != nil {
+		return x.Port
+	}
+	return 0
+}
+
+func (x *Service) GetMinScale() int32 {
+	if x != nil {
+		return x.MinScale
+	}
+	return 0
+}
+
+func (x *Service) GetMaxScale() int32 {
+	if x != nil {
+		return x.MaxScale
+	}
+	return 0
 }
 
 type ListServicesRequest struct {
@@ -887,7 +911,7 @@ const file_container_proto_rawDesc = "" +
 	"\x0eHealthResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
 	"\aservice\x18\x02 \x01(\tR\aservice\x12\x1c\n" +
-	"\ttimestamp\x18\x03 \x01(\tR\ttimestamp\"\xba\x03\n" +
+	"\ttimestamp\x18\x03 \x01(\tR\ttimestamp\"\x88\x04\n" +
 	"\aService\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05image\x18\x02 \x01(\tR\x05image\x12\x10\n" +
@@ -908,7 +932,10 @@ const file_container_proto_rawDesc = "" +
 	"\rcustom_domain\x18\v \x01(\tR\fcustomDomain\x12#\n" +
 	"\rdomain_status\x18\f \x01(\tR\fdomainStatus\x120\n" +
 	"\x14domain_status_reason\x18\r \x01(\tR\x12domainStatusReason\x12.\n" +
-	"\x13domain_cname_target\x18\x0e \x01(\tR\x11domainCnameTarget\"M\n" +
+	"\x13domain_cname_target\x18\x0e \x01(\tR\x11domainCnameTarget\x12\x12\n" +
+	"\x04port\x18\x0f \x01(\x05R\x04port\x12\x1b\n" +
+	"\tmin_scale\x18\x10 \x01(\x05R\bminScale\x12\x1b\n" +
+	"\tmax_scale\x18\x11 \x01(\x05R\bmaxScale\"M\n" +
 	"\x13ListServicesRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +

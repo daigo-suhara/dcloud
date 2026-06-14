@@ -72,6 +72,9 @@ type deployedService struct {
 	Namespace    string
 	ProjectID    string
 	Generation   int64
+	Port         int32
+	MinScale     int32
+	MaxScale     int32
 }
 
 type containerServer struct {
@@ -162,6 +165,9 @@ func (s *containerServer) ListServices(ctx context.Context, req *ListServicesReq
 			DomainStatus:       domainStatus,
 			DomainStatusReason: domainStatusReason,
 			DomainCnameTarget:  defaultMapping,
+			Port:               record.Port,
+			MinScale:           record.MinScale,
+			MaxScale:           record.MaxScale,
 		})
 	}
 	return &ListServicesResponse{UserId: userID, ProjectId: projectID, Namespace: s.namespace, Containers: items}, nil
@@ -213,6 +219,9 @@ func (s *containerServer) DeployService(ctx context.Context, req *DeployServiceR
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
 		Namespace: created.Namespace,
+		Port:      created.Port,
+		MinScale:  created.MinScale,
+		MaxScale:  created.MaxScale,
 	}); err != nil {
 		return nil, status.Error(codes.Internal, "failed to persist service")
 	}
@@ -227,6 +236,9 @@ func (s *containerServer) DeployService(ctx context.Context, req *DeployServiceR
 		Namespace:  created.Namespace,
 		ProjectId:  created.ProjectID,
 		Generation: created.Generation,
+		Port:       created.Port,
+		MinScale:   created.MinScale,
+		MaxScale:   created.MaxScale,
 	}
 	return &DeployServiceResponse{Service: &svc}, nil
 }
@@ -371,6 +383,9 @@ func (s *containerServer) SetServiceDomain(ctx context.Context, req *SetServiceD
 		DomainStatus:       domainStatus,
 		DomainStatusReason: domainStatusReason,
 		DomainCnameTarget:  defaultMapping,
+		Port:               dbRecord.Port,
+		MinScale:           dbRecord.MinScale,
+		MaxScale:           dbRecord.MaxScale,
 	}
 	return &SetServiceDomainResponse{Service: svc}, nil
 }

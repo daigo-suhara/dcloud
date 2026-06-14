@@ -22,22 +22,22 @@ SELECT EXISTS (
 );
 
 -- name: ListContainers :many
-SELECT project_id, name, image, url, ready, reason, created_at, updated_at, namespace, generation, custom_domain
+SELECT project_id, name, image, url, ready, reason, created_at, updated_at, namespace, generation, custom_domain, port, min_scale, max_scale
 FROM containers
 WHERE project_id = $1
 ORDER BY created_at, name;
 
 -- name: GetContainer :one
-SELECT project_id, name, image, url, ready, reason, created_at, updated_at, namespace, generation, custom_domain
+SELECT project_id, name, image, url, ready, reason, created_at, updated_at, namespace, generation, custom_domain, port, min_scale, max_scale
 FROM containers
 WHERE project_id = $1 AND name = $2;
 
 -- name: UpsertContainer :one
 INSERT INTO containers (
     project_id, name, image, url, ready, reason,
-    created_at, updated_at, namespace, generation
+    created_at, updated_at, namespace, generation, port, min_scale, max_scale
 )
-VALUES ($1, $2, $3, $4, TRUE, $5, $6, $7, $8, 1)
+VALUES ($1, $2, $3, $4, TRUE, $5, $6, $7, $8, 1, $9, $10, $11)
 ON CONFLICT (project_id, name) DO UPDATE SET
     image = EXCLUDED.image,
     url = EXCLUDED.url,
@@ -45,8 +45,11 @@ ON CONFLICT (project_id, name) DO UPDATE SET
     reason = EXCLUDED.reason,
     updated_at = EXCLUDED.updated_at,
     namespace = EXCLUDED.namespace,
-    generation = containers.generation + 1
-RETURNING project_id, name, image, url, ready, reason, created_at, updated_at, namespace, generation, custom_domain;
+    generation = containers.generation + 1,
+    port = EXCLUDED.port,
+    min_scale = EXCLUDED.min_scale,
+    max_scale = EXCLUDED.max_scale
+RETURNING project_id, name, image, url, ready, reason, created_at, updated_at, namespace, generation, custom_domain, port, min_scale, max_scale;
 
 -- name: UpdateContainerDomain :execrows
 UPDATE containers SET custom_domain = $3, updated_at = $4

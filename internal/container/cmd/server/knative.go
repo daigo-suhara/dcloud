@@ -281,9 +281,15 @@ func (m *knativeServiceManager) list(ctx context.Context, scope projectScope) ([
 			} `json:"metadata"`
 			Spec struct {
 				Template struct {
+					Metadata struct {
+						Annotations map[string]string `json:"annotations"`
+					} `json:"metadata"`
 					Spec struct {
 						Containers []struct {
 							Image string `json:"image"`
+							Ports []struct {
+								ContainerPort int32 `json:"containerPort"`
+							} `json:"ports"`
 						} `json:"containers"`
 					} `json:"spec"`
 				} `json:"template"`
@@ -320,7 +326,15 @@ func (m *knativeServiceManager) list(ctx context.Context, scope projectScope) ([
 			Generation:   item.Metadata.Generation,
 		}
 		if len(item.Spec.Template.Spec.Containers) > 0 {
-			svc.Image = item.Spec.Template.Spec.Containers[0].Image
+			c := item.Spec.Template.Spec.Containers[0]
+			svc.Image = c.Image
+			if len(c.Ports) > 0 {
+				svc.Port = c.Ports[0].ContainerPort
+			}
+		}
+		if ann := item.Spec.Template.Metadata.Annotations; ann != nil {
+			svc.MinScale = parseScaleAnnotation(ann["autoscaling.knative.dev/minScale"])
+			svc.MaxScale = parseScaleAnnotation(ann["autoscaling.knative.dev/maxScale"])
 		}
 		for _, cond := range item.Status.Conditions {
 			if cond.Type == "Ready" {
@@ -447,6 +461,9 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 		Generation:   payload.Metadata.Generation,
 		CreatedAt:    payload.Metadata.CreationTimestamp.UTC().Format(time.RFC3339),
 		UpdatedAt:    payload.Metadata.CreationTimestamp.UTC().Format(time.RFC3339),
+		Port:         req.Port,
+		MinScale:     req.MinScale,
+		MaxScale:     req.MaxScale,
 	}
 	if len(payload.Spec.Template.Spec.Containers) > 0 {
 		service.Image = payload.Spec.Template.Spec.Containers[0].Image
@@ -578,4 +595,13 @@ func decodeAPIError(res *http.Response) error {
 		}
 	}
 	return fmt.Errorf("kubernetes api returned %s", res.Status)
+}
+
+func parseScaleAnnotation(v string) int32 {
+	if v == "" {
+		return 0
+	}
+	var n int32
+	fmt.Sscanf(v, "%d", &n)
+	return n
 }

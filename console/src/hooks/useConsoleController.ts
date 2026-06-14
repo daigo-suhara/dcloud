@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { initialAuthForm, initialComputeForm, initialForm, type AuthForm, type AuthUser, type ComputeForm, type ComputeMachine, type DeployedService, type PlatformResponse, type Project, type ProjectsResponse, type RepositoryConfig, type RepositoryForm, type RouteState } from "../types";
+import { initialAuthForm, initialComputeForm, initialForm, type AuthForm, type AuthUser, type ComputeForm, type ComputeMachine, type DeployedService, type PlatformResponse, type Project, type ProjectsResponse, type RepositoryConfig, type RepositoryForm, type RouteState, type UpdateForm } from "../types";
 import { getServiceStatus, parseRoute } from "../utils";
 
 type LoadServicesOptions = {
@@ -54,6 +54,7 @@ export function useConsoleController() {
   const [computeSubmitting, setComputeSubmitting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [deletingName, setDeletingName] = useState("");
+  const [updatingName, setUpdatingName] = useState("");
   const [deletingMachineName, setDeletingMachineName] = useState("");
   const [pendingDeleteName, setPendingDeleteName] = useState("");
   const [pendingDeleteMachineName, setPendingDeleteMachineName] = useState("");
@@ -574,6 +575,37 @@ export function useConsoleController() {
     }
   }
 
+  async function handleUpdateContainer(name: string, form: UpdateForm) {
+    setUpdatingName(name);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch(`/api/v1/container/${encodeURIComponent(name)}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: apiHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          image: form.image.trim(),
+          port: Number(form.port || "8080"),
+          minScale: Number(form.minScale || "0"),
+          maxScale: Number(form.maxScale || "20")
+        })
+      });
+      const data = (await readJsonResponse(response)) as DeployedService | ApiErrorResponse;
+      if (!response.ok) {
+        throw new Error(getApiErrorMessage(data, "サービスの更新に失敗しました"));
+      }
+      if ("name" in data) {
+        setContainers((current) => current.map((c) => c.name === name ? { ...c, ...data } : c));
+        setMessage(`${name} を更新しました`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "サービスの更新に失敗しました");
+    } finally {
+      setUpdatingName("");
+    }
+  }
+
   async function handleSetContainerDomain(name: string, customDomain: string) {
     setError("");
     setMessage("");
@@ -742,11 +774,13 @@ export function useConsoleController() {
     creatingProject,
     currentUser,
     deletingName,
+    updatingName,
     deletingProjectId,
     error,
     form,
     handleCreateProject,
     handleSetContainerDomain,
+    handleUpdateContainer,
     handleFormChange,
     handleComputeFormChange,
     handleAuthFormChange,

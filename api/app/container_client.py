@@ -147,6 +147,9 @@ class ContainerClient:
             "domainStatus": service.domain_status or None,
             "domainStatusReason": service.domain_status_reason or None,
             "domainCnameTarget": service.domain_cname_target or None,
+            "port": service.port or 8080,
+            "minScale": service.min_scale,
+            "maxScale": service.max_scale,
         }
 
     @staticmethod

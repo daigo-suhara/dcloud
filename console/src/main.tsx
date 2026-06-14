@@ -143,12 +143,14 @@ function AppContent() {
           <ContainerSection
             loading={controller.loading}
             deletingServiceName={controller.deletingName}
+            updatingServiceName={controller.updatingName}
             onBackToList={() => navigate("/container")}
             onDeployClick={() => navigate("/container/deploy")}
             onDeleteService={controller.requestDelete}
             onOpenService={controller.handleOpenService}
             onRepoConnectClick={controller.handleOpenRepository}
             onSetDomain={controller.handleSetContainerDomain}
+            onUpdateService={controller.handleUpdateContainer}
             selectedService={controller.selectedService}
             selectedStatus={controller.selectedStatus}
             containers={controller.containers}

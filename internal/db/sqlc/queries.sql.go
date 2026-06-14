@@ -129,7 +129,7 @@ func (q *Queries) DeleteProject(ctx context.Context, arg DeleteProjectParams) (i
 }
 
 const getContainer = `-- name: GetContainer :one
-SELECT project_id, name, image, url, ready, reason, created_at, updated_at, namespace, generation, custom_domain
+SELECT project_id, name, image, url, ready, reason, created_at, updated_at, namespace, generation, custom_domain, port, min_scale, max_scale
 FROM containers
 WHERE project_id = $1 AND name = $2
 `
@@ -154,6 +154,9 @@ func (q *Queries) GetContainer(ctx context.Context, arg GetContainerParams) (Con
 		&i.Namespace,
 		&i.Generation,
 		&i.CustomDomain,
+		&i.Port,
+		&i.MinScale,
+		&i.MaxScale,
 	)
 	return i, err
 }
@@ -194,7 +197,7 @@ func (q *Queries) GetOperation(ctx context.Context, id string) (GetOperationRow,
 }
 
 const listContainers = `-- name: ListContainers :many
-SELECT project_id, name, image, url, ready, reason, created_at, updated_at, namespace, generation, custom_domain
+SELECT project_id, name, image, url, ready, reason, created_at, updated_at, namespace, generation, custom_domain, port, min_scale, max_scale
 FROM containers
 WHERE project_id = $1
 ORDER BY created_at, name
@@ -221,6 +224,9 @@ func (q *Queries) ListContainers(ctx context.Context, projectID string) ([]Conta
 			&i.Namespace,
 			&i.Generation,
 			&i.CustomDomain,
+			&i.Port,
+			&i.MinScale,
+			&i.MaxScale,
 		); err != nil {
 			return nil, err
 		}
@@ -392,9 +398,9 @@ func (q *Queries) UpdateOperation(ctx context.Context, arg UpdateOperationParams
 const upsertContainer = `-- name: UpsertContainer :one
 INSERT INTO containers (
     project_id, name, image, url, ready, reason,
-    created_at, updated_at, namespace, generation
+    created_at, updated_at, namespace, generation, port, min_scale, max_scale
 )
-VALUES ($1, $2, $3, $4, TRUE, $5, $6, $7, $8, 1)
+VALUES ($1, $2, $3, $4, TRUE, $5, $6, $7, $8, 1, $9, $10, $11)
 ON CONFLICT (project_id, name) DO UPDATE SET
     image = EXCLUDED.image,
     url = EXCLUDED.url,
@@ -402,8 +408,11 @@ ON CONFLICT (project_id, name) DO UPDATE SET
     reason = EXCLUDED.reason,
     updated_at = EXCLUDED.updated_at,
     namespace = EXCLUDED.namespace,
-    generation = containers.generation + 1
-RETURNING project_id, name, image, url, ready, reason, created_at, updated_at, namespace, generation, custom_domain
+    generation = containers.generation + 1,
+    port = EXCLUDED.port,
+    min_scale = EXCLUDED.min_scale,
+    max_scale = EXCLUDED.max_scale
+RETURNING project_id, name, image, url, ready, reason, created_at, updated_at, namespace, generation, custom_domain, port, min_scale, max_scale
 `
 
 type UpsertContainerParams struct {
@@ -415,6 +424,9 @@ type UpsertContainerParams struct {
 	CreatedAt string
 	UpdatedAt string
 	Namespace string
+	Port      int32
+	MinScale  int32
+	MaxScale  int32
 }
 
 func (q *Queries) UpsertContainer(ctx context.Context, arg UpsertContainerParams) (Container, error) {
@@ -427,6 +439,9 @@ func (q *Queries) UpsertContainer(ctx context.Context, arg UpsertContainerParams
 		arg.CreatedAt,
 		arg.UpdatedAt,
 		arg.Namespace,
+		arg.Port,
+		arg.MinScale,
+		arg.MaxScale,
 	)
 	var i Container
 	err := row.Scan(
@@ -441,6 +456,9 @@ func (q *Queries) UpsertContainer(ctx context.Context, arg UpsertContainerParams
 		&i.Namespace,
 		&i.Generation,
 		&i.CustomDomain,
+		&i.Port,
+		&i.MinScale,
+		&i.MaxScale,
 	)
 	return i, err
 }

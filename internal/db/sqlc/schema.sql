@@ -40,6 +40,9 @@ CREATE INDEX IF NOT EXISTS idx_containers_project_created_at
     ON containers (project_id, created_at, name);
 
 ALTER TABLE containers ADD COLUMN IF NOT EXISTS custom_domain TEXT;
+ALTER TABLE containers ADD COLUMN IF NOT EXISTS port INT NOT NULL DEFAULT 8080;
+ALTER TABLE containers ADD COLUMN IF NOT EXISTS min_scale INT NOT NULL DEFAULT 0;
+ALTER TABLE containers ADD COLUMN IF NOT EXISTS max_scale INT NOT NULL DEFAULT 20;
 
 CREATE TABLE IF NOT EXISTS identity_users (
     id TEXT PRIMARY KEY,

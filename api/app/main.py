@@ -321,6 +321,37 @@ def deploy_container(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
+@app.put("/api/v1/container/{name}")
+def update_container(
+    name: str,
+    body: dict[str, Any],
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, Any]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    ensure_project_not_deleting(project_id)
+    image = str(body.get("image", "")).strip()
+    try:
+        return app.state.container_client.deploy_service(
+            user["id"],
+            project_id,
+            name,
+            image,
+            int(body.get("port", 8080) or 8080),
+            int(body.get("minScale", 0) or 0),
+            int(body.get("maxScale", 20) or 20),
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="サービスが見つかりません") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
 @app.delete("/api/v1/container/{name}")
 def delete_container(
     name: str,

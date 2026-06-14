@@ -6,21 +6,24 @@ import ErrorOutlinedIcon from "@mui/icons-material/ErrorOutlined";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import { Box, Button, Card, CardContent, Chip, CircularProgress, IconButton, Paper, TextField, Tooltip, Typography } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { Link as RouterLink } from "react-router-dom";
-import type { DeployedService } from "../types";
+import type { DeployedService, UpdateForm } from "../types";
 import { actionLinkButtonSx } from "../theme";
 import { formatServiceStatus, formatServiceTimestamp, getServiceStatus } from "../utils";
 
 type ContainerSectionProps = {
   loading: boolean;
   deletingServiceName: string;
+  updatingServiceName: string;
   onBackToList: () => void;
   onDeployClick: () => void;
   onDeleteService: (name: string) => void;
   onOpenService: (name: string) => void;
   onRepoConnectClick: () => void;
   onSetDomain: (name: string, domain: string) => Promise<void>;
+  onUpdateService: (name: string, form: UpdateForm) => Promise<void>;
   selectedService: DeployedService | null;
   selectedStatus: ReturnType<typeof getServiceStatus> | null;
   containers: DeployedService[];
@@ -29,18 +32,32 @@ type ContainerSectionProps = {
 export function ContainerSection({
   loading,
   deletingServiceName,
+  updatingServiceName,
   onBackToList,
   onDeployClick,
   onDeleteService,
   onOpenService,
   onRepoConnectClick,
   onSetDomain,
+  onUpdateService,
   selectedService,
   selectedStatus,
   containers
 }: ContainerSectionProps) {
   const [domainInput, setDomainInput] = useState("");
   const [savingDomain, setSavingDomain] = useState(false);
+  const [updateForm, setUpdateForm] = useState<UpdateForm>({ image: "", port: "8080", minScale: "0", maxScale: "20" });
+
+  useEffect(() => {
+    if (selectedService) {
+      setUpdateForm({
+        image: selectedService.image,
+        port: String(selectedService.port ?? 8080),
+        minScale: String(selectedService.minScale ?? 0),
+        maxScale: String(selectedService.maxScale ?? 20)
+      });
+    }
+  }, [selectedService?.name]);
   const selectedStatusIcon =
     selectedStatus === "ready" ? (
       <CheckCircleIcon fontSize="small" />
@@ -116,6 +133,70 @@ export function ContainerSection({
                   </Typography>
                   <Typography sx={{ mt: 0.5, fontWeight: 600 }}>{selectedService.createdAt ?? "-"}</Typography>
                 </Paper>
+              </Box>
+
+              <Box sx={{ display: "grid", gap: 1.5 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                  イメージを更新
+                </Typography>
+                <Box
+                  component="form"
+                  onSubmit={async (event: FormEvent<HTMLFormElement>) => {
+                    event.preventDefault();
+                    await onUpdateService(selectedService.name, updateForm);
+                  }}
+                  sx={{ display: "grid", gap: 1.5 }}
+                >
+                  <TextField
+                    size="small"
+                    label="コンテナイメージ"
+                    value={updateForm.image}
+                    onChange={(e) => setUpdateForm((f) => ({ ...f, image: e.target.value }))}
+                    disabled={updatingServiceName === selectedService.name}
+                    placeholder="ghcr.io/org/app:tag"
+                    fullWidth
+                    slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false } }}
+                  />
+                  <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" } }}>
+                    <TextField
+                      size="small"
+                      label="Port"
+                      type="number"
+                      slotProps={{ htmlInput: { min: 1, max: 65535 } }}
+                      value={updateForm.port}
+                      onChange={(e) => setUpdateForm((f) => ({ ...f, port: e.target.value }))}
+                      disabled={updatingServiceName === selectedService.name}
+                    />
+                    <TextField
+                      size="small"
+                      label="最小スケール"
+                      type="number"
+                      slotProps={{ htmlInput: { min: 0, max: 20 } }}
+                      value={updateForm.minScale}
+                      onChange={(e) => setUpdateForm((f) => ({ ...f, minScale: e.target.value }))}
+                      disabled={updatingServiceName === selectedService.name}
+                    />
+                    <TextField
+                      size="small"
+                      label="最大スケール"
+                      type="number"
+                      slotProps={{ htmlInput: { min: 1, max: 20 } }}
+                      value={updateForm.maxScale}
+                      onChange={(e) => setUpdateForm((f) => ({ ...f, maxScale: e.target.value }))}
+                      disabled={updatingServiceName === selectedService.name}
+                    />
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      disabled={updatingServiceName === selectedService.name || !updateForm.image.trim()}
+                      startIcon={updatingServiceName === selectedService.name ? <CircularProgress size={16} thickness={5} sx={{ color: "inherit" }} /> : undefined}
+                    >
+                      {updatingServiceName === selectedService.name ? "更新中..." : "更新"}
+                    </Button>
+                  </Box>
+                </Box>
               </Box>
 
               <Box sx={{ display: "grid", gap: 1.5 }}>

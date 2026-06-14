@@ -20,6 +20,9 @@ type Container struct {
 	Namespace    string
 	Generation   int64
 	CustomDomain sql.NullString
+	Port         int32
+	MinScale     int32
+	MaxScale     int32
 }
 
 type IdentitySession struct {

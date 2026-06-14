@@ -52,6 +52,9 @@ export type DeployedService = {
   domainStatus?: "ready" | "pending" | "error" | null;
   domainStatusReason?: string | null;
   domainCnameTarget?: string | null;
+  port?: number;
+  minScale?: number;
+  maxScale?: number;
 };
 
 export type ComputeMachine = {
@@ -71,6 +74,13 @@ export type ComputeMachine = {
 
 export type DeployForm = {
   name: string;
+  image: string;
+  port: string;
+  minScale: string;
+  maxScale: string;
+};
+
+export type UpdateForm = {
   image: string;
   port: string;
   minScale: string;
