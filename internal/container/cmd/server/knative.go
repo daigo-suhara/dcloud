@@ -383,11 +383,16 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 			manifest.Spec.Template.Metadata.Annotations["autoscaling.knative.dev/maxScale"] = fmt.Sprintf("%d", req.MaxScale)
 		}
 	}
-	manifest.Spec.Template.Spec.Containers = []knativeContainer{{
+	container := knativeContainer{
 		Name:  req.Name,
 		Image: req.Image,
 		Ports: []knativeContainerPort{{ContainerPort: req.Port}},
-	}}
+	}
+	if req.StartupScript != "" {
+		container.Command = []string{"/bin/sh", "-c"}
+		container.Args = []string{req.StartupScript}
+	}
+	manifest.Spec.Template.Spec.Containers = []knativeContainer{container}
 
 	body, err := json.Marshal(manifest)
 	if err != nil {
@@ -452,18 +457,19 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 	}
 
 	service := deployedService{
-		Name:         req.Name,
-		Image:        req.Image,
-		URL:          m.publicURL(resourceName),
-		ResourceName: resourceName,
-		Namespace:    payload.Metadata.Namespace,
-		ProjectID:    scope.ProjectID,
-		Generation:   payload.Metadata.Generation,
-		CreatedAt:    payload.Metadata.CreationTimestamp.UTC().Format(time.RFC3339),
-		UpdatedAt:    payload.Metadata.CreationTimestamp.UTC().Format(time.RFC3339),
-		Port:         req.Port,
-		MinScale:     req.MinScale,
-		MaxScale:     req.MaxScale,
+		Name:          req.Name,
+		Image:         req.Image,
+		URL:           m.publicURL(resourceName),
+		ResourceName:  resourceName,
+		Namespace:     payload.Metadata.Namespace,
+		ProjectID:     scope.ProjectID,
+		Generation:    payload.Metadata.Generation,
+		CreatedAt:     payload.Metadata.CreationTimestamp.UTC().Format(time.RFC3339),
+		UpdatedAt:     payload.Metadata.CreationTimestamp.UTC().Format(time.RFC3339),
+		Port:          req.Port,
+		MinScale:      req.MinScale,
+		MaxScale:      req.MaxScale,
+		StartupScript: req.StartupScript,
 	}
 	if len(payload.Spec.Template.Spec.Containers) > 0 {
 		service.Image = payload.Spec.Template.Spec.Containers[0].Image
@@ -571,9 +577,11 @@ type knativeServiceManifest struct {
 }
 
 type knativeContainer struct {
-	Name  string               `json:"name"`
-	Image string               `json:"image"`
-	Ports []knativeContainerPort `json:"ports"`
+	Name    string                 `json:"name"`
+	Image   string                 `json:"image"`
+	Ports   []knativeContainerPort `json:"ports"`
+	Command []string               `json:"command,omitempty"`
+	Args    []string               `json:"args,omitempty"`
 }
 
 type knativeContainerPort struct {

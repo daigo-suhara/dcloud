@@ -52,29 +52,31 @@ type projectScope struct {
 }
 
 type deployRequest struct {
-	Name     string
-	Image    string
-	Port     int32
-	MinScale int32
-	MaxScale int32
+	Name          string
+	Image         string
+	Port          int32
+	MinScale      int32
+	MaxScale      int32
+	StartupScript string
 }
 
 type deployedService struct {
-	Name         string
-	Image        string
-	URL          string
-	CustomDomain string
-	ResourceName string
-	Ready        bool
-	Reason       string
-	CreatedAt    string
-	UpdatedAt    string
-	Namespace    string
-	ProjectID    string
-	Generation   int64
-	Port         int32
-	MinScale     int32
-	MaxScale     int32
+	Name          string
+	Image         string
+	URL           string
+	CustomDomain  string
+	ResourceName  string
+	Ready         bool
+	Reason        string
+	CreatedAt     string
+	UpdatedAt     string
+	Namespace     string
+	ProjectID     string
+	Generation    int64
+	Port          int32
+	MinScale      int32
+	MaxScale      int32
+	StartupScript string
 }
 
 type containerServer struct {
@@ -134,9 +136,13 @@ func (s *containerServer) ListServices(ctx context.Context, req *ListServicesReq
 		return nil, status.Error(codes.Internal, "failed to query container metadata")
 	}
 	customDomains := make(map[string]string, len(dbRecords))
+	startupScripts := make(map[string]string, len(dbRecords))
 	for _, r := range dbRecords {
 		if r.CustomDomain.Valid {
 			customDomains[r.Name] = r.CustomDomain.String
+		}
+		if r.StartupScript.Valid {
+			startupScripts[r.Name] = r.StartupScript.String
 		}
 	}
 	items := make([]*Service, 0, len(records))
@@ -168,6 +174,7 @@ func (s *containerServer) ListServices(ctx context.Context, req *ListServicesReq
 			Port:               record.Port,
 			MinScale:           record.MinScale,
 			MaxScale:           record.MaxScale,
+			StartupScript:      startupScripts[record.Name],
 		})
 	}
 	return &ListServicesResponse{UserId: userID, ProjectId: projectID, Namespace: s.namespace, Containers: items}, nil
@@ -193,11 +200,12 @@ func (s *containerServer) DeployService(ctx context.Context, req *DeployServiceR
 	}
 
 	created, err := s.knative.deploy(ctx, projectScope{UserID: userID, ProjectID: projectID}, deployRequest{
-		Name:     name,
-		Image:    image,
-		Port:     req.Port,
-		MinScale: req.MinScale,
-		MaxScale: req.MaxScale,
+		Name:          name,
+		Image:         image,
+		Port:          req.Port,
+		MinScale:      req.MinScale,
+		MaxScale:      req.MaxScale,
+		StartupScript: strings.TrimSpace(req.StartupScript),
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to deploy service")
@@ -211,34 +219,36 @@ func (s *containerServer) DeployService(ctx context.Context, req *DeployServiceR
 		updatedAt = createdAt
 	}
 	if _, err := s.q.UpsertContainer(ctx, dbsqlc.UpsertContainerParams{
-		ProjectID: projectID,
-		Name:      name,
-		Image:     created.Image,
-		Url:       created.URL,
-		Reason:    sql.NullString{},
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
-		Namespace: created.Namespace,
-		Port:      created.Port,
-		MinScale:  created.MinScale,
-		MaxScale:  created.MaxScale,
+		ProjectID:     projectID,
+		Name:          name,
+		Image:         created.Image,
+		Url:           created.URL,
+		Reason:        sql.NullString{},
+		CreatedAt:     createdAt,
+		UpdatedAt:     updatedAt,
+		Namespace:     created.Namespace,
+		Port:          created.Port,
+		MinScale:      created.MinScale,
+		MaxScale:      created.MaxScale,
+		StartupScript: sql.NullString{String: created.StartupScript, Valid: created.StartupScript != ""},
 	}); err != nil {
 		return nil, status.Error(codes.Internal, "failed to persist service")
 	}
 	svc := Service{
-		Name:       created.Name,
-		Image:      created.Image,
-		Url:        created.URL,
-		Ready:      created.Ready,
-		Reason:     created.Reason,
-		CreatedAt:  created.CreatedAt,
-		UpdatedAt:  created.UpdatedAt,
-		Namespace:  created.Namespace,
-		ProjectId:  created.ProjectID,
-		Generation: created.Generation,
-		Port:       created.Port,
-		MinScale:   created.MinScale,
-		MaxScale:   created.MaxScale,
+		Name:          created.Name,
+		Image:         created.Image,
+		Url:           created.URL,
+		Ready:         created.Ready,
+		Reason:        created.Reason,
+		CreatedAt:     created.CreatedAt,
+		UpdatedAt:     created.UpdatedAt,
+		Namespace:     created.Namespace,
+		ProjectId:     created.ProjectID,
+		Generation:    created.Generation,
+		Port:          created.Port,
+		MinScale:      created.MinScale,
+		MaxScale:      created.MaxScale,
+		StartupScript: created.StartupScript,
 	}
 	return &DeployServiceResponse{Service: &svc}, nil
 }

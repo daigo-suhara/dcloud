@@ -77,6 +77,7 @@ class ContainerClient:
         port: int,
         min_scale: int,
         max_scale: int,
+        startup_script: str = "",
     ) -> dict[str, Any]:
         try:
             response = self._deploy_service(
@@ -88,6 +89,7 @@ class ContainerClient:
                     port=port,
                     min_scale=min_scale,
                     max_scale=max_scale,
+                    startup_script=startup_script,
                 )
             )
         except grpc.RpcError as error:
@@ -150,6 +152,7 @@ class ContainerClient:
             "port": service.port or 8080,
             "minScale": service.min_scale,
             "maxScale": service.max_scale,
+            "startupScript": service.startup_script or None,
         }
 
     @staticmethod

@@ -34,6 +34,16 @@ class ContainerServiceStub:
                 request_serializer=container__pb2.DeleteServiceRequest.SerializeToString,
                 response_deserializer=container__pb2.DeleteServiceResponse.FromString,
                 _registered_method=True)
+        self.GetOperation = channel.unary_unary(
+                '/dcloud.container.v1.ContainerService/GetOperation',
+                request_serializer=container__pb2.GetOperationRequest.SerializeToString,
+                response_deserializer=container__pb2.GetOperationResponse.FromString,
+                _registered_method=True)
+        self.SetServiceDomain = channel.unary_unary(
+                '/dcloud.container.v1.ContainerService/SetServiceDomain',
+                request_serializer=container__pb2.SetServiceDomainRequest.SerializeToString,
+                response_deserializer=container__pb2.SetServiceDomainResponse.FromString,
+                _registered_method=True)
 
 
 class ContainerServiceServicer:
@@ -63,6 +73,18 @@ class ContainerServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetOperation(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetServiceDomain(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ContainerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -85,6 +107,16 @@ def add_ContainerServiceServicer_to_server(servicer, server):
                     servicer.DeleteService,
                     request_deserializer=container__pb2.DeleteServiceRequest.FromString,
                     response_serializer=container__pb2.DeleteServiceResponse.SerializeToString,
+            ),
+            'GetOperation': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetOperation,
+                    request_deserializer=container__pb2.GetOperationRequest.FromString,
+                    response_serializer=container__pb2.GetOperationResponse.SerializeToString,
+            ),
+            'SetServiceDomain': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetServiceDomain,
+                    request_deserializer=container__pb2.SetServiceDomainRequest.FromString,
+                    response_serializer=container__pb2.SetServiceDomainResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -195,6 +227,60 @@ class ContainerService:
             '/dcloud.container.v1.ContainerService/DeleteService',
             container__pb2.DeleteServiceRequest.SerializeToString,
             container__pb2.DeleteServiceResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetOperation(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/dcloud.container.v1.ContainerService/GetOperation',
+            container__pb2.GetOperationRequest.SerializeToString,
+            container__pb2.GetOperationResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetServiceDomain(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/dcloud.container.v1.ContainerService/SetServiceDomain',
+            container__pb2.SetServiceDomainRequest.SerializeToString,
+            container__pb2.SetServiceDomainResponse.FromString,
             options,
             channel_credentials,
             insecure,

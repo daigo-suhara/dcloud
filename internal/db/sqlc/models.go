@@ -9,20 +9,21 @@ import (
 )
 
 type Container struct {
-	ProjectID    string
-	Name         string
-	Image        string
-	Url          string
-	Ready        bool
-	Reason       sql.NullString
-	CreatedAt    string
-	UpdatedAt    string
-	Namespace    string
-	Generation   int64
-	CustomDomain sql.NullString
-	Port         int32
-	MinScale     int32
-	MaxScale     int32
+	ProjectID     string
+	Name          string
+	Image         string
+	Url           string
+	Ready         bool
+	Reason        sql.NullString
+	CreatedAt     string
+	UpdatedAt     string
+	Namespace     string
+	Generation    int64
+	CustomDomain  sql.NullString
+	Port          int32
+	MinScale      int32
+	MaxScale      int32
+	StartupScript sql.NullString
 }
 
 type IdentitySession struct {

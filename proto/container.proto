@@ -41,6 +41,7 @@ message Service {
   int32 port = 15;
   int32 min_scale = 16;
   int32 max_scale = 17;
+  string startup_script = 18;
 }
 
 message ListServicesRequest {
@@ -63,6 +64,7 @@ message DeployServiceRequest {
   int32 port = 5;
   int32 min_scale = 6;
   int32 max_scale = 7;
+  string startup_script = 8;
 }
 
 message DeployServiceResponse {
