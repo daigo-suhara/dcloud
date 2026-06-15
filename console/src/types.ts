@@ -55,6 +55,7 @@ export type DeployedService = {
   port?: number;
   minScale?: number;
   maxScale?: number;
+  startupScript?: string | null;
 };
 
 export type ComputeMachine = {
@@ -78,6 +79,7 @@ export type DeployForm = {
   port: string;
   minScale: string;
   maxScale: string;
+  startupScript: string;
 };
 
 export type UpdateForm = {
@@ -85,6 +87,7 @@ export type UpdateForm = {
   port: string;
   minScale: string;
   maxScale: string;
+  startupScript: string;
 };
 
 export type RouteState = {
@@ -114,7 +117,8 @@ export const initialForm: DeployForm = {
   image: "",
   port: "8080",
   minScale: "0",
-  maxScale: "20"
+  maxScale: "20",
+  startupScript: ""
 };
 
 export const initialAuthForm: AuthForm = {

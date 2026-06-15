@@ -125,6 +125,25 @@ export function DeploySection({ error, form, onBack, onChange, onSubmit, submitt
                   />
                 </Box>
 
+                <TextField
+                  label="起動スクリプト（任意）"
+                  value={form.startupScript}
+                  onChange={(event) => onChange({ startupScript: event.target.value })}
+                  placeholder={"#!/bin/sh\nexec code-server --bind-addr 0.0.0.0:8080 --auth none ."}
+                  multiline
+                  minRows={3}
+                  fullWidth
+                  slotProps={{
+                    htmlInput: {
+                      autoComplete: "off",
+                      autoCorrect: "off",
+                      autoCapitalize: "none",
+                      spellCheck: false,
+                      style: { fontFamily: "monospace", fontSize: "0.85rem" }
+                    }
+                  }}
+                />
+
                 <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: 1.25, pt: 0.5 }}>
                   <Button variant="outlined" onClick={onBack}>
                     キャンセル

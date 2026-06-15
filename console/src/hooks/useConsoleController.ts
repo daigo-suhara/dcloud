@@ -470,7 +470,8 @@ export function useConsoleController() {
           image: form.image.trim(),
           port: Number(form.port || "8080"),
           minScale: Number(form.minScale || "0"),
-          maxScale: Number(form.maxScale || "1")
+          maxScale: Number(form.maxScale || "1"),
+          startupScript: form.startupScript.trim()
         })
       });
 
@@ -588,7 +589,8 @@ export function useConsoleController() {
           image: form.image.trim(),
           port: Number(form.port || "8080"),
           minScale: Number(form.minScale || "0"),
-          maxScale: Number(form.maxScale || "20")
+          maxScale: Number(form.maxScale || "20"),
+          startupScript: form.startupScript.trim()
         })
       });
       const data = (await readJsonResponse(response)) as DeployedService | ApiErrorResponse;

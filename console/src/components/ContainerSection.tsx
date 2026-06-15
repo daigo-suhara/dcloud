@@ -46,7 +46,7 @@ export function ContainerSection({
 }: ContainerSectionProps) {
   const [domainInput, setDomainInput] = useState("");
   const [savingDomain, setSavingDomain] = useState(false);
-  const [updateForm, setUpdateForm] = useState<UpdateForm>({ image: "", port: "8080", minScale: "0", maxScale: "20" });
+  const [updateForm, setUpdateForm] = useState<UpdateForm>({ image: "", port: "8080", minScale: "0", maxScale: "20", startupScript: "" });
 
   useEffect(() => {
     if (selectedService) {
@@ -54,7 +54,8 @@ export function ContainerSection({
         image: selectedService.image,
         port: String(selectedService.port ?? 8080),
         minScale: String(selectedService.minScale ?? 0),
-        maxScale: String(selectedService.maxScale ?? 20)
+        maxScale: String(selectedService.maxScale ?? 20),
+        startupScript: selectedService.startupScript ?? ""
       });
     }
   }, [selectedService?.name]);
@@ -186,6 +187,26 @@ export function ContainerSection({
                       disabled={updatingServiceName === selectedService.name}
                     />
                   </Box>
+                  <TextField
+                    size="small"
+                    label="起動スクリプト（任意）"
+                    value={updateForm.startupScript}
+                    onChange={(e) => setUpdateForm((f) => ({ ...f, startupScript: e.target.value }))}
+                    disabled={updatingServiceName === selectedService.name}
+                    placeholder={"#!/bin/sh\nexec code-server --bind-addr 0.0.0.0:8080 --auth none ."}
+                    multiline
+                    minRows={3}
+                    fullWidth
+                    slotProps={{
+                      htmlInput: {
+                        autoComplete: "off",
+                        autoCorrect: "off",
+                        autoCapitalize: "none",
+                        spellCheck: false,
+                        style: { fontFamily: "monospace", fontSize: "0.85rem" }
+                      }
+                    }}
+                  />
                   <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                     <Button
                       type="submit"
