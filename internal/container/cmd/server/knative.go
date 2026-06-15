@@ -398,6 +398,8 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 			container.Env[i] = knativeEnvVar{Name: e.Name, Value: e.Value}
 		}
 	}
+	noTimeout := int64(0)
+	manifest.Spec.Template.Spec.TimeoutSeconds = &noTimeout
 	manifest.Spec.Template.Spec.Containers = []knativeContainer{container}
 
 	body, err := json.Marshal(manifest)
@@ -577,7 +579,8 @@ type knativeServiceManifest struct {
 				Annotations map[string]string `json:"annotations,omitempty"`
 			} `json:"metadata"`
 			Spec struct {
-				Containers []knativeContainer `json:"containers"`
+				TimeoutSeconds *int64             `json:"timeoutSeconds,omitempty"`
+				Containers     []knativeContainer `json:"containers"`
 			} `json:"spec"`
 		} `json:"template"`
 	} `json:"spec"`
