@@ -313,6 +313,7 @@ def deploy_container(
             int(body.get("minScale", 1) or 1),
             int(body.get("maxScale", 1) or 1),
             str(body.get("startupScript", "") or ""),
+            body.get("env") if isinstance(body.get("env"), list) else None,
         )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="サービスを作成できません") from exc
@@ -345,6 +346,7 @@ def update_container(
             int(body.get("minScale", 0) or 0),
             int(body.get("maxScale", 20) or 20),
             str(body.get("startupScript", "") or ""),
+            body.get("env") if isinstance(body.get("env"), list) else None,
         )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="サービスが見つかりません") from exc

@@ -56,6 +56,7 @@ export type DeployedService = {
   minScale?: number;
   maxScale?: number;
   startupScript?: string | null;
+  env?: { name: string; value: string }[] | null;
 };
 
 export type ComputeMachine = {
@@ -73,6 +74,8 @@ export type ComputeMachine = {
   generation?: number;
 };
 
+export type EnvVarEntry = { name: string; value: string };
+
 export type DeployForm = {
   name: string;
   image: string;
@@ -80,6 +83,7 @@ export type DeployForm = {
   minScale: string;
   maxScale: string;
   startupScript: string;
+  env: EnvVarEntry[];
 };
 
 export type UpdateForm = {
@@ -88,6 +92,7 @@ export type UpdateForm = {
   minScale: string;
   maxScale: string;
   startupScript: string;
+  env: EnvVarEntry[];
 };
 
 export type RouteState = {
@@ -118,7 +123,8 @@ export const initialForm: DeployForm = {
   port: "8080",
   minScale: "0",
   maxScale: "20",
-  startupScript: ""
+  startupScript: "",
+  env: []
 };
 
 export const initialAuthForm: AuthForm = {

@@ -15,6 +15,11 @@ service ContainerService {
 
 message Empty {}
 
+message EnvVar {
+  string name = 1;
+  string value = 2;
+}
+
 message HealthRequest {}
 
 message HealthResponse {
@@ -42,6 +47,7 @@ message Service {
   int32 min_scale = 16;
   int32 max_scale = 17;
   string startup_script = 18;
+  repeated EnvVar env = 19;
 }
 
 message ListServicesRequest {
@@ -65,6 +71,7 @@ message DeployServiceRequest {
   int32 min_scale = 6;
   int32 max_scale = 7;
   string startup_script = 8;
+  repeated EnvVar env = 9;
 }
 
 message DeployServiceResponse {

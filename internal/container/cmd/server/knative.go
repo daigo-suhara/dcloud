@@ -392,6 +392,12 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 		container.Command = []string{"/bin/sh", "-c"}
 		container.Args = []string{req.StartupScript}
 	}
+	if len(req.Env) > 0 {
+		container.Env = make([]knativeEnvVar, len(req.Env))
+		for i, e := range req.Env {
+			container.Env[i] = knativeEnvVar{Name: e.Name, Value: e.Value}
+		}
+	}
 	manifest.Spec.Template.Spec.Containers = []knativeContainer{container}
 
 	body, err := json.Marshal(manifest)
@@ -470,6 +476,7 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 		MinScale:      req.MinScale,
 		MaxScale:      req.MaxScale,
 		StartupScript: req.StartupScript,
+		Env:           req.Env,
 	}
 	if len(payload.Spec.Template.Spec.Containers) > 0 {
 		service.Image = payload.Spec.Template.Spec.Containers[0].Image
@@ -576,12 +583,18 @@ type knativeServiceManifest struct {
 	} `json:"spec"`
 }
 
+type knativeEnvVar struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
 type knativeContainer struct {
 	Name    string                 `json:"name"`
 	Image   string                 `json:"image"`
 	Ports   []knativeContainerPort `json:"ports"`
 	Command []string               `json:"command,omitempty"`
 	Args    []string               `json:"args,omitempty"`
+	Env     []knativeEnvVar        `json:"env,omitempty"`
 }
 
 type knativeContainerPort struct {

@@ -57,6 +57,58 @@ func (*Empty) Descriptor() ([]byte, []int) {
 	return file_container_proto_rawDescGZIP(), []int{0}
 }
 
+type EnvVar struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Value         string                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EnvVar) Reset() {
+	*x = EnvVar{}
+	mi := &file_container_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EnvVar) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnvVar) ProtoMessage() {}
+
+func (x *EnvVar) ProtoReflect() protoreflect.Message {
+	mi := &file_container_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnvVar.ProtoReflect.Descriptor instead.
+func (*EnvVar) Descriptor() ([]byte, []int) {
+	return file_container_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *EnvVar) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *EnvVar) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
 type HealthRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -65,7 +117,7 @@ type HealthRequest struct {
 
 func (x *HealthRequest) Reset() {
 	*x = HealthRequest{}
-	mi := &file_container_proto_msgTypes[1]
+	mi := &file_container_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -77,7 +129,7 @@ func (x *HealthRequest) String() string {
 func (*HealthRequest) ProtoMessage() {}
 
 func (x *HealthRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_container_proto_msgTypes[1]
+	mi := &file_container_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -90,7 +142,7 @@ func (x *HealthRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthRequest.ProtoReflect.Descriptor instead.
 func (*HealthRequest) Descriptor() ([]byte, []int) {
-	return file_container_proto_rawDescGZIP(), []int{1}
+	return file_container_proto_rawDescGZIP(), []int{2}
 }
 
 type HealthResponse struct {
@@ -104,7 +156,7 @@ type HealthResponse struct {
 
 func (x *HealthResponse) Reset() {
 	*x = HealthResponse{}
-	mi := &file_container_proto_msgTypes[2]
+	mi := &file_container_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -116,7 +168,7 @@ func (x *HealthResponse) String() string {
 func (*HealthResponse) ProtoMessage() {}
 
 func (x *HealthResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_container_proto_msgTypes[2]
+	mi := &file_container_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -129,7 +181,7 @@ func (x *HealthResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthResponse.ProtoReflect.Descriptor instead.
 func (*HealthResponse) Descriptor() ([]byte, []int) {
-	return file_container_proto_rawDescGZIP(), []int{2}
+	return file_container_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *HealthResponse) GetStatus() string {
@@ -173,13 +225,14 @@ type Service struct {
 	MinScale           int32                  `protobuf:"varint,16,opt,name=min_scale,json=minScale,proto3" json:"min_scale,omitempty"`
 	MaxScale           int32                  `protobuf:"varint,17,opt,name=max_scale,json=maxScale,proto3" json:"max_scale,omitempty"`
 	StartupScript      string                 `protobuf:"bytes,18,opt,name=startup_script,json=startupScript,proto3" json:"startup_script,omitempty"`
+	Env                []*EnvVar              `protobuf:"bytes,19,rep,name=env,proto3" json:"env,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
 
 func (x *Service) Reset() {
 	*x = Service{}
-	mi := &file_container_proto_msgTypes[3]
+	mi := &file_container_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -191,7 +244,7 @@ func (x *Service) String() string {
 func (*Service) ProtoMessage() {}
 
 func (x *Service) ProtoReflect() protoreflect.Message {
-	mi := &file_container_proto_msgTypes[3]
+	mi := &file_container_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -204,7 +257,7 @@ func (x *Service) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Service.ProtoReflect.Descriptor instead.
 func (*Service) Descriptor() ([]byte, []int) {
-	return file_container_proto_rawDescGZIP(), []int{3}
+	return file_container_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Service) GetName() string {
@@ -333,6 +386,13 @@ func (x *Service) GetStartupScript() string {
 	return ""
 }
 
+func (x *Service) GetEnv() []*EnvVar {
+	if x != nil {
+		return x.Env
+	}
+	return nil
+}
+
 type ListServicesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
@@ -343,7 +403,7 @@ type ListServicesRequest struct {
 
 func (x *ListServicesRequest) Reset() {
 	*x = ListServicesRequest{}
-	mi := &file_container_proto_msgTypes[4]
+	mi := &file_container_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -355,7 +415,7 @@ func (x *ListServicesRequest) String() string {
 func (*ListServicesRequest) ProtoMessage() {}
 
 func (x *ListServicesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_container_proto_msgTypes[4]
+	mi := &file_container_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -368,7 +428,7 @@ func (x *ListServicesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListServicesRequest.ProtoReflect.Descriptor instead.
 func (*ListServicesRequest) Descriptor() ([]byte, []int) {
-	return file_container_proto_rawDescGZIP(), []int{4}
+	return file_container_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListServicesRequest) GetUserId() string {
@@ -397,7 +457,7 @@ type ListServicesResponse struct {
 
 func (x *ListServicesResponse) Reset() {
 	*x = ListServicesResponse{}
-	mi := &file_container_proto_msgTypes[5]
+	mi := &file_container_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -409,7 +469,7 @@ func (x *ListServicesResponse) String() string {
 func (*ListServicesResponse) ProtoMessage() {}
 
 func (x *ListServicesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_container_proto_msgTypes[5]
+	mi := &file_container_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -422,7 +482,7 @@ func (x *ListServicesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListServicesResponse.ProtoReflect.Descriptor instead.
 func (*ListServicesResponse) Descriptor() ([]byte, []int) {
-	return file_container_proto_rawDescGZIP(), []int{5}
+	return file_container_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ListServicesResponse) GetUserId() string {
@@ -463,13 +523,14 @@ type DeployServiceRequest struct {
 	MinScale      int32                  `protobuf:"varint,6,opt,name=min_scale,json=minScale,proto3" json:"min_scale,omitempty"`
 	MaxScale      int32                  `protobuf:"varint,7,opt,name=max_scale,json=maxScale,proto3" json:"max_scale,omitempty"`
 	StartupScript string                 `protobuf:"bytes,8,opt,name=startup_script,json=startupScript,proto3" json:"startup_script,omitempty"`
+	Env           []*EnvVar              `protobuf:"bytes,9,rep,name=env,proto3" json:"env,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *DeployServiceRequest) Reset() {
 	*x = DeployServiceRequest{}
-	mi := &file_container_proto_msgTypes[6]
+	mi := &file_container_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -481,7 +542,7 @@ func (x *DeployServiceRequest) String() string {
 func (*DeployServiceRequest) ProtoMessage() {}
 
 func (x *DeployServiceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_container_proto_msgTypes[6]
+	mi := &file_container_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -494,7 +555,7 @@ func (x *DeployServiceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeployServiceRequest.ProtoReflect.Descriptor instead.
 func (*DeployServiceRequest) Descriptor() ([]byte, []int) {
-	return file_container_proto_rawDescGZIP(), []int{6}
+	return file_container_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *DeployServiceRequest) GetUserId() string {
@@ -553,6 +614,13 @@ func (x *DeployServiceRequest) GetStartupScript() string {
 	return ""
 }
 
+func (x *DeployServiceRequest) GetEnv() []*EnvVar {
+	if x != nil {
+		return x.Env
+	}
+	return nil
+}
+
 type DeployServiceResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Service       *Service               `protobuf:"bytes,1,opt,name=service,proto3" json:"service,omitempty"`
@@ -562,7 +630,7 @@ type DeployServiceResponse struct {
 
 func (x *DeployServiceResponse) Reset() {
 	*x = DeployServiceResponse{}
-	mi := &file_container_proto_msgTypes[7]
+	mi := &file_container_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -574,7 +642,7 @@ func (x *DeployServiceResponse) String() string {
 func (*DeployServiceResponse) ProtoMessage() {}
 
 func (x *DeployServiceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_container_proto_msgTypes[7]
+	mi := &file_container_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -587,7 +655,7 @@ func (x *DeployServiceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeployServiceResponse.ProtoReflect.Descriptor instead.
 func (*DeployServiceResponse) Descriptor() ([]byte, []int) {
-	return file_container_proto_rawDescGZIP(), []int{7}
+	return file_container_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DeployServiceResponse) GetService() *Service {
@@ -608,7 +676,7 @@ type DeleteServiceRequest struct {
 
 func (x *DeleteServiceRequest) Reset() {
 	*x = DeleteServiceRequest{}
-	mi := &file_container_proto_msgTypes[8]
+	mi := &file_container_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -620,7 +688,7 @@ func (x *DeleteServiceRequest) String() string {
 func (*DeleteServiceRequest) ProtoMessage() {}
 
 func (x *DeleteServiceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_container_proto_msgTypes[8]
+	mi := &file_container_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -633,7 +701,7 @@ func (x *DeleteServiceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteServiceRequest.ProtoReflect.Descriptor instead.
 func (*DeleteServiceRequest) Descriptor() ([]byte, []int) {
-	return file_container_proto_rawDescGZIP(), []int{8}
+	return file_container_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *DeleteServiceRequest) GetUserId() string {
@@ -666,7 +734,7 @@ type DeleteServiceResponse struct {
 
 func (x *DeleteServiceResponse) Reset() {
 	*x = DeleteServiceResponse{}
-	mi := &file_container_proto_msgTypes[9]
+	mi := &file_container_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -678,7 +746,7 @@ func (x *DeleteServiceResponse) String() string {
 func (*DeleteServiceResponse) ProtoMessage() {}
 
 func (x *DeleteServiceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_container_proto_msgTypes[9]
+	mi := &file_container_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -691,7 +759,7 @@ func (x *DeleteServiceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteServiceResponse.ProtoReflect.Descriptor instead.
 func (*DeleteServiceResponse) Descriptor() ([]byte, []int) {
-	return file_container_proto_rawDescGZIP(), []int{9}
+	return file_container_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *DeleteServiceResponse) GetOperationId() string {
@@ -710,7 +778,7 @@ type GetOperationRequest struct {
 
 func (x *GetOperationRequest) Reset() {
 	*x = GetOperationRequest{}
-	mi := &file_container_proto_msgTypes[10]
+	mi := &file_container_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -722,7 +790,7 @@ func (x *GetOperationRequest) String() string {
 func (*GetOperationRequest) ProtoMessage() {}
 
 func (x *GetOperationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_container_proto_msgTypes[10]
+	mi := &file_container_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -735,7 +803,7 @@ func (x *GetOperationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetOperationRequest.ProtoReflect.Descriptor instead.
 func (*GetOperationRequest) Descriptor() ([]byte, []int) {
-	return file_container_proto_rawDescGZIP(), []int{10}
+	return file_container_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetOperationRequest) GetOperationId() string {
@@ -756,7 +824,7 @@ type GetOperationResponse struct {
 
 func (x *GetOperationResponse) Reset() {
 	*x = GetOperationResponse{}
-	mi := &file_container_proto_msgTypes[11]
+	mi := &file_container_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -768,7 +836,7 @@ func (x *GetOperationResponse) String() string {
 func (*GetOperationResponse) ProtoMessage() {}
 
 func (x *GetOperationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_container_proto_msgTypes[11]
+	mi := &file_container_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -781,7 +849,7 @@ func (x *GetOperationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetOperationResponse.ProtoReflect.Descriptor instead.
 func (*GetOperationResponse) Descriptor() ([]byte, []int) {
-	return file_container_proto_rawDescGZIP(), []int{11}
+	return file_container_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetOperationResponse) GetOperationId() string {
@@ -817,7 +885,7 @@ type SetServiceDomainRequest struct {
 
 func (x *SetServiceDomainRequest) Reset() {
 	*x = SetServiceDomainRequest{}
-	mi := &file_container_proto_msgTypes[12]
+	mi := &file_container_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -829,7 +897,7 @@ func (x *SetServiceDomainRequest) String() string {
 func (*SetServiceDomainRequest) ProtoMessage() {}
 
 func (x *SetServiceDomainRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_container_proto_msgTypes[12]
+	mi := &file_container_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -842,7 +910,7 @@ func (x *SetServiceDomainRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetServiceDomainRequest.ProtoReflect.Descriptor instead.
 func (*SetServiceDomainRequest) Descriptor() ([]byte, []int) {
-	return file_container_proto_rawDescGZIP(), []int{12}
+	return file_container_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *SetServiceDomainRequest) GetUserId() string {
@@ -882,7 +950,7 @@ type SetServiceDomainResponse struct {
 
 func (x *SetServiceDomainResponse) Reset() {
 	*x = SetServiceDomainResponse{}
-	mi := &file_container_proto_msgTypes[13]
+	mi := &file_container_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -894,7 +962,7 @@ func (x *SetServiceDomainResponse) String() string {
 func (*SetServiceDomainResponse) ProtoMessage() {}
 
 func (x *SetServiceDomainResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_container_proto_msgTypes[13]
+	mi := &file_container_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -907,7 +975,7 @@ func (x *SetServiceDomainResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetServiceDomainResponse.ProtoReflect.Descriptor instead.
 func (*SetServiceDomainResponse) Descriptor() ([]byte, []int) {
-	return file_container_proto_rawDescGZIP(), []int{13}
+	return file_container_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *SetServiceDomainResponse) GetService() *Service {
@@ -922,12 +990,15 @@ var File_container_proto protoreflect.FileDescriptor
 const file_container_proto_rawDesc = "" +
 	"\n" +
 	"\x0fcontainer.proto\x12\x13dcloud.container.v1\"\a\n" +
-	"\x05Empty\"\x0f\n" +
+	"\x05Empty\"2\n" +
+	"\x06EnvVar\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value\"\x0f\n" +
 	"\rHealthRequest\"`\n" +
 	"\x0eHealthResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
 	"\aservice\x18\x02 \x01(\tR\aservice\x12\x1c\n" +
-	"\ttimestamp\x18\x03 \x01(\tR\ttimestamp\"\xaf\x04\n" +
+	"\ttimestamp\x18\x03 \x01(\tR\ttimestamp\"\xde\x04\n" +
 	"\aService\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05image\x18\x02 \x01(\tR\x05image\x12\x10\n" +
@@ -952,7 +1023,8 @@ const file_container_proto_rawDesc = "" +
 	"\x04port\x18\x0f \x01(\x05R\x04port\x12\x1b\n" +
 	"\tmin_scale\x18\x10 \x01(\x05R\bminScale\x12\x1b\n" +
 	"\tmax_scale\x18\x11 \x01(\x05R\bmaxScale\x12%\n" +
-	"\x0estartup_script\x18\x12 \x01(\tR\rstartupScript\"M\n" +
+	"\x0estartup_script\x18\x12 \x01(\tR\rstartupScript\x12-\n" +
+	"\x03env\x18\x13 \x03(\v2\x1b.dcloud.container.v1.EnvVarR\x03env\"M\n" +
 	"\x13ListServicesRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
@@ -964,7 +1036,7 @@ const file_container_proto_rawDesc = "" +
 	"\tnamespace\x18\x03 \x01(\tR\tnamespace\x12<\n" +
 	"\n" +
 	"containers\x18\x04 \x03(\v2\x1c.dcloud.container.v1.ServiceR\n" +
-	"containers\"\xed\x01\n" +
+	"containers\"\x9c\x02\n" +
 	"\x14DeployServiceRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
@@ -974,7 +1046,8 @@ const file_container_proto_rawDesc = "" +
 	"\x04port\x18\x05 \x01(\x05R\x04port\x12\x1b\n" +
 	"\tmin_scale\x18\x06 \x01(\x05R\bminScale\x12\x1b\n" +
 	"\tmax_scale\x18\a \x01(\x05R\bmaxScale\x12%\n" +
-	"\x0estartup_script\x18\b \x01(\tR\rstartupScript\"O\n" +
+	"\x0estartup_script\x18\b \x01(\tR\rstartupScript\x12-\n" +
+	"\x03env\x18\t \x03(\v2\x1b.dcloud.container.v1.EnvVarR\x03env\"O\n" +
 	"\x15DeployServiceResponse\x126\n" +
 	"\aservice\x18\x01 \x01(\v2\x1c.dcloud.container.v1.ServiceR\aservice\"b\n" +
 	"\x14DeleteServiceRequest\x12\x17\n" +
@@ -1018,44 +1091,47 @@ func file_container_proto_rawDescGZIP() []byte {
 	return file_container_proto_rawDescData
 }
 
-var file_container_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_container_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_container_proto_goTypes = []any{
 	(*Empty)(nil),                    // 0: dcloud.container.v1.Empty
-	(*HealthRequest)(nil),            // 1: dcloud.container.v1.HealthRequest
-	(*HealthResponse)(nil),           // 2: dcloud.container.v1.HealthResponse
-	(*Service)(nil),                  // 3: dcloud.container.v1.Service
-	(*ListServicesRequest)(nil),      // 4: dcloud.container.v1.ListServicesRequest
-	(*ListServicesResponse)(nil),     // 5: dcloud.container.v1.ListServicesResponse
-	(*DeployServiceRequest)(nil),     // 6: dcloud.container.v1.DeployServiceRequest
-	(*DeployServiceResponse)(nil),    // 7: dcloud.container.v1.DeployServiceResponse
-	(*DeleteServiceRequest)(nil),     // 8: dcloud.container.v1.DeleteServiceRequest
-	(*DeleteServiceResponse)(nil),    // 9: dcloud.container.v1.DeleteServiceResponse
-	(*GetOperationRequest)(nil),      // 10: dcloud.container.v1.GetOperationRequest
-	(*GetOperationResponse)(nil),     // 11: dcloud.container.v1.GetOperationResponse
-	(*SetServiceDomainRequest)(nil),  // 12: dcloud.container.v1.SetServiceDomainRequest
-	(*SetServiceDomainResponse)(nil), // 13: dcloud.container.v1.SetServiceDomainResponse
+	(*EnvVar)(nil),                   // 1: dcloud.container.v1.EnvVar
+	(*HealthRequest)(nil),            // 2: dcloud.container.v1.HealthRequest
+	(*HealthResponse)(nil),           // 3: dcloud.container.v1.HealthResponse
+	(*Service)(nil),                  // 4: dcloud.container.v1.Service
+	(*ListServicesRequest)(nil),      // 5: dcloud.container.v1.ListServicesRequest
+	(*ListServicesResponse)(nil),     // 6: dcloud.container.v1.ListServicesResponse
+	(*DeployServiceRequest)(nil),     // 7: dcloud.container.v1.DeployServiceRequest
+	(*DeployServiceResponse)(nil),    // 8: dcloud.container.v1.DeployServiceResponse
+	(*DeleteServiceRequest)(nil),     // 9: dcloud.container.v1.DeleteServiceRequest
+	(*DeleteServiceResponse)(nil),    // 10: dcloud.container.v1.DeleteServiceResponse
+	(*GetOperationRequest)(nil),      // 11: dcloud.container.v1.GetOperationRequest
+	(*GetOperationResponse)(nil),     // 12: dcloud.container.v1.GetOperationResponse
+	(*SetServiceDomainRequest)(nil),  // 13: dcloud.container.v1.SetServiceDomainRequest
+	(*SetServiceDomainResponse)(nil), // 14: dcloud.container.v1.SetServiceDomainResponse
 }
 var file_container_proto_depIdxs = []int32{
-	3,  // 0: dcloud.container.v1.ListServicesResponse.containers:type_name -> dcloud.container.v1.Service
-	3,  // 1: dcloud.container.v1.DeployServiceResponse.service:type_name -> dcloud.container.v1.Service
-	3,  // 2: dcloud.container.v1.SetServiceDomainResponse.service:type_name -> dcloud.container.v1.Service
-	1,  // 3: dcloud.container.v1.ContainerService.Health:input_type -> dcloud.container.v1.HealthRequest
-	4,  // 4: dcloud.container.v1.ContainerService.ListServices:input_type -> dcloud.container.v1.ListServicesRequest
-	6,  // 5: dcloud.container.v1.ContainerService.DeployService:input_type -> dcloud.container.v1.DeployServiceRequest
-	8,  // 6: dcloud.container.v1.ContainerService.DeleteService:input_type -> dcloud.container.v1.DeleteServiceRequest
-	10, // 7: dcloud.container.v1.ContainerService.GetOperation:input_type -> dcloud.container.v1.GetOperationRequest
-	12, // 8: dcloud.container.v1.ContainerService.SetServiceDomain:input_type -> dcloud.container.v1.SetServiceDomainRequest
-	2,  // 9: dcloud.container.v1.ContainerService.Health:output_type -> dcloud.container.v1.HealthResponse
-	5,  // 10: dcloud.container.v1.ContainerService.ListServices:output_type -> dcloud.container.v1.ListServicesResponse
-	7,  // 11: dcloud.container.v1.ContainerService.DeployService:output_type -> dcloud.container.v1.DeployServiceResponse
-	9,  // 12: dcloud.container.v1.ContainerService.DeleteService:output_type -> dcloud.container.v1.DeleteServiceResponse
-	11, // 13: dcloud.container.v1.ContainerService.GetOperation:output_type -> dcloud.container.v1.GetOperationResponse
-	13, // 14: dcloud.container.v1.ContainerService.SetServiceDomain:output_type -> dcloud.container.v1.SetServiceDomainResponse
-	9,  // [9:15] is the sub-list for method output_type
-	3,  // [3:9] is the sub-list for method input_type
-	3,  // [3:3] is the sub-list for extension type_name
-	3,  // [3:3] is the sub-list for extension extendee
-	0,  // [0:3] is the sub-list for field type_name
+	1,  // 0: dcloud.container.v1.Service.env:type_name -> dcloud.container.v1.EnvVar
+	4,  // 1: dcloud.container.v1.ListServicesResponse.containers:type_name -> dcloud.container.v1.Service
+	1,  // 2: dcloud.container.v1.DeployServiceRequest.env:type_name -> dcloud.container.v1.EnvVar
+	4,  // 3: dcloud.container.v1.DeployServiceResponse.service:type_name -> dcloud.container.v1.Service
+	4,  // 4: dcloud.container.v1.SetServiceDomainResponse.service:type_name -> dcloud.container.v1.Service
+	2,  // 5: dcloud.container.v1.ContainerService.Health:input_type -> dcloud.container.v1.HealthRequest
+	5,  // 6: dcloud.container.v1.ContainerService.ListServices:input_type -> dcloud.container.v1.ListServicesRequest
+	7,  // 7: dcloud.container.v1.ContainerService.DeployService:input_type -> dcloud.container.v1.DeployServiceRequest
+	9,  // 8: dcloud.container.v1.ContainerService.DeleteService:input_type -> dcloud.container.v1.DeleteServiceRequest
+	11, // 9: dcloud.container.v1.ContainerService.GetOperation:input_type -> dcloud.container.v1.GetOperationRequest
+	13, // 10: dcloud.container.v1.ContainerService.SetServiceDomain:input_type -> dcloud.container.v1.SetServiceDomainRequest
+	3,  // 11: dcloud.container.v1.ContainerService.Health:output_type -> dcloud.container.v1.HealthResponse
+	6,  // 12: dcloud.container.v1.ContainerService.ListServices:output_type -> dcloud.container.v1.ListServicesResponse
+	8,  // 13: dcloud.container.v1.ContainerService.DeployService:output_type -> dcloud.container.v1.DeployServiceResponse
+	10, // 14: dcloud.container.v1.ContainerService.DeleteService:output_type -> dcloud.container.v1.DeleteServiceResponse
+	12, // 15: dcloud.container.v1.ContainerService.GetOperation:output_type -> dcloud.container.v1.GetOperationResponse
+	14, // 16: dcloud.container.v1.ContainerService.SetServiceDomain:output_type -> dcloud.container.v1.SetServiceDomainResponse
+	11, // [11:17] is the sub-list for method output_type
+	5,  // [5:11] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_container_proto_init() }
@@ -1069,7 +1145,7 @@ func file_container_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_container_proto_rawDesc), len(file_container_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

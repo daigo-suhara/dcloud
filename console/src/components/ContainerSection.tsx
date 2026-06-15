@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import type { DeployedService, UpdateForm } from "../types";
+import { EnvVarEditor } from "./EnvVarEditor";
 import { actionLinkButtonSx } from "../theme";
 import { formatServiceStatus, formatServiceTimestamp, getServiceStatus } from "../utils";
 
@@ -46,7 +47,7 @@ export function ContainerSection({
 }: ContainerSectionProps) {
   const [domainInput, setDomainInput] = useState("");
   const [savingDomain, setSavingDomain] = useState(false);
-  const [updateForm, setUpdateForm] = useState<UpdateForm>({ image: "", port: "8080", minScale: "0", maxScale: "20", startupScript: "" });
+  const [updateForm, setUpdateForm] = useState<UpdateForm>({ image: "", port: "8080", minScale: "0", maxScale: "20", startupScript: "", env: [] });
 
   useEffect(() => {
     if (selectedService) {
@@ -55,7 +56,8 @@ export function ContainerSection({
         port: String(selectedService.port ?? 8080),
         minScale: String(selectedService.minScale ?? 0),
         maxScale: String(selectedService.maxScale ?? 20),
-        startupScript: selectedService.startupScript ?? ""
+        startupScript: selectedService.startupScript ?? "",
+        env: selectedService.env ?? []
       });
     }
   }, [selectedService?.name]);
@@ -187,6 +189,12 @@ export function ContainerSection({
                       disabled={updatingServiceName === selectedService.name}
                     />
                   </Box>
+                  <EnvVarEditor
+                    value={updateForm.env}
+                    onChange={(env) => setUpdateForm((f) => ({ ...f, env }))}
+                    disabled={updatingServiceName === selectedService.name}
+                    size="small"
+                  />
                   <TextField
                     size="small"
                     label="起動スクリプト（任意）"

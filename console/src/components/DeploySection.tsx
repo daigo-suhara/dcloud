@@ -3,6 +3,7 @@ import { Alert, Box, Button, Card, CardContent, Divider, TextField, Typography }
 import type { FormEvent } from "react";
 import type { DeployForm } from "../types";
 import { actionLinkButtonSx } from "../theme";
+import { EnvVarEditor } from "./EnvVarEditor";
 
 function isDnsLabel(value: string) {
   return /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(value) && value.length <= 63;
@@ -124,6 +125,8 @@ export function DeploySection({ error, form, onBack, onChange, onSubmit, submitt
                     fullWidth
                   />
                 </Box>
+
+                <EnvVarEditor value={form.env} onChange={(env) => onChange({ env })} />
 
                 <TextField
                   label="起動スクリプト（任意）"

@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"net"
@@ -51,6 +52,11 @@ type projectScope struct {
 	ProjectID string
 }
 
+type envVar struct {
+	Name  string
+	Value string
+}
+
 type deployRequest struct {
 	Name          string
 	Image         string
@@ -58,6 +64,7 @@ type deployRequest struct {
 	MinScale      int32
 	MaxScale      int32
 	StartupScript string
+	Env           []envVar
 }
 
 type deployedService struct {
@@ -77,6 +84,7 @@ type deployedService struct {
 	MinScale      int32
 	MaxScale      int32
 	StartupScript string
+	Env           []envVar
 }
 
 type containerServer struct {
@@ -137,12 +145,16 @@ func (s *containerServer) ListServices(ctx context.Context, req *ListServicesReq
 	}
 	customDomains := make(map[string]string, len(dbRecords))
 	startupScripts := make(map[string]string, len(dbRecords))
+	envVars := make(map[string][]envVar, len(dbRecords))
 	for _, r := range dbRecords {
 		if r.CustomDomain.Valid {
 			customDomains[r.Name] = r.CustomDomain.String
 		}
 		if r.StartupScript.Valid {
 			startupScripts[r.Name] = r.StartupScript.String
+		}
+		if vars := unmarshalEnv(r.Env); len(vars) > 0 {
+			envVars[r.Name] = vars
 		}
 	}
 	items := make([]*Service, 0, len(records))
@@ -175,6 +187,7 @@ func (s *containerServer) ListServices(ctx context.Context, req *ListServicesReq
 			MinScale:           record.MinScale,
 			MaxScale:           record.MaxScale,
 			StartupScript:      startupScripts[record.Name],
+			Env:                internalEnvToProto(envVars[record.Name]),
 		})
 	}
 	return &ListServicesResponse{UserId: userID, ProjectId: projectID, Namespace: s.namespace, Containers: items}, nil
@@ -206,6 +219,7 @@ func (s *containerServer) DeployService(ctx context.Context, req *DeployServiceR
 		MinScale:      req.MinScale,
 		MaxScale:      req.MaxScale,
 		StartupScript: strings.TrimSpace(req.StartupScript),
+		Env:           protoEnvToInternal(req.Env),
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to deploy service")
@@ -231,6 +245,7 @@ func (s *containerServer) DeployService(ctx context.Context, req *DeployServiceR
 		MinScale:      created.MinScale,
 		MaxScale:      created.MaxScale,
 		StartupScript: sql.NullString{String: created.StartupScript, Valid: created.StartupScript != ""},
+		Env:           marshalEnv(created.Env),
 	}); err != nil {
 		return nil, status.Error(codes.Internal, "failed to persist service")
 	}
@@ -249,6 +264,7 @@ func (s *containerServer) DeployService(ctx context.Context, req *DeployServiceR
 		MinScale:      created.MinScale,
 		MaxScale:      created.MaxScale,
 		StartupScript: created.StartupScript,
+		Env:           internalEnvToProto(created.Env),
 	}
 	return &DeployServiceResponse{Service: &svc}, nil
 }
@@ -448,4 +464,39 @@ func env(key, fallback string) string {
 
 func publicServiceDomain() string {
 	return env("DCLD_PUBLIC_SERVICE_DOMAIN", "drkatana.com")
+}
+
+func protoEnvToInternal(vars []*containerpb.EnvVar) []envVar {
+	out := make([]envVar, 0, len(vars))
+	for _, v := range vars {
+		if strings.TrimSpace(v.Name) != "" {
+			out = append(out, envVar{Name: v.Name, Value: v.Value})
+		}
+	}
+	return out
+}
+
+func internalEnvToProto(vars []envVar) []*containerpb.EnvVar {
+	out := make([]*containerpb.EnvVar, len(vars))
+	for i, v := range vars {
+		out[i] = &containerpb.EnvVar{Name: v.Name, Value: v.Value}
+	}
+	return out
+}
+
+func marshalEnv(vars []envVar) sql.NullString {
+	if len(vars) == 0 {
+		return sql.NullString{}
+	}
+	b, _ := json.Marshal(vars)
+	return sql.NullString{String: string(b), Valid: true}
+}
+
+func unmarshalEnv(s sql.NullString) []envVar {
+	if !s.Valid || s.String == "" {
+		return nil
+	}
+	var out []envVar
+	_ = json.Unmarshal([]byte(s.String), &out)
+	return out
 }

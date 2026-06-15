@@ -78,6 +78,7 @@ class ContainerClient:
         min_scale: int,
         max_scale: int,
         startup_script: str = "",
+        env: list[dict[str, str]] | None = None,
     ) -> dict[str, Any]:
         try:
             response = self._deploy_service(
@@ -90,6 +91,7 @@ class ContainerClient:
                     min_scale=min_scale,
                     max_scale=max_scale,
                     startup_script=startup_script,
+                    env=[container_pb2.EnvVar(name=e["name"], value=e["value"]) for e in (env or []) if e.get("name", "").strip()],
                 )
             )
         except grpc.RpcError as error:
@@ -153,6 +155,7 @@ class ContainerClient:
             "minScale": service.min_scale,
             "maxScale": service.max_scale,
             "startupScript": service.startup_script or None,
+            "env": [{"name": e.name, "value": e.value} for e in service.env] or None,
         }
 
     @staticmethod

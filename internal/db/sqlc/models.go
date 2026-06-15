@@ -24,6 +24,7 @@ type Container struct {
 	MinScale      int32
 	MaxScale      int32
 	StartupScript sql.NullString
+	Env           sql.NullString
 }
 
 type IdentitySession struct {
