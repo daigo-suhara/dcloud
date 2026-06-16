@@ -367,6 +367,9 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 		projectLabelKey:                scope.ProjectID,
 		serviceNameLabel:               req.Name,
 	}
+	manifest.Metadata.Annotations = map[string]string{
+		"networking.knative.dev/http-protocol": "h1c",
+	}
 	manifest.Spec.Template.Metadata.Labels = map[string]string{
 		"app.kubernetes.io/instance":  "dcloud",
 		"app.kubernetes.io/component": "container",
@@ -567,10 +570,11 @@ func sanitizeDNSLabel(value string) string {
 type knativeServiceManifest struct {
 	APIVersion string `json:"apiVersion"`
 	Kind       string `json:"kind"`
-	Metadata   struct {
-		Name      string            `json:"name"`
-		Namespace string            `json:"namespace"`
-		Labels    map[string]string `json:"labels"`
+	Metadata struct {
+		Name        string            `json:"name"`
+		Namespace   string            `json:"namespace"`
+		Labels      map[string]string `json:"labels"`
+		Annotations map[string]string `json:"annotations,omitempty"`
 	} `json:"metadata"`
 	Spec struct {
 		Template struct {
