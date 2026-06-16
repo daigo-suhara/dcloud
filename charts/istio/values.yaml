@@ -1,0 +1,13 @@
+base: {}
+
+istiod:
+  pilot:
+    replicaCount: 1
+
+ingressgateway:
+  name: istio-ingressgateway
+  labels:
+    app: istio-ingressgateway
+    istio: ingressgateway
+  service:
+    type: LoadBalancer

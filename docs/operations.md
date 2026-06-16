@@ -28,10 +28,10 @@ Cloudflare Zero Trust → Tunnels → トンネルを選択 → Edit → Public 
 |---|----------|---------|-------------|
 | 1 | `argo.daigo-suhara.com` | `https://172.16.100.10` | ✓ |
 | 2 | `cloud.daigo-suhara.com` | `http://172.16.100.11:8080` | |
-| 3 | `*.drkatana.com` | `http://kourier-internal.kourier-system.svc.cluster.local:80` | |
-| catch-all | （空欄） | `http://kourier-internal.kourier-system.svc.cluster.local:80` | |
+| 3 | `*.drkatana.com` | `http://istio-ingressgateway.istio-system.svc.cluster.local:80` | |
+| catch-all | （空欄） | `http://istio-ingressgateway.istio-system.svc.cluster.local:80` | |
 
-**catch-all を Kourier に設定することで、ユーザーのカスタムドメインが自動的にルーティングされる。**
+**catch-all を Istio IngressGateway に設定することで、ユーザーのカスタムドメインが自動的にルーティングされる。**
 
 IP アドレスが変わった場合は MetalLB の割り当てを確認して更新する。
 

@@ -75,6 +75,20 @@ func (m *knativeServiceManager) customURL(domain string) string {
 }
 
 func (m *knativeServiceManager) applyDomainMapping(ctx context.Context, domainName, resourceName string, labels map[string]string) error {
+	// Remove any legacy h1gw resources left from a previous implementation.
+	for _, path := range []string{
+		fmt.Sprintf("/apis/networking.internal.knative.dev/v1alpha1/namespaces/%s/ingresses/%s", m.namespace, domainName),
+		fmt.Sprintf("/api/v1/namespaces/%s/services/%s", m.namespace, resourceName+"-h1gw"),
+	} {
+		delReq, _ := http.NewRequestWithContext(ctx, http.MethodDelete, m.baseURL+path, nil)
+		if delReq != nil {
+			m.authorize(delReq)
+			if delRes, err := m.client.Do(delReq); err == nil {
+				delRes.Body.Close()
+			}
+		}
+	}
+
 	body, err := json.Marshal(map[string]any{
 		"apiVersion": "serving.knative.dev/v1beta1",
 		"kind":       "DomainMapping",
@@ -180,9 +194,8 @@ func (m *knativeServiceManager) fetchDomainMappingReady(ctx context.Context, dom
 	return "Unknown", "", nil
 }
 
-// getDomainMappingStatus checks the Knative DomainMapping's Ready condition
-// and, when the cluster-side is not yet conclusive, falls back to a DNS CNAME
-// lookup to detect whether the user has pointed their domain at the cluster.
+// getDomainMappingStatus checks the Knative DomainMapping's Ready condition for
+// a custom domain and, when not yet conclusive, falls back to a DNS CNAME lookup.
 // Returns ("ready"|"pending"|"error", reason).
 func (m *knativeServiceManager) getDomainMappingStatus(ctx context.Context, customDomain, defaultMapping string) (string, string) {
 	dmCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
@@ -192,7 +205,7 @@ func (m *knativeServiceManager) getDomainMappingStatus(ctx context.Context, cust
 	if err == nil {
 		switch readyStatus {
 		case "True":
-			// Knative routing is active. Verify DNS has propagated via CNAME check.
+			// Routing is active. Verify DNS has propagated via CNAME check.
 			dnsCtx, dnsCancel := context.WithTimeout(ctx, 5*time.Second)
 			defer dnsCancel()
 			if cname, lookupErr := net.DefaultResolver.LookupCNAME(dnsCtx, customDomain); lookupErr == nil {
@@ -367,9 +380,6 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 		projectLabelKey:                scope.ProjectID,
 		serviceNameLabel:               req.Name,
 	}
-	manifest.Metadata.Annotations = map[string]string{
-		"networking.knative.dev/http-protocol": "h1c",
-	}
 	manifest.Spec.Template.Metadata.Labels = map[string]string{
 		"app.kubernetes.io/instance":  "dcloud",
 		"app.kubernetes.io/component": "container",
@@ -379,12 +389,12 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 	}
 	if req.MinScale > 0 || req.MaxScale > 0 {
 		manifest.Spec.Template.Metadata.Annotations = map[string]string{}
-		if req.MinScale > 0 {
-			manifest.Spec.Template.Metadata.Annotations["autoscaling.knative.dev/minScale"] = fmt.Sprintf("%d", req.MinScale)
-		}
-		if req.MaxScale > 0 {
-			manifest.Spec.Template.Metadata.Annotations["autoscaling.knative.dev/maxScale"] = fmt.Sprintf("%d", req.MaxScale)
-		}
+	}
+	if req.MinScale > 0 {
+		manifest.Spec.Template.Metadata.Annotations["autoscaling.knative.dev/minScale"] = fmt.Sprintf("%d", req.MinScale)
+	}
+	if req.MaxScale > 0 {
+		manifest.Spec.Template.Metadata.Annotations["autoscaling.knative.dev/maxScale"] = fmt.Sprintf("%d", req.MaxScale)
 	}
 	container := knativeContainer{
 		Name:  req.Name,
@@ -501,14 +511,32 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 
 func (m *knativeServiceManager) delete(ctx context.Context, scope projectScope, name, customDomain string) error {
 	resourceName := serviceResourceName(scope.ProjectID, name)
+	defaultDomain := fmt.Sprintf("%s.%s", resourceName, m.publicDomain)
+
 	if customDomain != "" {
-		if err := m.deleteDomainMapping(ctx, customDomain); err != nil {
-			return err
+		_ = m.deleteDomainMapping(ctx, customDomain)
+	}
+	_ = m.deleteDomainMapping(ctx, defaultDomain)
+
+	// Clean up legacy h1gw resources.
+	legacyPaths := []string{
+		fmt.Sprintf("/apis/networking.internal.knative.dev/v1alpha1/namespaces/%s/ingresses/%s", m.namespace, defaultDomain),
+		fmt.Sprintf("/api/v1/namespaces/%s/services/%s", m.namespace, resourceName+"-h1gw"),
+	}
+	if customDomain != "" {
+		legacyPaths = append(legacyPaths,
+			fmt.Sprintf("/apis/networking.internal.knative.dev/v1alpha1/namespaces/%s/ingresses/%s", m.namespace, customDomain))
+	}
+	for _, path := range legacyPaths {
+		delReq, _ := http.NewRequestWithContext(ctx, http.MethodDelete, m.baseURL+path, nil)
+		if delReq != nil {
+			m.authorize(delReq)
+			if delRes, err := m.client.Do(delReq); err == nil {
+				delRes.Body.Close()
+			}
 		}
 	}
-	if err := m.deleteDomainMapping(ctx, fmt.Sprintf("%s.%s", resourceName, m.publicDomain)); err != nil {
-		return err
-	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, fmt.Sprintf("%s/apis/serving.knative.dev/v1/namespaces/%s/services/%s", m.baseURL, m.namespace, resourceName), nil)
 	if err != nil {
 		return err

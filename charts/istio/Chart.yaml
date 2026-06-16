@@ -1,0 +1,16 @@
+apiVersion: v2
+name: istio
+description: Istio service mesh for dcloud
+type: application
+version: 0.1.0
+dependencies:
+  - name: base
+    version: "1.23.0"
+    repository: https://istio-release.storage.googleapis.com/charts
+  - name: istiod
+    version: "1.23.0"
+    repository: https://istio-release.storage.googleapis.com/charts
+  - name: gateway
+    version: "1.23.0"
+    repository: https://istio-release.storage.googleapis.com/charts
+    alias: ingressgateway
