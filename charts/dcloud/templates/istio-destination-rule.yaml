@@ -1,0 +1,11 @@
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: {{ include "dcloud.fullname" . }}-knative-h1
+  namespace: {{ .Release.Namespace }}
+spec:
+  host: "*.{{ .Release.Namespace }}.svc.cluster.local"
+  trafficPolicy:
+    connectionPool:
+      http:
+        useClientProtocol: true
