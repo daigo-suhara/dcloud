@@ -38,7 +38,7 @@ export function parseRoute(pathname: string): RouteState {
     };
   }
 
-  if (normalizedSection === "home" || normalizedSection === "container" || normalizedSection === "deploy" || normalizedSection === "compute" || normalizedSection === "compute-create" || normalizedSection === "project-create" || normalizedSection === "repository") {
+  if (normalizedSection === "home" || normalizedSection === "container" || normalizedSection === "deploy" || normalizedSection === "compute" || normalizedSection === "compute-create" || normalizedSection === "project-create" || normalizedSection === "repository" || normalizedSection === "storage" || normalizedSection === "database") {
     return { section: normalizedSection, selectedServiceName: null, selectedComputeMachineName: null };
   }
 

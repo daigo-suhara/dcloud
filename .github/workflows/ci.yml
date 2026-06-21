@@ -49,6 +49,10 @@ jobs:
             dockerfile: internal/identity/Dockerfile
           - name: compute
             dockerfile: internal/compute/Dockerfile
+          - name: storage
+            dockerfile: internal/storage/Dockerfile
+          - name: dbaas
+            dockerfile: internal/dbaas/Dockerfile
           - name: db-migrate
             dockerfile: internal/db/Dockerfile
           - name: console

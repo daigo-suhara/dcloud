@@ -14,6 +14,8 @@ import { RepositorySection } from "./components/RepositorySection";
 import { ProjectCreateSection } from "./components/ProjectCreateSection";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { HomeSection } from "./components/HomeSection";
+import { StorageSection } from "./components/StorageSection";
+import { DatabaseSection } from "./components/DatabaseSection";
 import { theme } from "./theme";
 import { useConsoleController } from "./hooks/useConsoleController";
 
@@ -181,6 +183,24 @@ function AppContent() {
             machines={controller.computeMachines}
             onDeleteMachine={controller.requestDeleteMachine}
             onOpenCreate={() => navigate("/compute/new")}
+          />
+        ) : visibleSection === "storage" ? (
+          <StorageSection
+            loading={controller.storageLoading}
+            buckets={controller.buckets}
+            deletingBucketName={controller.deletingBucketName}
+            onDeleteBucket={controller.handleDeleteBucket}
+            onCreateBucket={controller.handleCreateBucket}
+            activeProjectId={controller.activeProjectId}
+          />
+        ) : visibleSection === "database" ? (
+          <DatabaseSection
+            loading={controller.databaseLoading}
+            databases={controller.databases}
+            deletingDatabaseName={controller.deletingDatabaseName}
+            onDeleteDatabase={controller.handleDeleteDatabase}
+            onCreateDatabase={controller.handleCreateDatabase}
+            activeProjectId={controller.activeProjectId}
           />
         ) : visibleSection === "deploy" ? (
           <DeploySection

@@ -95,8 +95,43 @@ export type UpdateForm = {
   env: EnvVarEntry[];
 };
 
+export type Bucket = {
+  name: string;
+  endpoint: string;
+  ready: boolean;
+  status: string;
+  createdAt?: string;
+  projectId?: string;
+};
+
+export type DatabaseInstance = {
+  name: string;
+  type: string;
+  version: string;
+  cpu: string;
+  memory: string;
+  storage: string;
+  ready: boolean;
+  status: string;
+  createdAt?: string;
+  projectId?: string;
+};
+
+export type BucketCreateForm = {
+  name: string;
+};
+
+export type DatabaseCreateForm = {
+  name: string;
+  type: string;
+  version: string;
+  cpu: string;
+  memory: string;
+  storage: string;
+};
+
 export type RouteState = {
-  section: "home" | "container" | "compute" | "compute-create" | "deploy" | "project-create" | "repository";
+  section: "home" | "container" | "compute" | "compute-create" | "deploy" | "project-create" | "repository" | "storage" | "database";
   selectedServiceName: string | null;
   selectedComputeMachineName: string | null;
 };
@@ -142,5 +177,7 @@ export const initialComputeForm: ComputeForm = {
 export const navItems = [
   { id: "home", label: "ホーム" },
   { id: "container", label: "コンテナ" },
-  { id: "compute", label: "仮想マシン" }
+  { id: "compute", label: "仮想マシン" },
+  { id: "storage", label: "ストレージ" },
+  { id: "database", label: "データベース" }
 ] as const;

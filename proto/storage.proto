@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package dcloud.storage.v1;
+
+option go_package = "github.com/daigo-suhara/dcloud/internal/pb/storagepb;storagepb";
+
+service ObjectStorageService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc ListBuckets(ListBucketsRequest) returns (ListBucketsResponse);
+  rpc CreateBucket(CreateBucketRequest) returns (CreateBucketResponse);
+  rpc DeleteBucket(DeleteBucketRequest) returns (DeleteBucketResponse);
+  rpc GetBucketCredentials(GetBucketCredentialsRequest) returns (GetBucketCredentialsResponse);
+  rpc GetOperation(GetOperationRequest) returns (GetOperationResponse);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string service = 2;
+  string timestamp = 3;
+}
+
+message Bucket {
+  string name = 1;
+  string endpoint = 2;
+  bool ready = 3;
+  string status = 4;
+  string created_at = 5;
+  string project_id = 6;
+}
+
+message BucketCredentials {
+  string endpoint = 1;
+  string bucket_name = 2;
+  string access_key_id = 3;
+  string secret_access_key = 4;
+}
+
+message ListBucketsRequest {
+  string user_id = 1;
+  string project_id = 2;
+}
+
+message ListBucketsResponse {
+  string user_id = 1;
+  string project_id = 2;
+  repeated Bucket buckets = 3;
+}
+
+message CreateBucketRequest {
+  string user_id = 1;
+  string project_id = 2;
+  string name = 3;
+}
+
+message CreateBucketResponse {
+  Bucket bucket = 1;
+}
+
+message DeleteBucketRequest {
+  string user_id = 1;
+  string project_id = 2;
+  string name = 3;
+}
+
+message DeleteBucketResponse {
+  string operation_id = 1;
+}
+
+message GetBucketCredentialsRequest {
+  string user_id = 1;
+  string project_id = 2;
+  string name = 3;
+}
+
+message GetBucketCredentialsResponse {
+  BucketCredentials credentials = 1;
+}
+
+message GetOperationRequest {
+  string operation_id = 1;
+}
+
+message GetOperationResponse {
+  string operation_id = 1;
+  string status = 2;
+  string error = 3;
+}

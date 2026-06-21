@@ -17,6 +17,8 @@ from app.identity_client import IdentityClient
 from app.compute_client import ComputeClient
 from app.repository import Repository
 from app.container_client import ContainerClient
+from app.storage_client import StorageClient
+from app.dbaas_client import DbaasClient
 
 app = FastAPI(title="DCloud API")
 
@@ -97,6 +99,8 @@ def startup() -> None:
             app.state.repo = Repository.new()
             app.state.container_client = ContainerClient.new()
             app.state.compute_client = ComputeClient.new()
+            app.state.storage_client = StorageClient.new()
+            app.state.dbaas_client = DbaasClient.new()
             return
         except Exception as exc:  # pragma: no cover - startup retry path
             last_error = exc
@@ -407,6 +411,10 @@ def get_operation(operation_id: str, request: Request) -> dict[str, str]:
         client = app.state.container_client
     elif operation_id.startswith("compute-op-") or operation_id.startswith("project-op-"):
         client = app.state.compute_client
+    elif operation_id.startswith("storage-op-"):
+        client = app.state.storage_client
+    elif operation_id.startswith("dbaas-op-"):
+        client = app.state.dbaas_client
     else:
         raise HTTPException(status_code=404, detail="オペレーションが見つかりません")
     try:
@@ -504,6 +512,178 @@ def delete_compute(
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=exception_detail(exc, "仮想マシンを削除できません")) from exc
     return {"status": "deleting", "operationId": operation_id}
+
+
+@app.get("/api/v1/storage")
+def list_storage(
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, Any]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    try:
+        result = app.state.storage_client.list_buckets(user["id"], project_id)
+        return {"user": user["id"], "projectId": project_id, "buckets": result["buckets"]}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/storage")
+def create_bucket(
+    body: dict[str, Any],
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, Any]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    ensure_project_not_deleting(project_id)
+    name = str(body.get("name", "")).strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="バケット名は必須です")
+    try:
+        return app.state.storage_client.create_bucket(user["id"], project_id, name)
+    except KeyError as exc:
+        raise HTTPException(status_code=409, detail="バケットは既に存在します") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.delete("/api/v1/storage/{name}")
+def delete_bucket(
+    name: str,
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, str]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    try:
+        operation_id = app.state.storage_client.delete_bucket(user["id"], project_id, name)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="バケットが見つかりません") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {"status": "deleting", "operationId": operation_id}
+
+
+@app.get("/api/v1/storage/{name}/credentials")
+def get_bucket_credentials(
+    name: str,
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, Any]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    try:
+        return app.state.storage_client.get_bucket_credentials(user["id"], project_id, name)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="バケットまたは認証情報が見つかりません") from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/database")
+def list_databases(
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, Any]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    try:
+        result = app.state.dbaas_client.list_databases(user["id"], project_id)
+        return {"user": user["id"], "projectId": project_id, "databases": result["databases"]}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/database")
+def create_database(
+    body: dict[str, Any],
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, Any]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    ensure_project_not_deleting(project_id)
+    name = str(body.get("name", "")).strip()
+    db_type = str(body.get("type", "")).strip()
+    if not name or not db_type:
+        raise HTTPException(status_code=400, detail="名前とタイプは必須です")
+    try:
+        return app.state.dbaas_client.create_database(
+            user["id"],
+            project_id,
+            name,
+            db_type,
+            str(body.get("version", "")).strip(),
+            str(body.get("cpu", "")).strip(),
+            str(body.get("memory", "")).strip(),
+            str(body.get("storage", "")).strip(),
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=409, detail="データベースは既に存在します") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.delete("/api/v1/database/{name}")
+def delete_database(
+    name: str,
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, str]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    try:
+        operation_id = app.state.dbaas_client.delete_database(user["id"], project_id, name)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="データベースが見つかりません") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {"status": "deleting", "operationId": operation_id}
+
+
+@app.get("/api/v1/database/{name}/connection")
+def get_database_connection(
+    name: str,
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, Any]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    try:
+        return app.state.dbaas_client.get_connection_string(user["id"], project_id, name)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="データベースが見つかりません") from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @app.websocket("/api/v1/compute/{name}/console")

@@ -58,6 +58,23 @@ container:
   service:
     port: 8082
 
+objectstorage:
+  replicaCount: 2
+  image:
+    repository: objectstorage
+  service:
+    port: 8085
+  bucketStorageClass: rook-ceph-delete-bucket
+  rgwEndpoint: ""
+
+dbaas:
+  replicaCount: 2
+  image:
+    repository: dbaas
+  service:
+    port: 8086
+  storageClass: ceph-rbd
+
 database:
   service:
     port: 5432

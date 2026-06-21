@@ -2,7 +2,7 @@ GO_BUILD_CACHE ?= $(CURDIR)/.cache/go-build
 GO_MOD_CACHE ?= $(shell go env GOMODCACHE)
 GOPATH_BIN := $(shell go env GOPATH)/bin
 
-.PHONY: test build-project build-container build-identity build-compute build-db-migrate build sqlc proto buf-lint
+.PHONY: test build-project build-container build-identity build-compute build-storage build-dbaas build-db-migrate build sqlc proto buf-lint
 
 test:
 	mkdir -p $(GO_BUILD_CACHE) $(GO_MOD_CACHE)
@@ -35,8 +35,16 @@ build-compute:
 	mkdir -p $(GO_BUILD_CACHE) $(GO_MOD_CACHE) bin
 	GOCACHE=$(GO_BUILD_CACHE) GOMODCACHE=$(GO_MOD_CACHE) go build -o bin/compute ./internal/compute/cmd/server
 
+build-storage:
+	mkdir -p $(GO_BUILD_CACHE) $(GO_MOD_CACHE) bin
+	GOCACHE=$(GO_BUILD_CACHE) GOMODCACHE=$(GO_MOD_CACHE) go build -o bin/storage ./internal/storage/cmd/server
+
+build-dbaas:
+	mkdir -p $(GO_BUILD_CACHE) $(GO_MOD_CACHE) bin
+	GOCACHE=$(GO_BUILD_CACHE) GOMODCACHE=$(GO_MOD_CACHE) go build -o bin/dbaas ./internal/dbaas/cmd/server
+
 build-db-migrate:
 	mkdir -p $(GO_BUILD_CACHE) $(GO_MOD_CACHE) bin
 	GOCACHE=$(GO_BUILD_CACHE) GOMODCACHE=$(GO_MOD_CACHE) go build -o bin/db-migrate ./internal/db/cmd/migrate
 
-build: build-project build-container build-identity build-compute build-db-migrate
+build: build-project build-container build-identity build-compute build-storage build-dbaas build-db-migrate

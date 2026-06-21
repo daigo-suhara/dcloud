@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { initialAuthForm, initialComputeForm, initialForm, type AuthForm, type AuthUser, type ComputeForm, type ComputeMachine, type DeployedService, type PlatformResponse, type Project, type ProjectsResponse, type RepositoryConfig, type RepositoryForm, type RouteState, type UpdateForm } from "../types";
+import { initialAuthForm, initialComputeForm, initialForm, type AuthForm, type AuthUser, type Bucket, type BucketCreateForm, type ComputeForm, type ComputeMachine, type DatabaseCreateForm, type DatabaseInstance, type DeployedService, type PlatformResponse, type Project, type ProjectsResponse, type RepositoryConfig, type RepositoryForm, type RouteState, type UpdateForm } from "../types";
 import { getServiceStatus, parseRoute } from "../utils";
 
 type LoadServicesOptions = {
@@ -62,6 +62,12 @@ export function useConsoleController() {
   const [error, setError] = useState("");
   const [form, setForm] = useState(initialForm);
   const [computeForm, setComputeForm] = useState<ComputeForm>(initialComputeForm);
+  const [buckets, setBuckets] = useState<Bucket[]>([]);
+  const [storageLoading, setStorageLoading] = useState(false);
+  const [deletingBucketName, setDeletingBucketName] = useState("");
+  const [databases, setDatabases] = useState<DatabaseInstance[]>([]);
+  const [databaseLoading, setDatabaseLoading] = useState(false);
+  const [deletingDatabaseName, setDeletingDatabaseName] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
   const route = useMemo<RouteState>(() => parseRoute(location.pathname), [location.pathname]);
@@ -764,6 +770,141 @@ export function useConsoleController() {
     }
   }
 
+  async function loadBuckets(options?: LoadServicesOptions) {
+    if (!activeProjectId || !currentUser) return;
+    if (!options?.quiet) setStorageLoading(true);
+    try {
+      const response = await fetch("/api/v1/storage", {
+        credentials: "include",
+        headers: apiHeaders()
+      });
+      if (!response.ok) return;
+      const data = await response.json() as { buckets: Bucket[] };
+      setBuckets(data.buckets ?? []);
+    } finally {
+      if (!options?.quiet) setStorageLoading(false);
+    }
+  }
+
+  async function loadDatabases(options?: LoadServicesOptions) {
+    if (!activeProjectId || !currentUser) return;
+    if (!options?.quiet) setDatabaseLoading(true);
+    try {
+      const response = await fetch("/api/v1/database", {
+        credentials: "include",
+        headers: apiHeaders()
+      });
+      if (!response.ok) return;
+      const data = await response.json() as { databases: DatabaseInstance[] };
+      setDatabases(data.databases ?? []);
+    } finally {
+      if (!options?.quiet) setDatabaseLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (route.section !== "storage") {
+      setBuckets([]);
+      return;
+    }
+    if (!activeProjectId || !currentUser) return;
+    void loadBuckets();
+  }, [route.section, activeProjectId, currentUser]);
+
+  useEffect(() => {
+    if (route.section !== "database") {
+      setDatabases([]);
+      return;
+    }
+    if (!activeProjectId || !currentUser) return;
+    void loadDatabases();
+  }, [route.section, activeProjectId, currentUser]);
+
+  async function handleCreateBucket(bucketForm: BucketCreateForm) {
+    const response = await fetch("/api/v1/storage", {
+      method: "POST",
+      credentials: "include",
+      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ name: bucketForm.name })
+    });
+    if (!response.ok) {
+      const data = (await readJsonResponse(response)) as ApiErrorResponse;
+      throw new Error(getApiErrorMessage(data, "バケットの作成に失敗しました"));
+    }
+    setMessage(`${bucketForm.name} を作成しました`);
+    await loadBuckets({ quiet: true });
+  }
+
+  async function handleDeleteBucket(name: string) {
+    setDeletingBucketName(name);
+    setError("");
+    try {
+      const response = await fetch(`/api/v1/storage/${encodeURIComponent(name)}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: apiHeaders()
+      });
+      if (!response.ok) {
+        const data = (await readJsonResponse(response)) as ApiErrorResponse;
+        throw new Error(getApiErrorMessage(data, "バケットの削除に失敗しました"));
+      }
+      const { operationId } = await response.json() as { operationId: string };
+      await pollOperation(operationId);
+      setMessage(`${name} を削除しました`);
+      await loadBuckets({ quiet: true });
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "バケットの削除に失敗しました");
+    } finally {
+      setDeletingBucketName("");
+    }
+  }
+
+  async function handleCreateDatabase(dbForm: DatabaseCreateForm) {
+    const response = await fetch("/api/v1/database", {
+      method: "POST",
+      credentials: "include",
+      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: dbForm.name,
+        type: dbForm.type,
+        version: dbForm.version,
+        cpu: dbForm.cpu,
+        memory: dbForm.memory,
+        storage: dbForm.storage
+      })
+    });
+    if (!response.ok) {
+      const data = (await readJsonResponse(response)) as ApiErrorResponse;
+      throw new Error(getApiErrorMessage(data, "データベースの作成に失敗しました"));
+    }
+    setMessage(`${dbForm.name} を作成しました`);
+    await loadDatabases({ quiet: true });
+  }
+
+  async function handleDeleteDatabase(name: string) {
+    setDeletingDatabaseName(name);
+    setError("");
+    try {
+      const response = await fetch(`/api/v1/database/${encodeURIComponent(name)}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: apiHeaders()
+      });
+      if (!response.ok) {
+        const data = (await readJsonResponse(response)) as ApiErrorResponse;
+        throw new Error(getApiErrorMessage(data, "データベースの削除に失敗しました"));
+      }
+      const { operationId } = await response.json() as { operationId: string };
+      await pollOperation(operationId);
+      setMessage(`${name} を削除しました`);
+      await loadDatabases({ quiet: true });
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "データベースの削除に失敗しました");
+    } finally {
+      setDeletingDatabaseName("");
+    }
+  }
+
   return {
     activeProjectId,
     authForm,
@@ -827,6 +968,16 @@ export function useConsoleController() {
     startLogout,
     startRegister,
     submitting,
-    setMessage
+    setMessage,
+    buckets,
+    storageLoading,
+    deletingBucketName,
+    handleCreateBucket,
+    handleDeleteBucket,
+    databases,
+    databaseLoading,
+    deletingDatabaseName,
+    handleCreateDatabase,
+    handleDeleteDatabase
   } as const;
 }

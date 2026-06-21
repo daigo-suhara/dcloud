@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package dcloud.dbaas.v1;
+
+option go_package = "github.com/daigo-suhara/dcloud/internal/pb/dbaaspb;dbaaspb";
+
+service DatabaseService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc ListDatabases(ListDatabasesRequest) returns (ListDatabasesResponse);
+  rpc CreateDatabase(CreateDatabaseRequest) returns (CreateDatabaseResponse);
+  rpc DeleteDatabase(DeleteDatabaseRequest) returns (DeleteDatabaseResponse);
+  rpc GetDatabase(GetDatabaseRequest) returns (GetDatabaseResponse);
+  rpc GetConnectionString(GetConnectionStringRequest) returns (GetConnectionStringResponse);
+  rpc GetOperation(GetOperationRequest) returns (GetOperationResponse);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string service = 2;
+  string timestamp = 3;
+}
+
+message Database {
+  string name = 1;
+  string type = 2;
+  string version = 3;
+  string cpu = 4;
+  string memory = 5;
+  string storage = 6;
+  bool ready = 7;
+  string status = 8;
+  string created_at = 9;
+  string project_id = 10;
+}
+
+message ListDatabasesRequest {
+  string user_id = 1;
+  string project_id = 2;
+}
+
+message ListDatabasesResponse {
+  string user_id = 1;
+  string project_id = 2;
+  repeated Database databases = 3;
+}
+
+message CreateDatabaseRequest {
+  string user_id = 1;
+  string project_id = 2;
+  string name = 3;
+  string type = 4;
+  string version = 5;
+  string cpu = 6;
+  string memory = 7;
+  string storage = 8;
+}
+
+message CreateDatabaseResponse {
+  Database database = 1;
+}
+
+message DeleteDatabaseRequest {
+  string user_id = 1;
+  string project_id = 2;
+  string name = 3;
+}
+
+message DeleteDatabaseResponse {
+  string operation_id = 1;
+}
+
+message GetDatabaseRequest {
+  string user_id = 1;
+  string project_id = 2;
+  string name = 3;
+}
+
+message GetDatabaseResponse {
+  Database database = 1;
+}
+
+message GetConnectionStringRequest {
+  string user_id = 1;
+  string project_id = 2;
+  string name = 3;
+}
+
+message GetConnectionStringResponse {
+  string connection_string = 1;
+  string host = 2;
+  string port = 3;
+  string username = 4;
+  string password = 5;
+  string database_name = 6;
+}
+
+message GetOperationRequest {
+  string operation_id = 1;
+}
+
+message GetOperationResponse {
+  string operation_id = 1;
+  string status = 2;
+  string error = 3;
+}
