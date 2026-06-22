@@ -2,6 +2,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { BiHomeAlt2, BiServer } from "react-icons/bi";
+import { BsDatabase, BsHdd } from "react-icons/bs";
 import { PiCpuBold } from "react-icons/pi";
 import { PiShippingContainer } from "react-icons/pi";
 import { navItems, type RouteState } from "../../types";
@@ -71,6 +72,10 @@ export function DrawerNav({ onCloseSidebar, onNavigate, route, sidebarOpen }: Dr
                     <Box component={PiShippingContainer} sx={{ fontSize: 18 }} />
                   ) : item.id === "compute" ? (
                     <Box component={PiCpuBold} sx={{ fontSize: 18 }} />
+                  ) : item.id === "storage" ? (
+                    <Box component={BsHdd} sx={{ fontSize: 18 }} />
+                  ) : item.id === "database" ? (
+                    <Box component={BsDatabase} sx={{ fontSize: 18 }} />
                   ) : (
                     <Box component={BiServer} sx={{ fontSize: 18 }} />
                   )}
