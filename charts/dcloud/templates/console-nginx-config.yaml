@@ -12,6 +12,7 @@ data:
       server_name {{ .Values.console.publicHostname | quote }};
       absolute_redirect off;
       port_in_redirect off;
+      client_max_body_size 10g;
 
       root /usr/share/nginx/html;
       index index.html;

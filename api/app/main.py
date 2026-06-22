@@ -795,10 +795,11 @@ def download_bucket_object(
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     content_type = resp.get("ContentType", "application/octet-stream")
     filename = key.split("/")[-1]
+    encoded = quote(filename, safe="")
     return StreamingResponse(
         resp["Body"].iter_chunks(),
         media_type=content_type,
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded}"},
     )
 
 
