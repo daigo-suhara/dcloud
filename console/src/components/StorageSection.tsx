@@ -184,20 +184,16 @@ export function StorageSection({
     }
   }
 
-  async function handleDownload(key: string) {
+  function handleDownload(key: string) {
     if (!browseOpen) return;
-    const res = await fetch(`/api/v1/storage/${encodeURIComponent(browseOpen)}/download?key=${encodeURIComponent(key)}`, {
-      credentials: "include",
-      headers: { "X-DCP-Project": activeProjectId }
-    });
-    if (!res.ok) return;
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    const filename = key.split("/").pop() ?? "download";
+    const url = `/api/v1/storage/${encodeURIComponent(browseOpen)}/download?key=${encodeURIComponent(key)}&project=${encodeURIComponent(activeProjectId)}`;
     const a = document.createElement("a");
     a.href = url;
-    a.download = key.split("/").pop() ?? "download";
+    a.download = filename;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   }
 
   function copyToClipboard(text: string) {

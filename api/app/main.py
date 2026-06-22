@@ -745,17 +745,16 @@ async def upload_bucket_object(
         raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
     client, bucket_name = _s3_client(user["id"], project_id, name)
     key = prefix + (file.filename or "upload")
-    content = await file.read()
     try:
-        client.put_object(
-            Bucket=bucket_name,
-            Key=key,
-            Body=content,
-            ContentType=file.content_type or "application/octet-stream",
+        client.upload_fileobj(
+            file.file,
+            bucket_name,
+            key,
+            ExtraArgs={"ContentType": file.content_type or "application/octet-stream"},
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
-    return {"key": key, "size": len(content)}
+    return {"key": key}
 
 
 @app.delete("/api/v1/storage/{name}/objects")
@@ -783,9 +782,10 @@ def download_bucket_object(
     key: str,
     request: Request,
     x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+    project: str | None = None,
 ) -> StreamingResponse:
     user = current_user(request)
-    project_id = (x_dcp_project or "").strip()
+    project_id = (x_dcp_project or project or "").strip()
     if not project_id:
         raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
     client, bucket_name = _s3_client(user["id"], project_id, name)
