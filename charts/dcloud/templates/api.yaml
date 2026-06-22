@@ -36,6 +36,10 @@ spec:
               value: {{ include "dcloud.fullname" . }}-container:{{ .Values.container.service.port }}
             - name: DCLD_COMPUTE_GRPC_ADDR
               value: {{ include "dcloud.fullname" . }}-compute:{{ .Values.compute.service.port }}
+            - name: DCLD_STORAGE_GRPC_ADDR
+              value: {{ include "dcloud.fullname" . }}-objectstorage:{{ .Values.objectstorage.service.port }}
+            - name: DCLD_DBAAS_GRPC_ADDR
+              value: {{ include "dcloud.fullname" . }}-dbaas:{{ .Values.dbaas.service.port }}
             - name: PYTHONPATH
               value: /app:/app/generated
           ports:
