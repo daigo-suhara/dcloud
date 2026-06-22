@@ -824,7 +824,7 @@ export function useConsoleController() {
     const response = await fetch("/api/v1/storage", {
       method: "POST",
       credentials: "include",
-      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      headers: apiHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ name: bucketForm.name })
     });
     if (!response.ok) {
@@ -863,7 +863,7 @@ export function useConsoleController() {
     const response = await fetch("/api/v1/database", {
       method: "POST",
       credentials: "include",
-      headers: { ...apiHeaders(), "Content-Type": "application/json" },
+      headers: apiHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
         name: dbForm.name,
         type: dbForm.type,
