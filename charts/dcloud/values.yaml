@@ -61,7 +61,7 @@ container:
 objectstorage:
   replicaCount: 2
   image:
-    repository: objectstorage
+    repository: storage
   service:
     port: 8085
   bucketStorageClass: rook-ceph-delete-bucket
