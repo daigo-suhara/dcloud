@@ -1,15 +1,27 @@
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import DownloadIcon from "@mui/icons-material/Download";
+import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import FolderIcon from "@mui/icons-material/Folder";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import KeyIcon from "@mui/icons-material/Key";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { alpha } from "@mui/material/styles";
 import {
-  Box, Button, Card, CardContent, CircularProgress, Collapse, Dialog, DialogContent,
-  DialogTitle, IconButton, Paper, TextField, Tooltip, Typography
+  Box, Breadcrumbs, Button, Card, CardContent, CircularProgress, Collapse, Dialog,
+  DialogContent, DialogTitle, Divider, IconButton, Link, Paper, TextField, Tooltip, Typography
 } from "@mui/material";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Bucket, BucketCreateForm } from "../types";
 import { formatComputeTimestamp } from "../utils";
+
+type S3Object = {
+  key: string;
+  size: number;
+  lastModified: string;
+};
 
 type StorageSectionProps = {
   loading: boolean;
@@ -19,6 +31,13 @@ type StorageSectionProps = {
   onCreateBucket: (form: BucketCreateForm) => Promise<void>;
   activeProjectId: string;
 };
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
 
 export function StorageSection({
   loading,
@@ -35,6 +54,17 @@ export function StorageSection({
   const [credsOpen, setCredsOpen] = useState<string | null>(null);
   const [creds, setCreds] = useState<Record<string, { endpoint: string; bucketName: string; accessKeyId: string; secretAccessKey: string }>>({});
   const [credsLoading, setCredsLoading] = useState(false);
+
+  // file browser state
+  const [browseOpen, setBrowseOpen] = useState<string | null>(null);
+  const [browsePrefix, setBrowsePrefix] = useState("");
+  const [objects, setObjects] = useState<S3Object[]>([]);
+  const [prefixes, setPrefixes] = useState<string[]>([]);
+  const [objectsLoading, setObjectsLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [deletingKey, setDeletingKey] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleCreate() {
     if (!form.name.trim()) return;
@@ -64,7 +94,7 @@ export function StorageSection({
         headers: { "X-DCP-Project": activeProjectId }
       });
       if (!response.ok) throw new Error("認証情報の取得に失敗しました");
-      const data = await response.json() as { endpoint: string; bucketName: string; accessKeyId: string; secretAccessKey: string };
+      const data = (await response.json()) as { endpoint: string; bucketName: string; accessKeyId: string; secretAccessKey: string };
       setCreds(prev => ({ ...prev, [name]: data }));
     } catch {
       setCredsOpen(null);
@@ -73,9 +103,108 @@ export function StorageSection({
     }
   }
 
+  async function loadObjects(bucketName: string, prefix: string) {
+    setObjectsLoading(true);
+    try {
+      const res = await fetch(`/api/v1/storage/${encodeURIComponent(bucketName)}/objects?prefix=${encodeURIComponent(prefix)}`, {
+        credentials: "include",
+        headers: { "X-DCP-Project": activeProjectId }
+      });
+      if (!res.ok) throw new Error();
+      const data = (await res.json()) as { objects: S3Object[]; prefixes: string[] };
+      setObjects(data.objects ?? []);
+      setPrefixes(data.prefixes ?? []);
+    } catch {
+      setObjects([]);
+      setPrefixes([]);
+    } finally {
+      setObjectsLoading(false);
+    }
+  }
+
+  function handleOpenBrowse(bucketName: string) {
+    setBrowseOpen(bucketName);
+    setBrowsePrefix("");
+    setUploadError("");
+    void loadObjects(bucketName, "");
+  }
+
+  function handleNavigate(prefix: string) {
+    setBrowsePrefix(prefix);
+    if (browseOpen) void loadObjects(browseOpen, prefix);
+  }
+
+  function handleCloseBrowse() {
+    setBrowseOpen(null);
+    setBrowsePrefix("");
+    setObjects([]);
+    setPrefixes([]);
+    setUploadError("");
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !browseOpen) return;
+    setUploading(true);
+    setUploadError("");
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch(`/api/v1/storage/${encodeURIComponent(browseOpen)}/objects?prefix=${encodeURIComponent(browsePrefix)}`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "X-DCP-Project": activeProjectId },
+        body: formData,
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { detail?: string };
+        throw new Error(data.detail ?? "アップロードに失敗しました");
+      }
+      void loadObjects(browseOpen, browsePrefix);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "アップロードに失敗しました");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+
+  async function handleDeleteObject(key: string) {
+    if (!browseOpen) return;
+    setDeletingKey(key);
+    try {
+      await fetch(`/api/v1/storage/${encodeURIComponent(browseOpen)}/objects?key=${encodeURIComponent(key)}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "X-DCP-Project": activeProjectId }
+      });
+      void loadObjects(browseOpen, browsePrefix);
+    } finally {
+      setDeletingKey("");
+    }
+  }
+
+  async function handleDownload(key: string) {
+    if (!browseOpen) return;
+    const res = await fetch(`/api/v1/storage/${encodeURIComponent(browseOpen)}/download?key=${encodeURIComponent(key)}`, {
+      credentials: "include",
+      headers: { "X-DCP-Project": activeProjectId }
+    });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = key.split("/").pop() ?? "download";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function copyToClipboard(text: string) {
     void navigator.clipboard.writeText(text);
   }
+
+  const breadcrumbParts = browsePrefix ? browsePrefix.split("/").filter(Boolean) : [];
 
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
@@ -99,7 +228,7 @@ export function StorageSection({
             <Box
               sx={{
                 display: { xs: "none", sm: "grid" },
-                gridTemplateColumns: "42px minmax(0, 1fr) 100px 160px 88px",
+                gridTemplateColumns: "42px minmax(0, 1fr) 100px 160px 120px",
                 alignItems: "center",
                 minHeight: 36,
                 px: 1,
@@ -133,7 +262,7 @@ export function StorageSection({
                         variant="outlined"
                         sx={{
                           display: "grid",
-                          gridTemplateColumns: "42px minmax(0, 1fr) 100px 160px 88px",
+                          gridTemplateColumns: "42px minmax(0, 1fr) 100px 160px 120px",
                           gap: 0,
                           alignItems: "center",
                           minHeight: 44,
@@ -164,15 +293,29 @@ export function StorageSection({
                           </Typography>
                         </Box>
                         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5, pr: 0.5 }}>
+                          <Tooltip title="ファイル">
+                            <span>
+                              <IconButton
+                                size="small"
+                                disabled={!isReady}
+                                onClick={() => handleOpenBrowse(bucket.name)}
+                                sx={{ border: "1px solid", borderColor: "divider" }}
+                              >
+                                <FolderOpenIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
                           <Tooltip title="認証情報">
-                            <IconButton
-                              size="small"
-                              disabled={!isReady}
-                              onClick={() => void handleShowCreds(bucket.name)}
-                              sx={{ border: "1px solid", borderColor: "divider" }}
-                            >
-                              <KeyIcon fontSize="small" />
-                            </IconButton>
+                            <span>
+                              <IconButton
+                                size="small"
+                                disabled={!isReady}
+                                onClick={() => void handleShowCreds(bucket.name)}
+                                sx={{ border: "1px solid", borderColor: "divider" }}
+                              >
+                                <KeyIcon fontSize="small" />
+                              </IconButton>
+                            </span>
                           </Tooltip>
                           <Tooltip title="削除">
                             <span>
@@ -234,6 +377,7 @@ export function StorageSection({
         </CardContent>
       </Card>
 
+      {/* Create Dialog */}
       <Dialog open={createOpen} onClose={() => !submitting && setCreateOpen(false)} fullWidth maxWidth="xs">
         <DialogTitle>バケットを作成</DialogTitle>
         <DialogContent sx={{ display: "grid", gap: 2, pt: "8px !important" }}>
@@ -253,6 +397,150 @@ export function StorageSection({
               {submitting ? <CircularProgress size={18} /> : "作成"}
             </Button>
           </Box>
+        </DialogContent>
+      </Dialog>
+
+      {/* File Browser Dialog */}
+      <Dialog open={browseOpen !== null} onClose={handleCloseBrowse} fullWidth maxWidth="md" slotProps={{ paper: { sx: { height: "80vh" } } }}>
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <FolderOpenIcon color="primary" />
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>{browseOpen}</Typography>
+          </Box>
+        </DialogTitle>
+        <Divider />
+        <Box sx={{ px: 2, py: 1, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+          <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} sx={{ flex: 1 }}>
+            <Link
+              component="button"
+              underline="hover"
+              color={browsePrefix === "" ? "text.primary" : "inherit"}
+              sx={{ cursor: "pointer", fontSize: 13 }}
+              onClick={() => handleNavigate("")}
+            >
+              /
+            </Link>
+            {breadcrumbParts.map((part, i) => {
+              const fullPrefix = breadcrumbParts.slice(0, i + 1).join("/") + "/";
+              const isLast = i === breadcrumbParts.length - 1;
+              return (
+                <Link
+                  key={fullPrefix}
+                  component="button"
+                  underline="hover"
+                  color={isLast ? "text.primary" : "inherit"}
+                  sx={{ cursor: "pointer", fontSize: 13 }}
+                  onClick={() => handleNavigate(fullPrefix)}
+                >
+                  {part}
+                </Link>
+              );
+            })}
+          </Breadcrumbs>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <input ref={fileInputRef} type="file" style={{ display: "none" }} onChange={(e) => void handleUpload(e)} />
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={uploading ? <CircularProgress size={14} sx={{ color: "inherit" }} /> : <CloudUploadIcon />}
+              disabled={uploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              アップロード
+            </Button>
+          </Box>
+        </Box>
+        {uploadError && (
+          <Typography color="error" variant="caption" sx={{ px: 2 }}>{uploadError}</Typography>
+        )}
+        <Divider />
+        <DialogContent sx={{ p: 0, overflow: "auto" }}>
+          {objectsLoading ? (
+            <Box sx={{ display: "grid", placeItems: "center", height: 120 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : prefixes.length === 0 && objects.length === 0 ? (
+            <Box sx={{ display: "grid", placeItems: "center", height: 120 }}>
+              <Typography color="text.secondary" variant="body2">ファイルがありません</Typography>
+            </Box>
+          ) : (
+            <Box>
+              {/* Header */}
+              <Box sx={{ display: "grid", gridTemplateColumns: "36px minmax(0,1fr) 80px 140px 76px", alignItems: "center", minHeight: 36, px: 1, bgcolor: alpha("#0f172a", 0.03), borderBottom: "1px solid rgba(148,163,184,0.18)", color: "text.secondary", fontSize: 11, fontWeight: 700 }}>
+                <Box />
+                <Box>名前</Box>
+                <Box>サイズ</Box>
+                <Box>更新日時</Box>
+                <Box sx={{ textAlign: "right" }}>操作</Box>
+              </Box>
+              {/* Folders */}
+              {prefixes.map((p) => {
+                const folderName = p.slice(browsePrefix.length);
+                return (
+                  <Box
+                    key={p}
+                    onClick={() => handleNavigate(p)}
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "36px minmax(0,1fr) 80px 140px 76px",
+                      alignItems: "center",
+                      minHeight: 40,
+                      px: 1,
+                      cursor: "pointer",
+                      borderBottom: "1px solid rgba(148,163,184,0.1)",
+                      "&:hover": { bgcolor: alpha("#2563eb", 0.04) }
+                    }}
+                  >
+                    <Box sx={{ display: "grid", placeItems: "center" }}>
+                      <FolderIcon sx={{ fontSize: 18, color: "primary.main" }} />
+                    </Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{folderName}</Typography>
+                    <Box />
+                    <Box />
+                    <Box />
+                  </Box>
+                );
+              })}
+              {/* Files */}
+              {objects.map((obj) => {
+                const filename = obj.key.slice(browsePrefix.length);
+                const isDeleting = deletingKey === obj.key;
+                return (
+                  <Box
+                    key={obj.key}
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "36px minmax(0,1fr) 80px 140px 76px",
+                      alignItems: "center",
+                      minHeight: 40,
+                      px: 1,
+                      borderBottom: "1px solid rgba(148,163,184,0.1)",
+                      "&:hover": { bgcolor: alpha("#0f172a", 0.02) }
+                    }}
+                  >
+                    <Box sx={{ display: "grid", placeItems: "center" }}>
+                      <InsertDriveFileIcon sx={{ fontSize: 18, color: "text.disabled" }} />
+                    </Box>
+                    <Typography variant="body2" sx={{ wordBreak: "break-all" }}>{filename}</Typography>
+                    <Typography variant="caption" color="text.secondary">{formatFileSize(obj.size)}</Typography>
+                    <Typography variant="caption" color="text.secondary">{formatComputeTimestamp(obj.lastModified)}</Typography>
+                    <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.25 }}>
+                      <Tooltip title="ダウンロード">
+                        <IconButton size="small" onClick={() => void handleDownload(obj.key)}>
+                          <DownloadIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="削除">
+                        <IconButton size="small" color="error" disabled={isDeleting} onClick={() => void handleDeleteObject(obj.key)}>
+                          {isDeleting ? <CircularProgress size={14} /> : <DeleteOutlinedIcon sx={{ fontSize: 16 }} />}
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
         </DialogContent>
       </Dialog>
     </Box>

@@ -8,9 +8,12 @@ from hashlib import sha256
 from typing import Any
 from urllib.parse import quote
 
-from fastapi import FastAPI, Header, HTTPException, Request
+import boto3
+from botocore.config import Config as BotocoreConfig
+
+from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile
 from fastapi import WebSocket, WebSocketDisconnect
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi import Response
 from app.routes.project import router as project_router
 from app.identity_client import IdentityClient
@@ -684,6 +687,119 @@ def get_database_connection(
         raise HTTPException(status_code=404, detail="データベースが見つかりません") from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+def _s3_client(user_id: str, project_id: str, bucket_name: str) -> tuple[Any, str]:
+    try:
+        creds = app.state.storage_client.get_bucket_credentials(user_id, project_id, bucket_name)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="バケットが見つかりません") from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    client = boto3.client(
+        "s3",
+        endpoint_url=creds["endpoint"],
+        aws_access_key_id=creds["accessKeyId"],
+        aws_secret_access_key=creds["secretAccessKey"],
+        config=BotocoreConfig(signature_version="s3v4", s3={"addressing_style": "path"}),
+    )
+    return client, creds["bucketName"]
+
+
+@app.get("/api/v1/storage/{name}/objects")
+def list_bucket_objects(
+    name: str,
+    request: Request,
+    prefix: str = "",
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, Any]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    client, bucket_name = _s3_client(user["id"], project_id, name)
+    try:
+        resp = client.list_objects_v2(Bucket=bucket_name, Prefix=prefix, Delimiter="/")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    objects = [
+        {"key": obj["Key"], "size": obj["Size"], "lastModified": obj["LastModified"].isoformat()}
+        for obj in resp.get("Contents", [])
+        if obj["Key"] != prefix
+    ]
+    prefixes = [p["Prefix"] for p in resp.get("CommonPrefixes", [])]
+    return {"objects": objects, "prefixes": prefixes, "prefix": prefix}
+
+
+@app.post("/api/v1/storage/{name}/objects")
+async def upload_bucket_object(
+    name: str,
+    request: Request,
+    file: UploadFile = File(...),
+    prefix: str = "",
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, Any]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    client, bucket_name = _s3_client(user["id"], project_id, name)
+    key = prefix + (file.filename or "upload")
+    content = await file.read()
+    try:
+        client.put_object(
+            Bucket=bucket_name,
+            Key=key,
+            Body=content,
+            ContentType=file.content_type or "application/octet-stream",
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return {"key": key, "size": len(content)}
+
+
+@app.delete("/api/v1/storage/{name}/objects")
+def delete_bucket_object(
+    name: str,
+    key: str,
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, str]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    client, bucket_name = _s3_client(user["id"], project_id, name)
+    try:
+        client.delete_object(Bucket=bucket_name, Key=key)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return {"status": "deleted"}
+
+
+@app.get("/api/v1/storage/{name}/download")
+def download_bucket_object(
+    name: str,
+    key: str,
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> StreamingResponse:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    client, bucket_name = _s3_client(user["id"], project_id, name)
+    try:
+        resp = client.get_object(Bucket=bucket_name, Key=key)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    content_type = resp.get("ContentType", "application/octet-stream")
+    filename = key.split("/")[-1]
+    return StreamingResponse(
+        resp["Body"].iter_chunks(),
+        media_type=content_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @app.websocket("/api/v1/compute/{name}/console")
