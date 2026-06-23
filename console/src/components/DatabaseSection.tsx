@@ -120,9 +120,6 @@ export function DatabaseSection({
               <Typography variant="h5" sx={{ fontWeight: 700 }}>
                 データベース
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                KubeBlocks による PostgreSQL / MySQL / Redis
-              </Typography>
             </Box>
             <Button variant="contained" onClick={() => setCreateOpen(true)}>
               データベースを作成

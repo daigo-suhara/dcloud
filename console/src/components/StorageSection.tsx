@@ -211,9 +211,6 @@ export function StorageSection({
               <Typography variant="h5" sx={{ fontWeight: 700 }}>
                 オブジェクトストレージ
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Ceph (Rook-Ceph) によるS3互換バケット
-              </Typography>
             </Box>
             <Button variant="contained" onClick={() => setCreateOpen(true)}>
               バケットを作成
