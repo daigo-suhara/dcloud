@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        (unknown)
-// source: dbaas.proto
+// source: database.proto
 
-package dbaaspb
+package databasepb
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -29,7 +29,7 @@ type HealthRequest struct {
 
 func (x *HealthRequest) Reset() {
 	*x = HealthRequest{}
-	mi := &file_dbaas_proto_msgTypes[0]
+	mi := &file_database_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -41,7 +41,7 @@ func (x *HealthRequest) String() string {
 func (*HealthRequest) ProtoMessage() {}
 
 func (x *HealthRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[0]
+	mi := &file_database_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -54,7 +54,7 @@ func (x *HealthRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthRequest.ProtoReflect.Descriptor instead.
 func (*HealthRequest) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{0}
+	return file_database_proto_rawDescGZIP(), []int{0}
 }
 
 type HealthResponse struct {
@@ -68,7 +68,7 @@ type HealthResponse struct {
 
 func (x *HealthResponse) Reset() {
 	*x = HealthResponse{}
-	mi := &file_dbaas_proto_msgTypes[1]
+	mi := &file_database_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -80,7 +80,7 @@ func (x *HealthResponse) String() string {
 func (*HealthResponse) ProtoMessage() {}
 
 func (x *HealthResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[1]
+	mi := &file_database_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -93,7 +93,7 @@ func (x *HealthResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthResponse.ProtoReflect.Descriptor instead.
 func (*HealthResponse) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{1}
+	return file_database_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *HealthResponse) GetStatus() string {
@@ -135,7 +135,7 @@ type Database struct {
 
 func (x *Database) Reset() {
 	*x = Database{}
-	mi := &file_dbaas_proto_msgTypes[2]
+	mi := &file_database_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -147,7 +147,7 @@ func (x *Database) String() string {
 func (*Database) ProtoMessage() {}
 
 func (x *Database) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[2]
+	mi := &file_database_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -160,7 +160,7 @@ func (x *Database) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Database.ProtoReflect.Descriptor instead.
 func (*Database) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{2}
+	return file_database_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Database) GetName() string {
@@ -243,7 +243,7 @@ type ListDatabasesRequest struct {
 
 func (x *ListDatabasesRequest) Reset() {
 	*x = ListDatabasesRequest{}
-	mi := &file_dbaas_proto_msgTypes[3]
+	mi := &file_database_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -255,7 +255,7 @@ func (x *ListDatabasesRequest) String() string {
 func (*ListDatabasesRequest) ProtoMessage() {}
 
 func (x *ListDatabasesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[3]
+	mi := &file_database_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -268,7 +268,7 @@ func (x *ListDatabasesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDatabasesRequest.ProtoReflect.Descriptor instead.
 func (*ListDatabasesRequest) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{3}
+	return file_database_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ListDatabasesRequest) GetUserId() string {
@@ -296,7 +296,7 @@ type ListDatabasesResponse struct {
 
 func (x *ListDatabasesResponse) Reset() {
 	*x = ListDatabasesResponse{}
-	mi := &file_dbaas_proto_msgTypes[4]
+	mi := &file_database_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -308,7 +308,7 @@ func (x *ListDatabasesResponse) String() string {
 func (*ListDatabasesResponse) ProtoMessage() {}
 
 func (x *ListDatabasesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[4]
+	mi := &file_database_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -321,7 +321,7 @@ func (x *ListDatabasesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDatabasesResponse.ProtoReflect.Descriptor instead.
 func (*ListDatabasesResponse) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{4}
+	return file_database_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ListDatabasesResponse) GetUserId() string {
@@ -361,7 +361,7 @@ type CreateDatabaseRequest struct {
 
 func (x *CreateDatabaseRequest) Reset() {
 	*x = CreateDatabaseRequest{}
-	mi := &file_dbaas_proto_msgTypes[5]
+	mi := &file_database_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -373,7 +373,7 @@ func (x *CreateDatabaseRequest) String() string {
 func (*CreateDatabaseRequest) ProtoMessage() {}
 
 func (x *CreateDatabaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[5]
+	mi := &file_database_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -386,7 +386,7 @@ func (x *CreateDatabaseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateDatabaseRequest.ProtoReflect.Descriptor instead.
 func (*CreateDatabaseRequest) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{5}
+	return file_database_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CreateDatabaseRequest) GetUserId() string {
@@ -454,7 +454,7 @@ type CreateDatabaseResponse struct {
 
 func (x *CreateDatabaseResponse) Reset() {
 	*x = CreateDatabaseResponse{}
-	mi := &file_dbaas_proto_msgTypes[6]
+	mi := &file_database_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -466,7 +466,7 @@ func (x *CreateDatabaseResponse) String() string {
 func (*CreateDatabaseResponse) ProtoMessage() {}
 
 func (x *CreateDatabaseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[6]
+	mi := &file_database_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -479,7 +479,7 @@ func (x *CreateDatabaseResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateDatabaseResponse.ProtoReflect.Descriptor instead.
 func (*CreateDatabaseResponse) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{6}
+	return file_database_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *CreateDatabaseResponse) GetDatabase() *Database {
@@ -500,7 +500,7 @@ type DeleteDatabaseRequest struct {
 
 func (x *DeleteDatabaseRequest) Reset() {
 	*x = DeleteDatabaseRequest{}
-	mi := &file_dbaas_proto_msgTypes[7]
+	mi := &file_database_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -512,7 +512,7 @@ func (x *DeleteDatabaseRequest) String() string {
 func (*DeleteDatabaseRequest) ProtoMessage() {}
 
 func (x *DeleteDatabaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[7]
+	mi := &file_database_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -525,7 +525,7 @@ func (x *DeleteDatabaseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteDatabaseRequest.ProtoReflect.Descriptor instead.
 func (*DeleteDatabaseRequest) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{7}
+	return file_database_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *DeleteDatabaseRequest) GetUserId() string {
@@ -558,7 +558,7 @@ type DeleteDatabaseResponse struct {
 
 func (x *DeleteDatabaseResponse) Reset() {
 	*x = DeleteDatabaseResponse{}
-	mi := &file_dbaas_proto_msgTypes[8]
+	mi := &file_database_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -570,7 +570,7 @@ func (x *DeleteDatabaseResponse) String() string {
 func (*DeleteDatabaseResponse) ProtoMessage() {}
 
 func (x *DeleteDatabaseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[8]
+	mi := &file_database_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -583,7 +583,7 @@ func (x *DeleteDatabaseResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteDatabaseResponse.ProtoReflect.Descriptor instead.
 func (*DeleteDatabaseResponse) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{8}
+	return file_database_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DeleteDatabaseResponse) GetOperationId() string {
@@ -604,7 +604,7 @@ type GetDatabaseRequest struct {
 
 func (x *GetDatabaseRequest) Reset() {
 	*x = GetDatabaseRequest{}
-	mi := &file_dbaas_proto_msgTypes[9]
+	mi := &file_database_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -616,7 +616,7 @@ func (x *GetDatabaseRequest) String() string {
 func (*GetDatabaseRequest) ProtoMessage() {}
 
 func (x *GetDatabaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[9]
+	mi := &file_database_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -629,7 +629,7 @@ func (x *GetDatabaseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDatabaseRequest.ProtoReflect.Descriptor instead.
 func (*GetDatabaseRequest) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{9}
+	return file_database_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetDatabaseRequest) GetUserId() string {
@@ -662,7 +662,7 @@ type GetDatabaseResponse struct {
 
 func (x *GetDatabaseResponse) Reset() {
 	*x = GetDatabaseResponse{}
-	mi := &file_dbaas_proto_msgTypes[10]
+	mi := &file_database_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -674,7 +674,7 @@ func (x *GetDatabaseResponse) String() string {
 func (*GetDatabaseResponse) ProtoMessage() {}
 
 func (x *GetDatabaseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[10]
+	mi := &file_database_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -687,7 +687,7 @@ func (x *GetDatabaseResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDatabaseResponse.ProtoReflect.Descriptor instead.
 func (*GetDatabaseResponse) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{10}
+	return file_database_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetDatabaseResponse) GetDatabase() *Database {
@@ -708,7 +708,7 @@ type GetConnectionStringRequest struct {
 
 func (x *GetConnectionStringRequest) Reset() {
 	*x = GetConnectionStringRequest{}
-	mi := &file_dbaas_proto_msgTypes[11]
+	mi := &file_database_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -720,7 +720,7 @@ func (x *GetConnectionStringRequest) String() string {
 func (*GetConnectionStringRequest) ProtoMessage() {}
 
 func (x *GetConnectionStringRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[11]
+	mi := &file_database_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -733,7 +733,7 @@ func (x *GetConnectionStringRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetConnectionStringRequest.ProtoReflect.Descriptor instead.
 func (*GetConnectionStringRequest) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{11}
+	return file_database_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetConnectionStringRequest) GetUserId() string {
@@ -771,7 +771,7 @@ type GetConnectionStringResponse struct {
 
 func (x *GetConnectionStringResponse) Reset() {
 	*x = GetConnectionStringResponse{}
-	mi := &file_dbaas_proto_msgTypes[12]
+	mi := &file_database_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -783,7 +783,7 @@ func (x *GetConnectionStringResponse) String() string {
 func (*GetConnectionStringResponse) ProtoMessage() {}
 
 func (x *GetConnectionStringResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[12]
+	mi := &file_database_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -796,7 +796,7 @@ func (x *GetConnectionStringResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetConnectionStringResponse.ProtoReflect.Descriptor instead.
 func (*GetConnectionStringResponse) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{12}
+	return file_database_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetConnectionStringResponse) GetConnectionString() string {
@@ -850,7 +850,7 @@ type GetOperationRequest struct {
 
 func (x *GetOperationRequest) Reset() {
 	*x = GetOperationRequest{}
-	mi := &file_dbaas_proto_msgTypes[13]
+	mi := &file_database_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -862,7 +862,7 @@ func (x *GetOperationRequest) String() string {
 func (*GetOperationRequest) ProtoMessage() {}
 
 func (x *GetOperationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[13]
+	mi := &file_database_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -875,7 +875,7 @@ func (x *GetOperationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetOperationRequest.ProtoReflect.Descriptor instead.
 func (*GetOperationRequest) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{13}
+	return file_database_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GetOperationRequest) GetOperationId() string {
@@ -896,7 +896,7 @@ type GetOperationResponse struct {
 
 func (x *GetOperationResponse) Reset() {
 	*x = GetOperationResponse{}
-	mi := &file_dbaas_proto_msgTypes[14]
+	mi := &file_database_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -908,7 +908,7 @@ func (x *GetOperationResponse) String() string {
 func (*GetOperationResponse) ProtoMessage() {}
 
 func (x *GetOperationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dbaas_proto_msgTypes[14]
+	mi := &file_database_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -921,7 +921,7 @@ func (x *GetOperationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetOperationResponse.ProtoReflect.Descriptor instead.
 func (*GetOperationResponse) Descriptor() ([]byte, []int) {
-	return file_dbaas_proto_rawDescGZIP(), []int{14}
+	return file_database_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetOperationResponse) GetOperationId() string {
@@ -945,11 +945,11 @@ func (x *GetOperationResponse) GetError() string {
 	return ""
 }
 
-var File_dbaas_proto protoreflect.FileDescriptor
+var File_database_proto protoreflect.FileDescriptor
 
-const file_dbaas_proto_rawDesc = "" +
+const file_database_proto_rawDesc = "" +
 	"\n" +
-	"\vdbaas.proto\x12\x0fdcloud.dbaas.v1\"\x0f\n" +
+	"\x0edatabase.proto\x12\x12dcloud.database.v1\"\x0f\n" +
 	"\rHealthRequest\"`\n" +
 	"\x0eHealthResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
@@ -972,12 +972,12 @@ const file_dbaas_proto_rawDesc = "" +
 	"\x14ListDatabasesRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
-	"project_id\x18\x02 \x01(\tR\tprojectId\"\x88\x01\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\"\x8b\x01\n" +
 	"\x15ListDatabasesResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
-	"project_id\x18\x02 \x01(\tR\tprojectId\x127\n" +
-	"\tdatabases\x18\x03 \x03(\v2\x19.dcloud.dbaas.v1.DatabaseR\tdatabases\"\xd5\x01\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\x12:\n" +
+	"\tdatabases\x18\x03 \x03(\v2\x1c.dcloud.database.v1.DatabaseR\tdatabases\"\xd5\x01\n" +
 	"\x15CreateDatabaseRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
@@ -987,9 +987,9 @@ const file_dbaas_proto_rawDesc = "" +
 	"\aversion\x18\x05 \x01(\tR\aversion\x12\x10\n" +
 	"\x03cpu\x18\x06 \x01(\tR\x03cpu\x12\x16\n" +
 	"\x06memory\x18\a \x01(\tR\x06memory\x12\x18\n" +
-	"\astorage\x18\b \x01(\tR\astorage\"O\n" +
-	"\x16CreateDatabaseResponse\x125\n" +
-	"\bdatabase\x18\x01 \x01(\v2\x19.dcloud.dbaas.v1.DatabaseR\bdatabase\"c\n" +
+	"\astorage\x18\b \x01(\tR\astorage\"R\n" +
+	"\x16CreateDatabaseResponse\x128\n" +
+	"\bdatabase\x18\x01 \x01(\v2\x1c.dcloud.database.v1.DatabaseR\bdatabase\"c\n" +
 	"\x15DeleteDatabaseRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
@@ -1001,9 +1001,9 @@ const file_dbaas_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x02 \x01(\tR\tprojectId\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\"L\n" +
-	"\x13GetDatabaseResponse\x125\n" +
-	"\bdatabase\x18\x01 \x01(\v2\x19.dcloud.dbaas.v1.DatabaseR\bdatabase\"h\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\"O\n" +
+	"\x13GetDatabaseResponse\x128\n" +
+	"\bdatabase\x18\x01 \x01(\v2\x1c.dcloud.database.v1.DatabaseR\bdatabase\"h\n" +
 	"\x1aGetConnectionStringRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
@@ -1021,64 +1021,64 @@ const file_dbaas_proto_rawDesc = "" +
 	"\x14GetOperationResponse\x12!\n" +
 	"\foperation_id\x18\x01 \x01(\tR\voperationId\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12\x14\n" +
-	"\x05error\x18\x03 \x01(\tR\x05error2\xab\x05\n" +
-	"\x0fDatabaseService\x12I\n" +
-	"\x06Health\x12\x1e.dcloud.dbaas.v1.HealthRequest\x1a\x1f.dcloud.dbaas.v1.HealthResponse\x12^\n" +
-	"\rListDatabases\x12%.dcloud.dbaas.v1.ListDatabasesRequest\x1a&.dcloud.dbaas.v1.ListDatabasesResponse\x12a\n" +
-	"\x0eCreateDatabase\x12&.dcloud.dbaas.v1.CreateDatabaseRequest\x1a'.dcloud.dbaas.v1.CreateDatabaseResponse\x12a\n" +
-	"\x0eDeleteDatabase\x12&.dcloud.dbaas.v1.DeleteDatabaseRequest\x1a'.dcloud.dbaas.v1.DeleteDatabaseResponse\x12X\n" +
-	"\vGetDatabase\x12#.dcloud.dbaas.v1.GetDatabaseRequest\x1a$.dcloud.dbaas.v1.GetDatabaseResponse\x12p\n" +
-	"\x13GetConnectionString\x12+.dcloud.dbaas.v1.GetConnectionStringRequest\x1a,.dcloud.dbaas.v1.GetConnectionStringResponse\x12[\n" +
-	"\fGetOperation\x12$.dcloud.dbaas.v1.GetOperationRequest\x1a%.dcloud.dbaas.v1.GetOperationResponseB<Z:github.com/daigo-suhara/dcloud/internal/pb/dbaaspb;dbaaspbb\x06proto3"
+	"\x05error\x18\x03 \x01(\tR\x05error2\xd5\x05\n" +
+	"\x0fDatabaseService\x12O\n" +
+	"\x06Health\x12!.dcloud.database.v1.HealthRequest\x1a\".dcloud.database.v1.HealthResponse\x12d\n" +
+	"\rListDatabases\x12(.dcloud.database.v1.ListDatabasesRequest\x1a).dcloud.database.v1.ListDatabasesResponse\x12g\n" +
+	"\x0eCreateDatabase\x12).dcloud.database.v1.CreateDatabaseRequest\x1a*.dcloud.database.v1.CreateDatabaseResponse\x12g\n" +
+	"\x0eDeleteDatabase\x12).dcloud.database.v1.DeleteDatabaseRequest\x1a*.dcloud.database.v1.DeleteDatabaseResponse\x12^\n" +
+	"\vGetDatabase\x12&.dcloud.database.v1.GetDatabaseRequest\x1a'.dcloud.database.v1.GetDatabaseResponse\x12v\n" +
+	"\x13GetConnectionString\x12..dcloud.database.v1.GetConnectionStringRequest\x1a/.dcloud.database.v1.GetConnectionStringResponse\x12a\n" +
+	"\fGetOperation\x12'.dcloud.database.v1.GetOperationRequest\x1a(.dcloud.database.v1.GetOperationResponseBBZ@github.com/daigo-suhara/dcloud/internal/pb/databasepb;databasepbb\x06proto3"
 
 var (
-	file_dbaas_proto_rawDescOnce sync.Once
-	file_dbaas_proto_rawDescData []byte
+	file_database_proto_rawDescOnce sync.Once
+	file_database_proto_rawDescData []byte
 )
 
-func file_dbaas_proto_rawDescGZIP() []byte {
-	file_dbaas_proto_rawDescOnce.Do(func() {
-		file_dbaas_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_dbaas_proto_rawDesc), len(file_dbaas_proto_rawDesc)))
+func file_database_proto_rawDescGZIP() []byte {
+	file_database_proto_rawDescOnce.Do(func() {
+		file_database_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_database_proto_rawDesc), len(file_database_proto_rawDesc)))
 	})
-	return file_dbaas_proto_rawDescData
+	return file_database_proto_rawDescData
 }
 
-var file_dbaas_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
-var file_dbaas_proto_goTypes = []any{
-	(*HealthRequest)(nil),               // 0: dcloud.dbaas.v1.HealthRequest
-	(*HealthResponse)(nil),              // 1: dcloud.dbaas.v1.HealthResponse
-	(*Database)(nil),                    // 2: dcloud.dbaas.v1.Database
-	(*ListDatabasesRequest)(nil),        // 3: dcloud.dbaas.v1.ListDatabasesRequest
-	(*ListDatabasesResponse)(nil),       // 4: dcloud.dbaas.v1.ListDatabasesResponse
-	(*CreateDatabaseRequest)(nil),       // 5: dcloud.dbaas.v1.CreateDatabaseRequest
-	(*CreateDatabaseResponse)(nil),      // 6: dcloud.dbaas.v1.CreateDatabaseResponse
-	(*DeleteDatabaseRequest)(nil),       // 7: dcloud.dbaas.v1.DeleteDatabaseRequest
-	(*DeleteDatabaseResponse)(nil),      // 8: dcloud.dbaas.v1.DeleteDatabaseResponse
-	(*GetDatabaseRequest)(nil),          // 9: dcloud.dbaas.v1.GetDatabaseRequest
-	(*GetDatabaseResponse)(nil),         // 10: dcloud.dbaas.v1.GetDatabaseResponse
-	(*GetConnectionStringRequest)(nil),  // 11: dcloud.dbaas.v1.GetConnectionStringRequest
-	(*GetConnectionStringResponse)(nil), // 12: dcloud.dbaas.v1.GetConnectionStringResponse
-	(*GetOperationRequest)(nil),         // 13: dcloud.dbaas.v1.GetOperationRequest
-	(*GetOperationResponse)(nil),        // 14: dcloud.dbaas.v1.GetOperationResponse
+var file_database_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_database_proto_goTypes = []any{
+	(*HealthRequest)(nil),               // 0: dcloud.database.v1.HealthRequest
+	(*HealthResponse)(nil),              // 1: dcloud.database.v1.HealthResponse
+	(*Database)(nil),                    // 2: dcloud.database.v1.Database
+	(*ListDatabasesRequest)(nil),        // 3: dcloud.database.v1.ListDatabasesRequest
+	(*ListDatabasesResponse)(nil),       // 4: dcloud.database.v1.ListDatabasesResponse
+	(*CreateDatabaseRequest)(nil),       // 5: dcloud.database.v1.CreateDatabaseRequest
+	(*CreateDatabaseResponse)(nil),      // 6: dcloud.database.v1.CreateDatabaseResponse
+	(*DeleteDatabaseRequest)(nil),       // 7: dcloud.database.v1.DeleteDatabaseRequest
+	(*DeleteDatabaseResponse)(nil),      // 8: dcloud.database.v1.DeleteDatabaseResponse
+	(*GetDatabaseRequest)(nil),          // 9: dcloud.database.v1.GetDatabaseRequest
+	(*GetDatabaseResponse)(nil),         // 10: dcloud.database.v1.GetDatabaseResponse
+	(*GetConnectionStringRequest)(nil),  // 11: dcloud.database.v1.GetConnectionStringRequest
+	(*GetConnectionStringResponse)(nil), // 12: dcloud.database.v1.GetConnectionStringResponse
+	(*GetOperationRequest)(nil),         // 13: dcloud.database.v1.GetOperationRequest
+	(*GetOperationResponse)(nil),        // 14: dcloud.database.v1.GetOperationResponse
 }
-var file_dbaas_proto_depIdxs = []int32{
-	2,  // 0: dcloud.dbaas.v1.ListDatabasesResponse.databases:type_name -> dcloud.dbaas.v1.Database
-	2,  // 1: dcloud.dbaas.v1.CreateDatabaseResponse.database:type_name -> dcloud.dbaas.v1.Database
-	2,  // 2: dcloud.dbaas.v1.GetDatabaseResponse.database:type_name -> dcloud.dbaas.v1.Database
-	0,  // 3: dcloud.dbaas.v1.DatabaseService.Health:input_type -> dcloud.dbaas.v1.HealthRequest
-	3,  // 4: dcloud.dbaas.v1.DatabaseService.ListDatabases:input_type -> dcloud.dbaas.v1.ListDatabasesRequest
-	5,  // 5: dcloud.dbaas.v1.DatabaseService.CreateDatabase:input_type -> dcloud.dbaas.v1.CreateDatabaseRequest
-	7,  // 6: dcloud.dbaas.v1.DatabaseService.DeleteDatabase:input_type -> dcloud.dbaas.v1.DeleteDatabaseRequest
-	9,  // 7: dcloud.dbaas.v1.DatabaseService.GetDatabase:input_type -> dcloud.dbaas.v1.GetDatabaseRequest
-	11, // 8: dcloud.dbaas.v1.DatabaseService.GetConnectionString:input_type -> dcloud.dbaas.v1.GetConnectionStringRequest
-	13, // 9: dcloud.dbaas.v1.DatabaseService.GetOperation:input_type -> dcloud.dbaas.v1.GetOperationRequest
-	1,  // 10: dcloud.dbaas.v1.DatabaseService.Health:output_type -> dcloud.dbaas.v1.HealthResponse
-	4,  // 11: dcloud.dbaas.v1.DatabaseService.ListDatabases:output_type -> dcloud.dbaas.v1.ListDatabasesResponse
-	6,  // 12: dcloud.dbaas.v1.DatabaseService.CreateDatabase:output_type -> dcloud.dbaas.v1.CreateDatabaseResponse
-	8,  // 13: dcloud.dbaas.v1.DatabaseService.DeleteDatabase:output_type -> dcloud.dbaas.v1.DeleteDatabaseResponse
-	10, // 14: dcloud.dbaas.v1.DatabaseService.GetDatabase:output_type -> dcloud.dbaas.v1.GetDatabaseResponse
-	12, // 15: dcloud.dbaas.v1.DatabaseService.GetConnectionString:output_type -> dcloud.dbaas.v1.GetConnectionStringResponse
-	14, // 16: dcloud.dbaas.v1.DatabaseService.GetOperation:output_type -> dcloud.dbaas.v1.GetOperationResponse
+var file_database_proto_depIdxs = []int32{
+	2,  // 0: dcloud.database.v1.ListDatabasesResponse.databases:type_name -> dcloud.database.v1.Database
+	2,  // 1: dcloud.database.v1.CreateDatabaseResponse.database:type_name -> dcloud.database.v1.Database
+	2,  // 2: dcloud.database.v1.GetDatabaseResponse.database:type_name -> dcloud.database.v1.Database
+	0,  // 3: dcloud.database.v1.DatabaseService.Health:input_type -> dcloud.database.v1.HealthRequest
+	3,  // 4: dcloud.database.v1.DatabaseService.ListDatabases:input_type -> dcloud.database.v1.ListDatabasesRequest
+	5,  // 5: dcloud.database.v1.DatabaseService.CreateDatabase:input_type -> dcloud.database.v1.CreateDatabaseRequest
+	7,  // 6: dcloud.database.v1.DatabaseService.DeleteDatabase:input_type -> dcloud.database.v1.DeleteDatabaseRequest
+	9,  // 7: dcloud.database.v1.DatabaseService.GetDatabase:input_type -> dcloud.database.v1.GetDatabaseRequest
+	11, // 8: dcloud.database.v1.DatabaseService.GetConnectionString:input_type -> dcloud.database.v1.GetConnectionStringRequest
+	13, // 9: dcloud.database.v1.DatabaseService.GetOperation:input_type -> dcloud.database.v1.GetOperationRequest
+	1,  // 10: dcloud.database.v1.DatabaseService.Health:output_type -> dcloud.database.v1.HealthResponse
+	4,  // 11: dcloud.database.v1.DatabaseService.ListDatabases:output_type -> dcloud.database.v1.ListDatabasesResponse
+	6,  // 12: dcloud.database.v1.DatabaseService.CreateDatabase:output_type -> dcloud.database.v1.CreateDatabaseResponse
+	8,  // 13: dcloud.database.v1.DatabaseService.DeleteDatabase:output_type -> dcloud.database.v1.DeleteDatabaseResponse
+	10, // 14: dcloud.database.v1.DatabaseService.GetDatabase:output_type -> dcloud.database.v1.GetDatabaseResponse
+	12, // 15: dcloud.database.v1.DatabaseService.GetConnectionString:output_type -> dcloud.database.v1.GetConnectionStringResponse
+	14, // 16: dcloud.database.v1.DatabaseService.GetOperation:output_type -> dcloud.database.v1.GetOperationResponse
 	10, // [10:17] is the sub-list for method output_type
 	3,  // [3:10] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
@@ -1086,26 +1086,26 @@ var file_dbaas_proto_depIdxs = []int32{
 	0,  // [0:3] is the sub-list for field type_name
 }
 
-func init() { file_dbaas_proto_init() }
-func file_dbaas_proto_init() {
-	if File_dbaas_proto != nil {
+func init() { file_database_proto_init() }
+func file_database_proto_init() {
+	if File_database_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dbaas_proto_rawDesc), len(file_dbaas_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_database_proto_rawDesc), len(file_database_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_dbaas_proto_goTypes,
-		DependencyIndexes: file_dbaas_proto_depIdxs,
-		MessageInfos:      file_dbaas_proto_msgTypes,
+		GoTypes:           file_database_proto_goTypes,
+		DependencyIndexes: file_database_proto_depIdxs,
+		MessageInfos:      file_database_proto_msgTypes,
 	}.Build()
-	File_dbaas_proto = out.File
-	file_dbaas_proto_goTypes = nil
-	file_dbaas_proto_depIdxs = nil
+	File_database_proto = out.File
+	file_database_proto_goTypes = nil
+	file_database_proto_depIdxs = nil
 }

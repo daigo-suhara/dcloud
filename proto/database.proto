@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package dcloud.dbaas.v1;
+package dcloud.database.v1;
 
-option go_package = "github.com/daigo-suhara/dcloud/internal/pb/dbaaspb;dbaaspb";
+option go_package = "github.com/daigo-suhara/dcloud/internal/pb/databasepb;databasepb";
 
 service DatabaseService {
   rpc Health(HealthRequest) returns (HealthResponse);

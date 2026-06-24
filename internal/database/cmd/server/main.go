@@ -27,28 +27,28 @@ import (
 
 	"github.com/daigo-suhara/dcloud/internal/db"
 	dbsqlc "github.com/daigo-suhara/dcloud/internal/db/sqlc"
-	dbaaspb "github.com/daigo-suhara/dcloud/internal/pb/dbaaspb"
+	databasepb "github.com/daigo-suhara/dcloud/internal/pb/databasepb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-type HealthRequest = dbaaspb.HealthRequest
-type HealthResponse = dbaaspb.HealthResponse
-type Database = dbaaspb.Database
-type ListDatabasesRequest = dbaaspb.ListDatabasesRequest
-type ListDatabasesResponse = dbaaspb.ListDatabasesResponse
-type CreateDatabaseRequest = dbaaspb.CreateDatabaseRequest
-type CreateDatabaseResponse = dbaaspb.CreateDatabaseResponse
-type DeleteDatabaseRequest = dbaaspb.DeleteDatabaseRequest
-type DeleteDatabaseResponse = dbaaspb.DeleteDatabaseResponse
-type GetDatabaseRequest = dbaaspb.GetDatabaseRequest
-type GetDatabaseResponse = dbaaspb.GetDatabaseResponse
-type GetConnectionStringRequest = dbaaspb.GetConnectionStringRequest
-type GetConnectionStringResponse = dbaaspb.GetConnectionStringResponse
-type GetOperationRequest = dbaaspb.GetOperationRequest
-type GetOperationResponse = dbaaspb.GetOperationResponse
-type DatabaseServer = dbaaspb.DatabaseServiceServer
+type HealthRequest = databasepb.HealthRequest
+type HealthResponse = databasepb.HealthResponse
+type Database = databasepb.Database
+type ListDatabasesRequest = databasepb.ListDatabasesRequest
+type ListDatabasesResponse = databasepb.ListDatabasesResponse
+type CreateDatabaseRequest = databasepb.CreateDatabaseRequest
+type CreateDatabaseResponse = databasepb.CreateDatabaseResponse
+type DeleteDatabaseRequest = databasepb.DeleteDatabaseRequest
+type DeleteDatabaseResponse = databasepb.DeleteDatabaseResponse
+type GetDatabaseRequest = databasepb.GetDatabaseRequest
+type GetDatabaseResponse = databasepb.GetDatabaseResponse
+type GetConnectionStringRequest = databasepb.GetConnectionStringRequest
+type GetConnectionStringResponse = databasepb.GetConnectionStringResponse
+type GetOperationRequest = databasepb.GetOperationRequest
+type GetOperationResponse = databasepb.GetOperationResponse
+type DatabaseServer = databasepb.DatabaseServiceServer
 
 // KubeBlocks uses a unified Cluster CRD for all DB types.
 // clusterDefinitions maps dcloud's DB type to KubeBlocks ClusterDefinition name.
@@ -100,7 +100,7 @@ type dbRecord struct {
 }
 
 type databaseServer struct {
-	dbaaspb.UnimplementedDatabaseServiceServer
+	databasepb.UnimplementedDatabaseServiceServer
 	namespace    string
 	db           *sql.DB
 	q            *dbsqlc.Queries
@@ -431,7 +431,7 @@ func main() {
 	defer server.Close()
 
 	grpcServer := grpc.NewServer()
-	dbaaspb.RegisterDatabaseServiceServer(grpcServer, server)
+	databasepb.RegisterDatabaseServiceServer(grpcServer, server)
 	errc := make(chan error, 1)
 	go func() {
 		logger.Info("database grpc listening", "addr", addr)

@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             (unknown)
-// source: dbaas.proto
+// source: database.proto
 
-package dbaaspb
+package databasepb
 
 import (
 	context "context"
@@ -19,13 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	DatabaseService_Health_FullMethodName              = "/dcloud.dbaas.v1.DatabaseService/Health"
-	DatabaseService_ListDatabases_FullMethodName       = "/dcloud.dbaas.v1.DatabaseService/ListDatabases"
-	DatabaseService_CreateDatabase_FullMethodName      = "/dcloud.dbaas.v1.DatabaseService/CreateDatabase"
-	DatabaseService_DeleteDatabase_FullMethodName      = "/dcloud.dbaas.v1.DatabaseService/DeleteDatabase"
-	DatabaseService_GetDatabase_FullMethodName         = "/dcloud.dbaas.v1.DatabaseService/GetDatabase"
-	DatabaseService_GetConnectionString_FullMethodName = "/dcloud.dbaas.v1.DatabaseService/GetConnectionString"
-	DatabaseService_GetOperation_FullMethodName        = "/dcloud.dbaas.v1.DatabaseService/GetOperation"
+	DatabaseService_Health_FullMethodName              = "/dcloud.database.v1.DatabaseService/Health"
+	DatabaseService_ListDatabases_FullMethodName       = "/dcloud.database.v1.DatabaseService/ListDatabases"
+	DatabaseService_CreateDatabase_FullMethodName      = "/dcloud.database.v1.DatabaseService/CreateDatabase"
+	DatabaseService_DeleteDatabase_FullMethodName      = "/dcloud.database.v1.DatabaseService/DeleteDatabase"
+	DatabaseService_GetDatabase_FullMethodName         = "/dcloud.database.v1.DatabaseService/GetDatabase"
+	DatabaseService_GetConnectionString_FullMethodName = "/dcloud.database.v1.DatabaseService/GetConnectionString"
+	DatabaseService_GetOperation_FullMethodName        = "/dcloud.database.v1.DatabaseService/GetOperation"
 )
 
 // DatabaseServiceClient is the client API for DatabaseService service.
@@ -312,7 +312,7 @@ func _DatabaseService_GetOperation_Handler(srv interface{}, ctx context.Context,
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var DatabaseService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "dcloud.dbaas.v1.DatabaseService",
+	ServiceName: "dcloud.database.v1.DatabaseService",
 	HandlerType: (*DatabaseServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -345,5 +345,5 @@ var DatabaseService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "dbaas.proto",
+	Metadata: "database.proto",
 }

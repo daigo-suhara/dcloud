@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import dbaas_pb2 as dbaas__pb2
+import database_pb2 as database__pb2
 
 
 class DatabaseServiceStub:
@@ -15,39 +15,39 @@ class DatabaseServiceStub:
             channel: A grpc.Channel.
         """
         self.Health = channel.unary_unary(
-                '/dcloud.dbaas.v1.DatabaseService/Health',
-                request_serializer=dbaas__pb2.HealthRequest.SerializeToString,
-                response_deserializer=dbaas__pb2.HealthResponse.FromString,
+                '/dcloud.database.v1.DatabaseService/Health',
+                request_serializer=database__pb2.HealthRequest.SerializeToString,
+                response_deserializer=database__pb2.HealthResponse.FromString,
                 _registered_method=True)
         self.ListDatabases = channel.unary_unary(
-                '/dcloud.dbaas.v1.DatabaseService/ListDatabases',
-                request_serializer=dbaas__pb2.ListDatabasesRequest.SerializeToString,
-                response_deserializer=dbaas__pb2.ListDatabasesResponse.FromString,
+                '/dcloud.database.v1.DatabaseService/ListDatabases',
+                request_serializer=database__pb2.ListDatabasesRequest.SerializeToString,
+                response_deserializer=database__pb2.ListDatabasesResponse.FromString,
                 _registered_method=True)
         self.CreateDatabase = channel.unary_unary(
-                '/dcloud.dbaas.v1.DatabaseService/CreateDatabase',
-                request_serializer=dbaas__pb2.CreateDatabaseRequest.SerializeToString,
-                response_deserializer=dbaas__pb2.CreateDatabaseResponse.FromString,
+                '/dcloud.database.v1.DatabaseService/CreateDatabase',
+                request_serializer=database__pb2.CreateDatabaseRequest.SerializeToString,
+                response_deserializer=database__pb2.CreateDatabaseResponse.FromString,
                 _registered_method=True)
         self.DeleteDatabase = channel.unary_unary(
-                '/dcloud.dbaas.v1.DatabaseService/DeleteDatabase',
-                request_serializer=dbaas__pb2.DeleteDatabaseRequest.SerializeToString,
-                response_deserializer=dbaas__pb2.DeleteDatabaseResponse.FromString,
+                '/dcloud.database.v1.DatabaseService/DeleteDatabase',
+                request_serializer=database__pb2.DeleteDatabaseRequest.SerializeToString,
+                response_deserializer=database__pb2.DeleteDatabaseResponse.FromString,
                 _registered_method=True)
         self.GetDatabase = channel.unary_unary(
-                '/dcloud.dbaas.v1.DatabaseService/GetDatabase',
-                request_serializer=dbaas__pb2.GetDatabaseRequest.SerializeToString,
-                response_deserializer=dbaas__pb2.GetDatabaseResponse.FromString,
+                '/dcloud.database.v1.DatabaseService/GetDatabase',
+                request_serializer=database__pb2.GetDatabaseRequest.SerializeToString,
+                response_deserializer=database__pb2.GetDatabaseResponse.FromString,
                 _registered_method=True)
         self.GetConnectionString = channel.unary_unary(
-                '/dcloud.dbaas.v1.DatabaseService/GetConnectionString',
-                request_serializer=dbaas__pb2.GetConnectionStringRequest.SerializeToString,
-                response_deserializer=dbaas__pb2.GetConnectionStringResponse.FromString,
+                '/dcloud.database.v1.DatabaseService/GetConnectionString',
+                request_serializer=database__pb2.GetConnectionStringRequest.SerializeToString,
+                response_deserializer=database__pb2.GetConnectionStringResponse.FromString,
                 _registered_method=True)
         self.GetOperation = channel.unary_unary(
-                '/dcloud.dbaas.v1.DatabaseService/GetOperation',
-                request_serializer=dbaas__pb2.GetOperationRequest.SerializeToString,
-                response_deserializer=dbaas__pb2.GetOperationResponse.FromString,
+                '/dcloud.database.v1.DatabaseService/GetOperation',
+                request_serializer=database__pb2.GetOperationRequest.SerializeToString,
+                response_deserializer=database__pb2.GetOperationResponse.FromString,
                 _registered_method=True)
 
 
@@ -101,44 +101,44 @@ def add_DatabaseServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Health': grpc.unary_unary_rpc_method_handler(
                     servicer.Health,
-                    request_deserializer=dbaas__pb2.HealthRequest.FromString,
-                    response_serializer=dbaas__pb2.HealthResponse.SerializeToString,
+                    request_deserializer=database__pb2.HealthRequest.FromString,
+                    response_serializer=database__pb2.HealthResponse.SerializeToString,
             ),
             'ListDatabases': grpc.unary_unary_rpc_method_handler(
                     servicer.ListDatabases,
-                    request_deserializer=dbaas__pb2.ListDatabasesRequest.FromString,
-                    response_serializer=dbaas__pb2.ListDatabasesResponse.SerializeToString,
+                    request_deserializer=database__pb2.ListDatabasesRequest.FromString,
+                    response_serializer=database__pb2.ListDatabasesResponse.SerializeToString,
             ),
             'CreateDatabase': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateDatabase,
-                    request_deserializer=dbaas__pb2.CreateDatabaseRequest.FromString,
-                    response_serializer=dbaas__pb2.CreateDatabaseResponse.SerializeToString,
+                    request_deserializer=database__pb2.CreateDatabaseRequest.FromString,
+                    response_serializer=database__pb2.CreateDatabaseResponse.SerializeToString,
             ),
             'DeleteDatabase': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteDatabase,
-                    request_deserializer=dbaas__pb2.DeleteDatabaseRequest.FromString,
-                    response_serializer=dbaas__pb2.DeleteDatabaseResponse.SerializeToString,
+                    request_deserializer=database__pb2.DeleteDatabaseRequest.FromString,
+                    response_serializer=database__pb2.DeleteDatabaseResponse.SerializeToString,
             ),
             'GetDatabase': grpc.unary_unary_rpc_method_handler(
                     servicer.GetDatabase,
-                    request_deserializer=dbaas__pb2.GetDatabaseRequest.FromString,
-                    response_serializer=dbaas__pb2.GetDatabaseResponse.SerializeToString,
+                    request_deserializer=database__pb2.GetDatabaseRequest.FromString,
+                    response_serializer=database__pb2.GetDatabaseResponse.SerializeToString,
             ),
             'GetConnectionString': grpc.unary_unary_rpc_method_handler(
                     servicer.GetConnectionString,
-                    request_deserializer=dbaas__pb2.GetConnectionStringRequest.FromString,
-                    response_serializer=dbaas__pb2.GetConnectionStringResponse.SerializeToString,
+                    request_deserializer=database__pb2.GetConnectionStringRequest.FromString,
+                    response_serializer=database__pb2.GetConnectionStringResponse.SerializeToString,
             ),
             'GetOperation': grpc.unary_unary_rpc_method_handler(
                     servicer.GetOperation,
-                    request_deserializer=dbaas__pb2.GetOperationRequest.FromString,
-                    response_serializer=dbaas__pb2.GetOperationResponse.SerializeToString,
+                    request_deserializer=database__pb2.GetOperationRequest.FromString,
+                    response_serializer=database__pb2.GetOperationResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'dcloud.dbaas.v1.DatabaseService', rpc_method_handlers)
+            'dcloud.database.v1.DatabaseService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('dcloud.dbaas.v1.DatabaseService', rpc_method_handlers)
+    server.add_registered_method_handlers('dcloud.database.v1.DatabaseService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -159,9 +159,9 @@ class DatabaseService:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/dcloud.dbaas.v1.DatabaseService/Health',
-            dbaas__pb2.HealthRequest.SerializeToString,
-            dbaas__pb2.HealthResponse.FromString,
+            '/dcloud.database.v1.DatabaseService/Health',
+            database__pb2.HealthRequest.SerializeToString,
+            database__pb2.HealthResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -186,9 +186,9 @@ class DatabaseService:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/dcloud.dbaas.v1.DatabaseService/ListDatabases',
-            dbaas__pb2.ListDatabasesRequest.SerializeToString,
-            dbaas__pb2.ListDatabasesResponse.FromString,
+            '/dcloud.database.v1.DatabaseService/ListDatabases',
+            database__pb2.ListDatabasesRequest.SerializeToString,
+            database__pb2.ListDatabasesResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -213,9 +213,9 @@ class DatabaseService:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/dcloud.dbaas.v1.DatabaseService/CreateDatabase',
-            dbaas__pb2.CreateDatabaseRequest.SerializeToString,
-            dbaas__pb2.CreateDatabaseResponse.FromString,
+            '/dcloud.database.v1.DatabaseService/CreateDatabase',
+            database__pb2.CreateDatabaseRequest.SerializeToString,
+            database__pb2.CreateDatabaseResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -240,9 +240,9 @@ class DatabaseService:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/dcloud.dbaas.v1.DatabaseService/DeleteDatabase',
-            dbaas__pb2.DeleteDatabaseRequest.SerializeToString,
-            dbaas__pb2.DeleteDatabaseResponse.FromString,
+            '/dcloud.database.v1.DatabaseService/DeleteDatabase',
+            database__pb2.DeleteDatabaseRequest.SerializeToString,
+            database__pb2.DeleteDatabaseResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -267,9 +267,9 @@ class DatabaseService:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/dcloud.dbaas.v1.DatabaseService/GetDatabase',
-            dbaas__pb2.GetDatabaseRequest.SerializeToString,
-            dbaas__pb2.GetDatabaseResponse.FromString,
+            '/dcloud.database.v1.DatabaseService/GetDatabase',
+            database__pb2.GetDatabaseRequest.SerializeToString,
+            database__pb2.GetDatabaseResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -294,9 +294,9 @@ class DatabaseService:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/dcloud.dbaas.v1.DatabaseService/GetConnectionString',
-            dbaas__pb2.GetConnectionStringRequest.SerializeToString,
-            dbaas__pb2.GetConnectionStringResponse.FromString,
+            '/dcloud.database.v1.DatabaseService/GetConnectionString',
+            database__pb2.GetConnectionStringRequest.SerializeToString,
+            database__pb2.GetConnectionStringResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -321,9 +321,9 @@ class DatabaseService:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/dcloud.dbaas.v1.DatabaseService/GetOperation',
-            dbaas__pb2.GetOperationRequest.SerializeToString,
-            dbaas__pb2.GetOperationResponse.FromString,
+            '/dcloud.database.v1.DatabaseService/GetOperation',
+            database__pb2.GetOperationRequest.SerializeToString,
+            database__pb2.GetOperationResponse.FromString,
             options,
             channel_credentials,
             insecure,

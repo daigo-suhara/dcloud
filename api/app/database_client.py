@@ -5,7 +5,7 @@ from typing import Any
 
 import grpc
 
-from generated import dbaas_pb2
+from generated import database_pb2
 
 
 def env(key: str, fallback: str) -> str:
@@ -25,34 +25,34 @@ def _rpc_error_message(error: grpc.RpcError) -> str:
 class DatabaseClient:
     def __init__(self, channel: grpc.Channel) -> None:
         self._list_databases = channel.unary_unary(
-            "/dcloud.dbaas.v1.DatabaseService/ListDatabases",
-            request_serializer=dbaas_pb2.ListDatabasesRequest.SerializeToString,
-            response_deserializer=dbaas_pb2.ListDatabasesResponse.FromString,
+            "/dcloud.database.v1.DatabaseService/ListDatabases",
+            request_serializer=database_pb2.ListDatabasesRequest.SerializeToString,
+            response_deserializer=database_pb2.ListDatabasesResponse.FromString,
         )
         self._create_database = channel.unary_unary(
-            "/dcloud.dbaas.v1.DatabaseService/CreateDatabase",
-            request_serializer=dbaas_pb2.CreateDatabaseRequest.SerializeToString,
-            response_deserializer=dbaas_pb2.CreateDatabaseResponse.FromString,
+            "/dcloud.database.v1.DatabaseService/CreateDatabase",
+            request_serializer=database_pb2.CreateDatabaseRequest.SerializeToString,
+            response_deserializer=database_pb2.CreateDatabaseResponse.FromString,
         )
         self._delete_database = channel.unary_unary(
-            "/dcloud.dbaas.v1.DatabaseService/DeleteDatabase",
-            request_serializer=dbaas_pb2.DeleteDatabaseRequest.SerializeToString,
-            response_deserializer=dbaas_pb2.DeleteDatabaseResponse.FromString,
+            "/dcloud.database.v1.DatabaseService/DeleteDatabase",
+            request_serializer=database_pb2.DeleteDatabaseRequest.SerializeToString,
+            response_deserializer=database_pb2.DeleteDatabaseResponse.FromString,
         )
         self._get_database = channel.unary_unary(
-            "/dcloud.dbaas.v1.DatabaseService/GetDatabase",
-            request_serializer=dbaas_pb2.GetDatabaseRequest.SerializeToString,
-            response_deserializer=dbaas_pb2.GetDatabaseResponse.FromString,
+            "/dcloud.database.v1.DatabaseService/GetDatabase",
+            request_serializer=database_pb2.GetDatabaseRequest.SerializeToString,
+            response_deserializer=database_pb2.GetDatabaseResponse.FromString,
         )
         self._get_connection_string = channel.unary_unary(
-            "/dcloud.dbaas.v1.DatabaseService/GetConnectionString",
-            request_serializer=dbaas_pb2.GetConnectionStringRequest.SerializeToString,
-            response_deserializer=dbaas_pb2.GetConnectionStringResponse.FromString,
+            "/dcloud.database.v1.DatabaseService/GetConnectionString",
+            request_serializer=database_pb2.GetConnectionStringRequest.SerializeToString,
+            response_deserializer=database_pb2.GetConnectionStringResponse.FromString,
         )
         self._get_operation = channel.unary_unary(
-            "/dcloud.dbaas.v1.DatabaseService/GetOperation",
-            request_serializer=dbaas_pb2.GetOperationRequest.SerializeToString,
-            response_deserializer=dbaas_pb2.GetOperationResponse.FromString,
+            "/dcloud.database.v1.DatabaseService/GetOperation",
+            request_serializer=database_pb2.GetOperationRequest.SerializeToString,
+            response_deserializer=database_pb2.GetOperationResponse.FromString,
         )
 
     @classmethod
@@ -62,7 +62,7 @@ class DatabaseClient:
     def list_databases(self, user_id: str, project_id: str) -> dict[str, Any]:
         try:
             response = self._list_databases(
-                dbaas_pb2.ListDatabasesRequest(user_id=user_id, project_id=project_id)
+                database_pb2.ListDatabasesRequest(user_id=user_id, project_id=project_id)
             )
         except grpc.RpcError as error:
             raise self._map_error(error) from error
@@ -85,7 +85,7 @@ class DatabaseClient:
     ) -> dict[str, Any]:
         try:
             response = self._create_database(
-                dbaas_pb2.CreateDatabaseRequest(
+                database_pb2.CreateDatabaseRequest(
                     user_id=user_id,
                     project_id=project_id,
                     name=name,
@@ -103,7 +103,7 @@ class DatabaseClient:
     def delete_database(self, user_id: str, project_id: str, name: str) -> str:
         try:
             response = self._delete_database(
-                dbaas_pb2.DeleteDatabaseRequest(user_id=user_id, project_id=project_id, name=name)
+                database_pb2.DeleteDatabaseRequest(user_id=user_id, project_id=project_id, name=name)
             )
             return response.operation_id
         except grpc.RpcError as error:
@@ -112,7 +112,7 @@ class DatabaseClient:
     def get_database(self, user_id: str, project_id: str, name: str) -> dict[str, Any]:
         try:
             response = self._get_database(
-                dbaas_pb2.GetDatabaseRequest(user_id=user_id, project_id=project_id, name=name)
+                database_pb2.GetDatabaseRequest(user_id=user_id, project_id=project_id, name=name)
             )
         except grpc.RpcError as error:
             raise self._map_error(error) from error
@@ -121,7 +121,7 @@ class DatabaseClient:
     def get_connection_string(self, user_id: str, project_id: str, name: str) -> dict[str, Any]:
         try:
             response = self._get_connection_string(
-                dbaas_pb2.GetConnectionStringRequest(user_id=user_id, project_id=project_id, name=name)
+                database_pb2.GetConnectionStringRequest(user_id=user_id, project_id=project_id, name=name)
             )
         except grpc.RpcError as error:
             raise self._map_error(error) from error
@@ -137,14 +137,14 @@ class DatabaseClient:
     def get_operation(self, operation_id: str) -> dict[str, Any]:
         try:
             response = self._get_operation(
-                dbaas_pb2.GetOperationRequest(operation_id=operation_id)
+                database_pb2.GetOperationRequest(operation_id=operation_id)
             )
             return {"operationId": response.operation_id, "status": response.status, "error": response.error}
         except grpc.RpcError as error:
             raise self._map_error(error) from error
 
     @staticmethod
-    def _db_to_dict(db: dbaas_pb2.Database) -> dict[str, Any]:
+    def _db_to_dict(db: database_pb2.Database) -> dict[str, Any]:
         return {
             "name": db.name,
             "type": db.type,
