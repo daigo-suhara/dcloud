@@ -82,7 +82,7 @@ func newOperationID() (string, error) {
 	if _, err := rand.Read(buf); err != nil {
 		return "", err
 	}
-	return "dbaas-op-" + hex.EncodeToString(buf), nil
+	return "database-op-" + hex.EncodeToString(buf), nil
 }
 
 type dbRecord struct {
@@ -99,7 +99,7 @@ type dbRecord struct {
 	ResourceName string
 }
 
-type dbaasServer struct {
+type databaseServer struct {
 	dbaaspb.UnimplementedDatabaseServiceServer
 	namespace    string
 	db           *sql.DB
@@ -108,7 +108,7 @@ type dbaasServer struct {
 	storageClass string
 }
 
-func newDbaasServer(namespace string) (*dbaasServer, error) {
+func newDatabaseServer(namespace string) (*databaseServer, error) {
 	database, err := db.Open()
 	if err != nil {
 		return nil, err
@@ -118,31 +118,31 @@ func newDbaasServer(namespace string) (*dbaasServer, error) {
 		_ = database.Close()
 		return nil, err
 	}
-	return &dbaasServer{
+	return &databaseServer{
 		namespace:    namespace,
 		db:           database,
 		q:            dbsqlc.New(database),
 		kube:         kube,
-		storageClass: env("DCLD_DBAAS_STORAGE_CLASS", "ceph-rbd"),
+		storageClass: env("DCLD_DATABASE_STORAGE_CLASS", "ceph-rbd"),
 	}, nil
 }
 
-func (s *dbaasServer) Close() error {
+func (s *databaseServer) Close() error {
 	if s.db != nil {
 		return s.db.Close()
 	}
 	return nil
 }
 
-func (s *dbaasServer) Health(context.Context, *HealthRequest) (*HealthResponse, error) {
-	return &HealthResponse{Status: "ok", Service: "dbaas", Timestamp: time.Now().UTC().Format(time.RFC3339Nano)}, nil
+func (s *databaseServer) Health(context.Context, *HealthRequest) (*HealthResponse, error) {
+	return &HealthResponse{Status: "ok", Service: "database", Timestamp: time.Now().UTC().Format(time.RFC3339Nano)}, nil
 }
 
-func (s *dbaasServer) projectExists(ctx context.Context, userID, projectID string) (bool, error) {
+func (s *databaseServer) projectExists(ctx context.Context, userID, projectID string) (bool, error) {
 	return s.q.ProjectExists(ctx, dbsqlc.ProjectExistsParams{UserID: userID, ID: projectID})
 }
 
-func (s *dbaasServer) ListDatabases(ctx context.Context, req *ListDatabasesRequest) (*ListDatabasesResponse, error) {
+func (s *databaseServer) ListDatabases(ctx context.Context, req *ListDatabasesRequest) (*ListDatabasesResponse, error) {
 	userID := strings.TrimSpace(req.UserId)
 	projectID := strings.TrimSpace(req.ProjectId)
 	if userID == "" || projectID == "" {
@@ -169,7 +169,7 @@ func (s *dbaasServer) ListDatabases(ctx context.Context, req *ListDatabasesReque
 	return &ListDatabasesResponse{UserId: userID, ProjectId: projectID, Databases: items}, nil
 }
 
-func (s *dbaasServer) CreateDatabase(ctx context.Context, req *CreateDatabaseRequest) (*CreateDatabaseResponse, error) {
+func (s *databaseServer) CreateDatabase(ctx context.Context, req *CreateDatabaseRequest) (*CreateDatabaseResponse, error) {
 	userID := strings.TrimSpace(req.UserId)
 	projectID := strings.TrimSpace(req.ProjectId)
 	name := strings.TrimSpace(req.Name)
@@ -223,7 +223,7 @@ func (s *dbaasServer) CreateDatabase(ctx context.Context, req *CreateDatabaseReq
 	return &CreateDatabaseResponse{Database: recordToProto(record)}, nil
 }
 
-func (s *dbaasServer) DeleteDatabase(ctx context.Context, req *DeleteDatabaseRequest) (*DeleteDatabaseResponse, error) {
+func (s *databaseServer) DeleteDatabase(ctx context.Context, req *DeleteDatabaseRequest) (*DeleteDatabaseResponse, error) {
 	userID := strings.TrimSpace(req.UserId)
 	projectID := strings.TrimSpace(req.ProjectId)
 	name := strings.TrimSpace(req.Name)
@@ -281,7 +281,7 @@ func (s *dbaasServer) DeleteDatabase(ctx context.Context, req *DeleteDatabaseReq
 	return &DeleteDatabaseResponse{OperationId: opID}, nil
 }
 
-func (s *dbaasServer) GetDatabase(ctx context.Context, req *GetDatabaseRequest) (*GetDatabaseResponse, error) {
+func (s *databaseServer) GetDatabase(ctx context.Context, req *GetDatabaseRequest) (*GetDatabaseResponse, error) {
 	userID := strings.TrimSpace(req.UserId)
 	projectID := strings.TrimSpace(req.ProjectId)
 	name := strings.TrimSpace(req.Name)
@@ -310,7 +310,7 @@ func (s *dbaasServer) GetDatabase(ctx context.Context, req *GetDatabaseRequest) 
 	return nil, status.Error(codes.NotFound, "database not found")
 }
 
-func (s *dbaasServer) GetConnectionString(ctx context.Context, req *GetConnectionStringRequest) (*GetConnectionStringResponse, error) {
+func (s *databaseServer) GetConnectionString(ctx context.Context, req *GetConnectionStringRequest) (*GetConnectionStringResponse, error) {
 	userID := strings.TrimSpace(req.UserId)
 	projectID := strings.TrimSpace(req.ProjectId)
 	name := strings.TrimSpace(req.Name)
@@ -348,7 +348,7 @@ func (s *dbaasServer) GetConnectionString(ctx context.Context, req *GetConnectio
 	return connInfo, nil
 }
 
-func (s *dbaasServer) GetOperation(ctx context.Context, req *GetOperationRequest) (*GetOperationResponse, error) {
+func (s *databaseServer) GetOperation(ctx context.Context, req *GetOperationRequest) (*GetOperationResponse, error) {
 	opID := strings.TrimSpace(req.OperationId)
 	if opID == "" {
 		return nil, status.Error(codes.InvalidArgument, "operationId is required")
@@ -367,7 +367,7 @@ func (s *dbaasServer) GetOperation(ctx context.Context, req *GetOperationRequest
 	return &GetOperationResponse{OperationId: op.ID, Status: op.Status, Error: errStr}, nil
 }
 
-func (s *dbaasServer) reconcileDeletions(ctx context.Context) {
+func (s *databaseServer) reconcileDeletions(ctx context.Context) {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 	for {
@@ -394,7 +394,7 @@ func (s *dbaasServer) reconcileDeletions(ctx context.Context) {
 	}
 }
 
-func (s *dbaasServer) reconcileResourceType(ctx context.Context, resourceType string, isDone func(dbsqlc.ListPendingOperationsByResourceTypeRow) bool, onDone func(dbsqlc.ListPendingOperationsByResourceTypeRow) error) {
+func (s *databaseServer) reconcileResourceType(ctx context.Context, resourceType string, isDone func(dbsqlc.ListPendingOperationsByResourceTypeRow) bool, onDone func(dbsqlc.ListPendingOperationsByResourceTypeRow) error) {
 	ops, err := s.q.ListPendingOperationsByResourceType(ctx, sql.NullString{String: resourceType, Valid: true})
 	if err != nil || len(ops) == 0 {
 		return
@@ -417,15 +417,15 @@ func (s *dbaasServer) reconcileResourceType(ctx context.Context, resourceType st
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	addr := env("DCLD_DBAAS_ADDR", ":8086")
+	addr := env("DCLD_DATABASE_ADDR", ":8086")
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("failed to listen", "addr", addr, "error", err)
 		os.Exit(1)
 	}
-	server, err := newDbaasServer(env("DCLD_TARGET_NAMESPACE", "dcloud-system"))
+	server, err := newDatabaseServer(env("DCLD_TARGET_NAMESPACE", "dcloud-system"))
 	if err != nil {
-		logger.Error("failed to open dbaas server", "error", err)
+		logger.Error("failed to open database server", "error", err)
 		os.Exit(1)
 	}
 	defer server.Close()
@@ -434,7 +434,7 @@ func main() {
 	dbaaspb.RegisterDatabaseServiceServer(grpcServer, server)
 	errc := make(chan error, 1)
 	go func() {
-		logger.Info("dbaas grpc listening", "addr", addr)
+		logger.Info("database grpc listening", "addr", addr)
 		errc <- grpcServer.Serve(lis)
 	}()
 	ctx, cancel := context.WithCancel(context.Background())
@@ -573,7 +573,7 @@ type kubeStatus struct {
 // listDatabases queries KubeBlocks Cluster CRDs with dcloud labels.
 // All DB types share the same clusters resource, so a single API call suffices.
 func (c *kubeClient) listDatabases(ctx context.Context, namespace, userID, projectID string) ([]dbRecord, error) {
-	selector := url.QueryEscape(fmt.Sprintf("dcloud-component=dbaas,dcloud-user-id=%s,dcloud-project-id=%s", userID, projectID))
+	selector := url.QueryEscape(fmt.Sprintf("dcloud-component=database,dcloud-user-id=%s,dcloud-project-id=%s", userID, projectID))
 	var payload kubeClusterList
 	if err := c.doJSON(ctx, http.MethodGet, fmt.Sprintf("/apis/apps.kubeblocks.io/v1alpha1/namespaces/%s/clusters?labelSelector=%s", namespace, selector), nil, &payload); err != nil {
 		return nil, err
@@ -602,7 +602,7 @@ func (c *kubeClient) createDatabase(ctx context.Context, namespace, userID, proj
 			"name":      resourceName,
 			"namespace": namespace,
 			"labels": map[string]string{
-				"dcloud-component":       "dbaas",
+				"dcloud-component":       "database",
 				"dcloud-user-id":         userID,
 				"dcloud-project-id":      projectID,
 				"dcloud-display-name":    name,

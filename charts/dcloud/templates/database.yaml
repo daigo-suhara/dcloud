@@ -1,20 +1,54 @@
----
-apiVersion: bitnami.com/v1alpha1
-kind: SealedSecret
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: dcloud-database
-  namespace: dcloud-system
+  name: {{ include "dcloud.fullname" . }}-database
+  labels:
+    {{- include "dcloud.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
 spec:
-  encryptedData:
-    DCLD_DATABASE_MIGRATION_URL: AgBIDIrNdQFdqYJPLADxQ9H0sjaN20nIjKbNXOYQFUtVmbwSfZSsTnsLK2chahlF+Le7YrJO6gaqcBNc+MNhpWU4lOdYZhyIIqhPUop+OnepcqO02dKTaSDg0T2eToysnhIL8JoHErH77RwH2JeGrTUDVhyOgiP2l0q8gABHtojHyZF9Tz2ALIWYVwixQJitLpTEfSBDyKdJG9unMYDNse6/yC3tjQyDBcoFwwklP7h6y/Wf7shmVMy4BODxjl70+6NDFs92pZ6T24TwegNTFu+xKL7ZtlSYUWq1Zs9RDRHlp1mgTJDTMzTDDzgNPBnNwhQbSCpLq9mYwL4L3cI9qmUg/CLPKk5mhMeR+S28q3zEWSiVBOND/GY9g7p9pWQe6j0qhSH+v+ev0ssEAWybs0h6oxx454kScpFvnAjdTr3Vc7Mk1RnRqPnXurghOzyrXEmq85O24sXFjwd3EVUFZI8Sg7VhnIfobmEV2tdwulFaEYT2ohTG8AIWs4/DiUnZFGeR9x6Hk0CWVt3jGTwIbyZMCWIP5dIUN6qFqvNEn6QR/r/YvTX51flb2PPz8wHhZ4P/II+mPkzQu4nXYObheGpW531CLCv9dN+//+1bNgoZMP8Fu7icJFYwtK7fo2b4BZEcW/OXXZ704nXW01kXwahJSpEf0TyVP3Y536Jz+WRDvZBaGFWpWcrLOI16BUg3J/J2MjwAWtISq9Fj8Zei1gGCwpI32ozjUnSQfCRPFYitirOCFbo4+8AddtVxOQTYN0JoeFPdVPQycVVoQQ6SSs3nk4loHiFzFmAbcBTKT1Z1Tg+/U2wtnWV4QeiQMDWaR2qomo78jvk595z91m+w6dGABlufjH4B
-    DCLD_DATABASE_URL: AgCMaRJpdRzUTWsghOHYxvY/yjJNV+Km521xdRkmCdrfL9wmRDa75hSPIzVNIJQ92xrLAAuISpzatrxGmA+S2UulO4SYabejywyD2IFL6E9Zef6BEHxcYaZ/vOV/VHnpzx5+oyEwqgHxBQPa/SSYTI8Mi8+qZuuvxJ2218Q82SCN1FxD1W8QvpDSw45u14Nji/xzg8/dpA+9WZcV3eto4lysWZzrxALxXh0r5PPyxN2qdzRwTX179Dm8LewNMNdyHn30TZJVJtydPxAG3JLyAwX7uLB2ZUvRyNYvcEp/Lqh8s2OVd5OXj8xEtIue6u/tcw9+jpqUlsisBmOayCmJwLpfL6wyih2HgVQeLEK8lKFzctNyCHL1L9Bj00mLcchlMgltAaD8m7Or49lBY3+OoBO7HgvMA9p4gPmGXyuIiNqT4qJGvFv/lXIho4lQtwYllIdLQbFDp9wrbCtkJIBNUQ3JiZ6tHZHhAE/srCXlZSDxZ4tsgQJSzy+GIjGJx6jHfKMVWkUFEjt3aprPkfmjUjzdVP//0GA9327yaJec8wklz1RrDDLpSd4QybWeisCN0uamSLrid2PjgHzkluTR+pzvYB/VWVr37Lh03zy/Jd9gY1Ov289XDNFGXDlW0TCxvtA5bS27N/7UwdUnWrxcLxPC0UPkcd8f8Drms450Mgvmvaxd89b9fAFtpRkkixzIEDSxj46B+u7ItpaF0ULeRPTZHcZ1tPD4bB8y4bwQUYOiTAJcE6hST+PzYCJXp2tdPJKMyNAtO9TutrbEqHkowHjnXYEna8Ft7XbwKndvQX1UtH6/NHBO2mkZtoZOaCrJPk1MgqCkPcj0NH8zdSwxn2Ea8QA=
-    admin-password: AgBr+i/N7et2ZB6SoMHXXRIV8vsDUJEc/jJJ23PcdLs0uqhOq6ZpGxKtPFCLbaD21V/t9qbwy0xVOIF7CUBRi0VAh1PYMQfKUZWubqXHkM9MVor37jxIav8zrULU/sHG50UDbNYUHRe5ZVPdzov1UhHpUAAYSL5ayI5vK2FvPu3tcSM4/FJvzgldat3lbQSAXHfIsiD2hIuplFAQGeBCY1IX/g84KSF9phNmVO85YCPrgaQtAQ4jARaTBxZqO9dAY8LEJtdFY2qChmq6SKpWh54ICMX6SxN1Pm68DRhvJZeBno0hTapvDn85Qdp5UV2pXfZIf3eEmrU0XgnF8XLjlH7o8mglcPM/CO0zesi7D3AJDuvCqiFAbjnXvTlaIHUmc0fMcWrsa5yLu1K/s1JVuCsZbveGdHn7YwOOcY53r3uOjCyJmf24PcyOOccH9kwBnccjnPFCtmW+DD0C+aXJp/sXcGU0rqplZio7nySWYKSyD5uY37SgFHLG20NSQfrSA0jL5upJIWu0Fle2Ra5r2oaWOsPoQ3Wp9AAfu5/3si9KtRbTo0RILZfpHtrMWNzJbhYsAZSP3O64g+7sB5tBMT1UZZDug+vhf3cUx+waUASOymP54S2M1BxaKf4H9QLWt9CN1HzeakAcwoFH/D+xKu9QQDNtzZhTtwWbI1z7MxfGKEoMKwnHDvHUACLHAz1asYcdRK/hx5g3zmeb
-    password: AgAXS5FYCjbA1q7ttrIo/rOPABvGOkrjdIL4qe6wYKdb5UoND0GbHSM9u3sjRtjf95s8IKjMxqZMpq4mFVlqba+teQg/yXI1YfbvonKtPt0XbZuMJ5U4Dp7cJGl6n9dqiXvEGvmKow9qW7JV0ZD3wo+xPCKoKbGwd0JgldDsqt22FNYISd6jZXhxMaG9ScqeAcSLmjOjFK3a/tMgr5Co/fO7S9LlEXd+uBjbJl6MgqdEMwzGJBFJt9iH9/LG8+sMlHmP3Rzq87vqx1rF99gmGMvhYk4Ca92kRH868LjPrEoLNuInYmhZMPx/ZJ+bLKT6a8xZCXz4itAdCpnfX8qbmYdrH8K/8axkutKBxXiBQVXttjRze6ZBDpSJ3FIdSSCtF5BzpDSNDtSKBYOHQ++WMqcy3OG6FTqPPrSjJ+G5IAC6Tnglk2qrW38/KFP75yzqUh+N1uj6Csi8CG+302B56UlGrjWPeh3i8SLmtcHrg2FfzV3W6MIEgOvY6w9FncrsiyKqBm6j/7cZ08O4hFQbzCMhtXr8KaA7rwA0Y1VWO8CsHHTJVsj5s/Qv/tsx388/rO4ObM0EdEcgEfuFaGBqkGxMV9tZ5ZnuzTXc4UXoEq0a7uXERytgMNd7Xr+lMkdGNZBOtf6OoVYKE52qrrTfx+Vw5BQKea0oQ5WveFH22B9xZ757laV7vM6lQ375xDhWZzzP7F479gTa6mXgW1l4fALm8txqYBucTzkuLq+aUw7nBmqn/8PMKw==
-    postgres-password: AgA3cSc0S1+Zoiw9mEWKidrFBy21rTdZgckX0QZ2LJ3qJGH1xs2NBmiflATzdSZYfgukZDbqlxBI0bgH1v3HeLBxwloZTFjyToeu2r+f1xaHbDlROD6sBXc95y5wctDn4wHIa5p/r5TT7KnDTTD5/X8yxWgD3pBTgjZ3UJV7q8coStyBQ0Mx0A+in9uHKrmPeiefli0Fi7NKNBjlac3jMie1x2904RNl2crFmBIVMaR103pvvO0qecQzyFpDeil8x1drwdqUyfk7Pa/oTZpB4xMy7ThbFzqXkSDkmTyg5J0sWLhsQCQYtve50CeAe1DuJBYOJtYcf/POddptWdmSAN5a9k0zA7tVvhdR+aySKYAkAJtJMR3/1jJfvHNQ8mmxAuQkzu+qDYfWugWJY4MkBvfGxaOurD91Y9zZEnFRoMPfEp41See8/MgRI7P8YS5jqDiir24hYYa0C79nXRMIkwOkeN7ld0XxzmVm1u2sp6FW74lqvcPoAxATGUCYVc51R1LmPR9yhbgfA9FUW9qg+4AkwU4XCmPeizhx82E4YmCND6owhlc3mzyb707IK4qT6XUH5xERHU6LzL/V3b1uR3bV72649qi1Br/XTam+OimGzEyL9504gZv/QtyT/A3KysyF0Cz9OVM4Ev6KuD05pgc2fmsc5ZMdo8VzWg6T2ZtdJXGGnzBt4G9uVp4USysKlGxLfrCjS/ym3/+InVTmM728WJgowXEkPHjmHT2AOdGH50mouV0ejg==
-    repmgr-password: AgBcSgCtBPDucw2A2f0dg3hDYg6MrnaftNWcxF6g9e49mO4oCw14+ugm0Ow5xn+s40qOyK7SkFJSVfQ+YoK18SOOotI9NpfGyLJ+jjBEBOoRfGL6OGknhf7bXgahTFaPETnN7DP4Z1wvZHi1jOV3hOkF/8ykIimSQyjrwXj8PQa53X/vq3uq/cu2OnS73s+w3AVESP5yXtHGV7bNnx6uj4wpOSxlNDGWiJlIJQvQzkX+s6eX5hwVoF1/mFP9Lz0vlnw4sUSae1wT4l829zfS8QxVBcBacw5T5ZQVNKjBPxfHXkzDlBx5/j9lx2OqFHgNGFyvF4Xp9IAg3mUuk9V31i8+JEwrguNSG9J+woX9xNy6R0n3/+aNJfghiEJBYGE5CuIRlsfbYqacCvIGlKGl+5GiIM3p4B5wHJAO0FfTumVp6WJyyovZFvPC0Ytv+IsjaxqqPK6h9UvseUWomu+M9Qx6nh8KyaEMh4y8WxXgtYUifufLVzJmh4lCoUSVmSgRI0DzblOByUNxq1WS9DEUEXmrpuKh0nQ8kBemHUDbuX2aotax4vyZWSzdLD92AV7aM/bmt6C2MXOK6YnDKFVwUfJZAf/whJTMvBc2HFUUT16lO7y/kPKbjxg4J/fyoYKKid+xIBdZVaYNx2C+Itv/Mxi5keK1WPrVZkfoPZS5YvHhSfBhij97a/Qv9n55SeAg4nmcOkbyQKptYjfxsrJBbufdiYoXA7xb4d1tq3ugObR5wy05BbY=
-    sr-check-password: AgCvcbuJksKGwEXp7nAliFPxpcMgv3r5BgdgMBo47QB5PS/hs2cnCVE+F876uLAW07X4zU26NLBkX5o7MSEzgfdPW5JcAJmwKnJxh5kVHk+fpq/L+c8kqIQux7D5Bsq2gs24rCAaapKsmXgtCOqVyqIElGNoAeRL/ZYHUdxOxf0LEKZrh6YXp+7RSagzZQXXGe3HnIRG9fKTWvTIeMnMWjj2N/MXR8DeyypeKFdCVaXlrQBGZdAM930xpZOeymf+4oLE3bLKYcpbZqTTb24iHFGz1Nv+c+2cxXVeqcAaofcsuNrt38CT01sjfm1bZOod63/ZJO2+ZWYPaQC4REHsvZqc7HBfsqlX+KZKJ0L+1fXjmSPvbpsTj2OuKf15+CldVMyEnlspGV6fj8f4wj5mRPCGxsegrfwUCm9KQtDoVKXwkIuksQmwdvx6Bt/egXvBxBVh6Q3L2hX7BqHJ+Y2v+cQnDX9nQdxVh6lhsLzah3OAH6rVOhvwhNKNiGKRgqVVRIKcN6I1G/DcqORvE0iyizsCZmZ0cWjXMV+OChVzva1hHyw2FcQLG2E9Nus8tRxNBa8qlDys8jsF2m2plTNv+u+7KpyC5GgyzFfxkliSTVQXebWibicxIZPTYflZMfl5E0CrfsxS/7A024ic4fzal8N2u0suF5UIqAThKK1rHbzNpVFVqikL82MccOLuKiOm0c0f34lZEZ9J0lSS
+  replicas: {{ .Values.database.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: database
   template:
     metadata:
-      name: dcloud-database
-      namespace: dcloud-system
-    type: Opaque
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: database
+    spec:
+      serviceAccountName: {{ include "dcloud.fullname" . }}-internal
+      containers:
+        - name: database
+          image: {{ include "dcloud.image" (dict "root" . "repository" .Values.database.image.repository) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          envFrom:
+            - secretRef:
+                name: {{ include "dcloud.fullname" . }}-database
+          env:
+            - name: DCLD_DATABASE_ADDR
+              value: :{{ .Values.database.service.port }}
+            - name: DCLD_DATABASE_STORAGE_CLASS
+              value: {{ .Values.database.storageClass }}
+          ports:
+            - name: grpc
+              containerPort: {{ .Values.database.service.port }}
+          readinessProbe:
+            tcpSocket:
+              port: grpc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dcloud.fullname" . }}-database
+  labels:
+    {{- include "dcloud.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  ports:
+    - name: grpc
+      port: {{ .Values.database.service.port }}
+      targetPort: grpc
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: database

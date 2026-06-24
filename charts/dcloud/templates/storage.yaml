@@ -1,38 +1,40 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "dcloud.fullname" . }}-dbaas
+  name: {{ include "dcloud.fullname" . }}-storage
   labels:
     {{- include "dcloud.labels" . | nindent 4 }}
-    app.kubernetes.io/component: dbaas
+    app.kubernetes.io/component: storage
 spec:
-  replicas: {{ .Values.dbaas.replicaCount }}
+  replicas: {{ .Values.storage.replicaCount }}
   selector:
     matchLabels:
       app.kubernetes.io/instance: {{ .Release.Name }}
-      app.kubernetes.io/component: dbaas
+      app.kubernetes.io/component: storage
   template:
     metadata:
       labels:
         app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: dbaas
+        app.kubernetes.io/component: storage
     spec:
       serviceAccountName: {{ include "dcloud.fullname" . }}-internal
       containers:
-        - name: dbaas
-          image: {{ include "dcloud.image" (dict "root" . "repository" .Values.dbaas.image.repository) }}
+        - name: storage
+          image: {{ include "dcloud.image" (dict "root" . "repository" .Values.storage.image.repository) }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
             - secretRef:
                 name: {{ include "dcloud.fullname" . }}-database
           env:
-            - name: DCLD_DBAAS_ADDR
-              value: :{{ .Values.dbaas.service.port }}
-            - name: DCLD_DBAAS_STORAGE_CLASS
-              value: {{ .Values.dbaas.storageClass }}
+            - name: DCLD_STORAGE_ADDR
+              value: :{{ .Values.storage.service.port }}
+            - name: DCLD_BUCKET_STORAGE_CLASS
+              value: {{ .Values.storage.bucketStorageClass }}
+            - name: DCLD_RGW_ENDPOINT
+              value: {{ .Values.storage.rgwEndpoint }}
           ports:
             - name: grpc
-              containerPort: {{ .Values.dbaas.service.port }}
+              containerPort: {{ .Values.storage.service.port }}
           readinessProbe:
             tcpSocket:
               port: grpc
@@ -40,15 +42,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "dcloud.fullname" . }}-dbaas
+  name: {{ include "dcloud.fullname" . }}-storage
   labels:
     {{- include "dcloud.labels" . | nindent 4 }}
-    app.kubernetes.io/component: dbaas
+    app.kubernetes.io/component: storage
 spec:
   ports:
     - name: grpc
-      port: {{ .Values.dbaas.service.port }}
+      port: {{ .Values.storage.service.port }}
       targetPort: grpc
   selector:
     app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: dbaas
+    app.kubernetes.io/component: storage

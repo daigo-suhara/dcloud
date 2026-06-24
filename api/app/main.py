@@ -21,7 +21,7 @@ from app.compute_client import ComputeClient
 from app.repository import Repository
 from app.container_client import ContainerClient
 from app.storage_client import StorageClient
-from app.dbaas_client import DbaasClient
+from app.database_client import DatabaseClient
 
 app = FastAPI(title="DCloud API")
 
@@ -103,7 +103,7 @@ def startup() -> None:
             app.state.container_client = ContainerClient.new()
             app.state.compute_client = ComputeClient.new()
             app.state.storage_client = StorageClient.new()
-            app.state.dbaas_client = DbaasClient.new()
+            app.state.database_client = DatabaseClient.new()
             return
         except Exception as exc:  # pragma: no cover - startup retry path
             last_error = exc
@@ -416,8 +416,8 @@ def get_operation(operation_id: str, request: Request) -> dict[str, str]:
         client = app.state.compute_client
     elif operation_id.startswith("storage-op-"):
         client = app.state.storage_client
-    elif operation_id.startswith("dbaas-op-"):
-        client = app.state.dbaas_client
+    elif operation_id.startswith("database-op-"):
+        client = app.state.database_client
     else:
         raise HTTPException(status_code=404, detail="オペレーションが見つかりません")
     try:
@@ -608,7 +608,7 @@ def list_databases(
     if not project_id:
         raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
     try:
-        result = app.state.dbaas_client.list_databases(user["id"], project_id)
+        result = app.state.database_client.list_databases(user["id"], project_id)
         return {"user": user["id"], "projectId": project_id, "databases": result["databases"]}
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -632,7 +632,7 @@ def create_database(
     if not name or not db_type:
         raise HTTPException(status_code=400, detail="名前とタイプは必須です")
     try:
-        return app.state.dbaas_client.create_database(
+        return app.state.database_client.create_database(
             user["id"],
             project_id,
             name,
@@ -661,7 +661,7 @@ def delete_database(
     if not project_id:
         raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
     try:
-        operation_id = app.state.dbaas_client.delete_database(user["id"], project_id, name)
+        operation_id = app.state.database_client.delete_database(user["id"], project_id, name)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="データベースが見つかりません") from exc
     except ValueError as exc:
@@ -682,7 +682,7 @@ def get_database_connection(
     if not project_id:
         raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
     try:
-        return app.state.dbaas_client.get_connection_string(user["id"], project_id, name)
+        return app.state.database_client.get_connection_string(user["id"], project_id, name)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="データベースが見つかりません") from exc
     except RuntimeError as exc:

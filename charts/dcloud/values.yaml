@@ -20,7 +20,7 @@ compute:
   service:
     port: 8084
 
-storage:
+storageClass:
   createClass: true
   className: ceph-rbd
   clusterID: rook-ceph
@@ -58,7 +58,7 @@ container:
   service:
     port: 8082
 
-objectstorage:
+storage:
   replicaCount: 2
   image:
     repository: storage
@@ -67,20 +67,13 @@ objectstorage:
   bucketStorageClass: rook-ceph-delete-bucket
   rgwEndpoint: ""
 
-dbaas:
+database:
   replicaCount: 2
   image:
-    repository: dbaas
+    repository: database
   service:
     port: 8086
   storageClass: ceph-rbd
-
-database:
-  service:
-    port: 5432
-  auth:
-    database: dcloud
-    username: dcloud
 
 postgresql-ha:
   global:

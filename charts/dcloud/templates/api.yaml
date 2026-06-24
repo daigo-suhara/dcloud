@@ -37,9 +37,9 @@ spec:
             - name: DCLD_COMPUTE_GRPC_ADDR
               value: {{ include "dcloud.fullname" . }}-compute:{{ .Values.compute.service.port }}
             - name: DCLD_STORAGE_GRPC_ADDR
-              value: {{ include "dcloud.fullname" . }}-objectstorage:{{ .Values.objectstorage.service.port }}
-            - name: DCLD_DBAAS_GRPC_ADDR
-              value: {{ include "dcloud.fullname" . }}-dbaas:{{ .Values.dbaas.service.port }}
+              value: {{ include "dcloud.fullname" . }}-storage:{{ .Values.storage.service.port }}
+            - name: DCLD_DATABASE_GRPC_ADDR
+              value: {{ include "dcloud.fullname" . }}-database:{{ .Values.database.service.port }}
             - name: PYTHONPATH
               value: /app:/app/generated
           ports:

@@ -1,14 +1,14 @@
-{{- if .Values.storage.createClass }}
+{{- if .Values.storageClass.createClass }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: {{ .Values.storage.className | quote }}
+  name: {{ .Values.storageClass.className | quote }}
   labels:
     {{- include "dcloud.labels" . | nindent 4 }}
 provisioner: rook-ceph.rbd.csi.ceph.com
 parameters:
-  clusterID: {{ .Values.storage.clusterID | quote }}
-  pool: {{ .Values.storage.pool | quote }}
+  clusterID: {{ .Values.storageClass.clusterID | quote }}
+  pool: {{ .Values.storageClass.pool | quote }}
   imageFeatures: layering
   csi.storage.k8s.io/fstype: ext4
   csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner

@@ -13,8 +13,8 @@ def env(key: str, fallback: str) -> str:
     return value if value else fallback
 
 
-def dbaas_grpc_addr() -> str:
-    return env("DCLD_DBAAS_GRPC_ADDR", "localhost:8086")
+def database_grpc_addr() -> str:
+    return env("DCLD_DATABASE_GRPC_ADDR", "localhost:8086")
 
 
 def _rpc_error_message(error: grpc.RpcError) -> str:
@@ -22,7 +22,7 @@ def _rpc_error_message(error: grpc.RpcError) -> str:
     return details or error.__class__.__name__
 
 
-class DbaasClient:
+class DatabaseClient:
     def __init__(self, channel: grpc.Channel) -> None:
         self._list_databases = channel.unary_unary(
             "/dcloud.dbaas.v1.DatabaseService/ListDatabases",
@@ -56,8 +56,8 @@ class DbaasClient:
         )
 
     @classmethod
-    def new(cls) -> "DbaasClient":
-        return cls(grpc.insecure_channel(dbaas_grpc_addr()))
+    def new(cls) -> "DatabaseClient":
+        return cls(grpc.insecure_channel(database_grpc_addr()))
 
     def list_databases(self, user_id: str, project_id: str) -> dict[str, Any]:
         try:
