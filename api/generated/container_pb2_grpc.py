@@ -44,6 +44,11 @@ class ContainerServiceStub:
                 request_serializer=container__pb2.SetServiceDomainRequest.SerializeToString,
                 response_deserializer=container__pb2.SetServiceDomainResponse.FromString,
                 _registered_method=True)
+        self.GetServiceLogs = channel.unary_stream(
+                '/dcloud.container.v1.ContainerService/GetServiceLogs',
+                request_serializer=container__pb2.GetServiceLogsRequest.SerializeToString,
+                response_deserializer=container__pb2.LogLine.FromString,
+                _registered_method=True)
 
 
 class ContainerServiceServicer:
@@ -85,6 +90,12 @@ class ContainerServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetServiceLogs(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ContainerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -117,6 +128,11 @@ def add_ContainerServiceServicer_to_server(servicer, server):
                     servicer.SetServiceDomain,
                     request_deserializer=container__pb2.SetServiceDomainRequest.FromString,
                     response_serializer=container__pb2.SetServiceDomainResponse.SerializeToString,
+            ),
+            'GetServiceLogs': grpc.unary_stream_rpc_method_handler(
+                    servicer.GetServiceLogs,
+                    request_deserializer=container__pb2.GetServiceLogsRequest.FromString,
+                    response_serializer=container__pb2.LogLine.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -281,6 +297,33 @@ class ContainerService:
             '/dcloud.container.v1.ContainerService/SetServiceDomain',
             container__pb2.SetServiceDomainRequest.SerializeToString,
             container__pb2.SetServiceDomainResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetServiceLogs(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/dcloud.container.v1.ContainerService/GetServiceLogs',
+            container__pb2.GetServiceLogsRequest.SerializeToString,
+            container__pb2.LogLine.FromString,
             options,
             channel_credentials,
             insecure,

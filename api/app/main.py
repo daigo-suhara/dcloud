@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import ssl
 import os
 import time
@@ -405,6 +406,43 @@ def set_container_domain(
         raise HTTPException(status_code=404, detail="サービスが見つかりません") from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/container/{name}/logs")
+def stream_container_logs(
+    name: str,
+    request: Request,
+    tail: int = 200,
+    follow: int = 1,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+    project: str | None = None,
+) -> StreamingResponse:
+    user = current_user(request)
+    project_id = (x_dcp_project or project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+
+    def event_stream():
+        try:
+            for line in app.state.container_client.get_service_logs(
+                user["id"], project_id, name, tail_lines=tail, follow=bool(follow)
+            ):
+                payload = json.dumps(line, ensure_ascii=False)
+                yield f"data: {payload}\n\n"
+        except KeyError:
+            yield "event: error\ndata: {\"detail\": \"サービスが見つかりません\"}\n\n"
+        except Exception as exc:
+            payload = json.dumps({"detail": str(exc)}, ensure_ascii=False)
+            yield f"event: error\ndata: {payload}\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @app.get("/api/v1/operations/{operation_id}")

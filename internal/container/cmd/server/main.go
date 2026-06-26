@@ -37,6 +37,8 @@ type GetOperationRequest = containerpb.GetOperationRequest
 type GetOperationResponse = containerpb.GetOperationResponse
 type SetServiceDomainRequest = containerpb.SetServiceDomainRequest
 type SetServiceDomainResponse = containerpb.SetServiceDomainResponse
+type GetServiceLogsRequest = containerpb.GetServiceLogsRequest
+type LogLine = containerpb.LogLine
 type ContainerServer = containerpb.ContainerServiceServer
 
 func newOperationID() (string, error) {
@@ -414,6 +416,57 @@ func (s *containerServer) SetServiceDomain(ctx context.Context, req *SetServiceD
 		MaxScale:           dbRecord.MaxScale,
 	}
 	return &SetServiceDomainResponse{Service: svc}, nil
+}
+
+func (s *containerServer) GetServiceLogs(req *GetServiceLogsRequest, stream containerpb.ContainerService_GetServiceLogsServer) error {
+	ctx := stream.Context()
+	userID := strings.TrimSpace(req.UserId)
+	projectID := strings.TrimSpace(req.ProjectId)
+	name := strings.TrimSpace(req.Name)
+	if userID == "" || projectID == "" || name == "" {
+		return status.Error(codes.InvalidArgument, "userId, projectId, and name are required")
+	}
+	exists, err := s.projectExists(ctx, userID, projectID)
+	if err != nil {
+		return status.Error(codes.Internal, "failed to query project")
+	}
+	if !exists {
+		return status.Error(codes.NotFound, "project not found")
+	}
+	if _, err := s.q.GetContainer(ctx, dbsqlc.GetContainerParams{ProjectID: projectID, Name: name}); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return status.Error(codes.NotFound, "container not found")
+		}
+		return status.Error(codes.Internal, "failed to query container")
+	}
+
+	resourceName := serviceResourceName(projectID, name)
+	pods, err := s.knative.listServingPods(ctx, resourceName)
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to list pods: %v", err)
+	}
+	if len(pods) == 0 {
+		return status.Error(codes.FailedPrecondition, "no pod is running for this service yet")
+	}
+	pod := pods[0]
+	containerName := pickUserContainerName(pod)
+	if containerName == "" {
+		return status.Error(codes.Internal, "could not identify user container")
+	}
+
+	body, err := s.knative.streamPodLogs(ctx, pod.Name, containerName, req.TailLines, req.Follow)
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to open log stream: %v", err)
+	}
+	defer body.Close()
+
+	emitErr := forwardLogLines(ctx, body, func(timestamp, text string) error {
+		return stream.Send(&LogLine{Text: text, Timestamp: timestamp})
+	})
+	if emitErr != nil && !errors.Is(emitErr, context.Canceled) {
+		return status.Errorf(codes.Internal, "log stream interrupted: %v", emitErr)
+	}
+	return nil
 }
 
 func RegisterContainerServer(server *grpc.Server, impl ContainerServer) {

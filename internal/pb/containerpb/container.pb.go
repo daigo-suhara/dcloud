@@ -985,6 +985,137 @@ func (x *SetServiceDomainResponse) GetService() *Service {
 	return nil
 }
 
+type GetServiceLogsRequest struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	UserId    string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ProjectId string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	Name      string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	// Number of lines from the tail to seed the stream with. <=0 means "all".
+	TailLines int32 `protobuf:"varint,4,opt,name=tail_lines,json=tailLines,proto3" json:"tail_lines,omitempty"`
+	// If true, the stream stays open and continues sending new lines.
+	Follow        bool `protobuf:"varint,5,opt,name=follow,proto3" json:"follow,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetServiceLogsRequest) Reset() {
+	*x = GetServiceLogsRequest{}
+	mi := &file_container_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetServiceLogsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetServiceLogsRequest) ProtoMessage() {}
+
+func (x *GetServiceLogsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_container_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetServiceLogsRequest.ProtoReflect.Descriptor instead.
+func (*GetServiceLogsRequest) Descriptor() ([]byte, []int) {
+	return file_container_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *GetServiceLogsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *GetServiceLogsRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *GetServiceLogsRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *GetServiceLogsRequest) GetTailLines() int32 {
+	if x != nil {
+		return x.TailLines
+	}
+	return 0
+}
+
+func (x *GetServiceLogsRequest) GetFollow() bool {
+	if x != nil {
+		return x.Follow
+	}
+	return false
+}
+
+type LogLine struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Text  string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	// RFC3339 timestamp when present (k8s timestamps=true).
+	Timestamp     string `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogLine) Reset() {
+	*x = LogLine{}
+	mi := &file_container_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogLine) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogLine) ProtoMessage() {}
+
+func (x *LogLine) ProtoReflect() protoreflect.Message {
+	mi := &file_container_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogLine.ProtoReflect.Descriptor instead.
+func (*LogLine) Descriptor() ([]byte, []int) {
+	return file_container_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *LogLine) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
+func (x *LogLine) GetTimestamp() string {
+	if x != nil {
+		return x.Timestamp
+	}
+	return ""
+}
+
 var File_container_proto protoreflect.FileDescriptor
 
 const file_container_proto_rawDesc = "" +
@@ -1070,14 +1201,26 @@ const file_container_proto_rawDesc = "" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12#\n" +
 	"\rcustom_domain\x18\x04 \x01(\tR\fcustomDomain\"R\n" +
 	"\x18SetServiceDomainResponse\x126\n" +
-	"\aservice\x18\x01 \x01(\v2\x1c.dcloud.container.v1.ServiceR\aservice2\xf0\x04\n" +
+	"\aservice\x18\x01 \x01(\v2\x1c.dcloud.container.v1.ServiceR\aservice\"\x9a\x01\n" +
+	"\x15GetServiceLogsRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1d\n" +
+	"\n" +
+	"tail_lines\x18\x04 \x01(\x05R\ttailLines\x12\x16\n" +
+	"\x06follow\x18\x05 \x01(\bR\x06follow\";\n" +
+	"\aLogLine\x12\x12\n" +
+	"\x04text\x18\x01 \x01(\tR\x04text\x12\x1c\n" +
+	"\ttimestamp\x18\x02 \x01(\tR\ttimestamp2\xce\x05\n" +
 	"\x10ContainerService\x12Q\n" +
 	"\x06Health\x12\".dcloud.container.v1.HealthRequest\x1a#.dcloud.container.v1.HealthResponse\x12c\n" +
 	"\fListServices\x12(.dcloud.container.v1.ListServicesRequest\x1a).dcloud.container.v1.ListServicesResponse\x12f\n" +
 	"\rDeployService\x12).dcloud.container.v1.DeployServiceRequest\x1a*.dcloud.container.v1.DeployServiceResponse\x12f\n" +
 	"\rDeleteService\x12).dcloud.container.v1.DeleteServiceRequest\x1a*.dcloud.container.v1.DeleteServiceResponse\x12c\n" +
 	"\fGetOperation\x12(.dcloud.container.v1.GetOperationRequest\x1a).dcloud.container.v1.GetOperationResponse\x12o\n" +
-	"\x10SetServiceDomain\x12,.dcloud.container.v1.SetServiceDomainRequest\x1a-.dcloud.container.v1.SetServiceDomainResponseBDZBgithub.com/daigo-suhara/dcloud/internal/pb/containerpb;containerpbb\x06proto3"
+	"\x10SetServiceDomain\x12,.dcloud.container.v1.SetServiceDomainRequest\x1a-.dcloud.container.v1.SetServiceDomainResponse\x12\\\n" +
+	"\x0eGetServiceLogs\x12*.dcloud.container.v1.GetServiceLogsRequest\x1a\x1c.dcloud.container.v1.LogLine0\x01BDZBgithub.com/daigo-suhara/dcloud/internal/pb/containerpb;containerpbb\x06proto3"
 
 var (
 	file_container_proto_rawDescOnce sync.Once
@@ -1091,7 +1234,7 @@ func file_container_proto_rawDescGZIP() []byte {
 	return file_container_proto_rawDescData
 }
 
-var file_container_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_container_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_container_proto_goTypes = []any{
 	(*Empty)(nil),                    // 0: dcloud.container.v1.Empty
 	(*EnvVar)(nil),                   // 1: dcloud.container.v1.EnvVar
@@ -1108,6 +1251,8 @@ var file_container_proto_goTypes = []any{
 	(*GetOperationResponse)(nil),     // 12: dcloud.container.v1.GetOperationResponse
 	(*SetServiceDomainRequest)(nil),  // 13: dcloud.container.v1.SetServiceDomainRequest
 	(*SetServiceDomainResponse)(nil), // 14: dcloud.container.v1.SetServiceDomainResponse
+	(*GetServiceLogsRequest)(nil),    // 15: dcloud.container.v1.GetServiceLogsRequest
+	(*LogLine)(nil),                  // 16: dcloud.container.v1.LogLine
 }
 var file_container_proto_depIdxs = []int32{
 	1,  // 0: dcloud.container.v1.Service.env:type_name -> dcloud.container.v1.EnvVar
@@ -1121,14 +1266,16 @@ var file_container_proto_depIdxs = []int32{
 	9,  // 8: dcloud.container.v1.ContainerService.DeleteService:input_type -> dcloud.container.v1.DeleteServiceRequest
 	11, // 9: dcloud.container.v1.ContainerService.GetOperation:input_type -> dcloud.container.v1.GetOperationRequest
 	13, // 10: dcloud.container.v1.ContainerService.SetServiceDomain:input_type -> dcloud.container.v1.SetServiceDomainRequest
-	3,  // 11: dcloud.container.v1.ContainerService.Health:output_type -> dcloud.container.v1.HealthResponse
-	6,  // 12: dcloud.container.v1.ContainerService.ListServices:output_type -> dcloud.container.v1.ListServicesResponse
-	8,  // 13: dcloud.container.v1.ContainerService.DeployService:output_type -> dcloud.container.v1.DeployServiceResponse
-	10, // 14: dcloud.container.v1.ContainerService.DeleteService:output_type -> dcloud.container.v1.DeleteServiceResponse
-	12, // 15: dcloud.container.v1.ContainerService.GetOperation:output_type -> dcloud.container.v1.GetOperationResponse
-	14, // 16: dcloud.container.v1.ContainerService.SetServiceDomain:output_type -> dcloud.container.v1.SetServiceDomainResponse
-	11, // [11:17] is the sub-list for method output_type
-	5,  // [5:11] is the sub-list for method input_type
+	15, // 11: dcloud.container.v1.ContainerService.GetServiceLogs:input_type -> dcloud.container.v1.GetServiceLogsRequest
+	3,  // 12: dcloud.container.v1.ContainerService.Health:output_type -> dcloud.container.v1.HealthResponse
+	6,  // 13: dcloud.container.v1.ContainerService.ListServices:output_type -> dcloud.container.v1.ListServicesResponse
+	8,  // 14: dcloud.container.v1.ContainerService.DeployService:output_type -> dcloud.container.v1.DeployServiceResponse
+	10, // 15: dcloud.container.v1.ContainerService.DeleteService:output_type -> dcloud.container.v1.DeleteServiceResponse
+	12, // 16: dcloud.container.v1.ContainerService.GetOperation:output_type -> dcloud.container.v1.GetOperationResponse
+	14, // 17: dcloud.container.v1.ContainerService.SetServiceDomain:output_type -> dcloud.container.v1.SetServiceDomainResponse
+	16, // 18: dcloud.container.v1.ContainerService.GetServiceLogs:output_type -> dcloud.container.v1.LogLine
+	12, // [12:19] is the sub-list for method output_type
+	5,  // [5:12] is the sub-list for method input_type
 	5,  // [5:5] is the sub-list for extension type_name
 	5,  // [5:5] is the sub-list for extension extendee
 	0,  // [0:5] is the sub-list for field type_name
@@ -1145,7 +1292,7 @@ func file_container_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_container_proto_rawDesc), len(file_container_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

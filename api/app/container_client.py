@@ -49,6 +49,11 @@ class ContainerClient:
             request_serializer=container_pb2.SetServiceDomainRequest.SerializeToString,
             response_deserializer=container_pb2.SetServiceDomainResponse.FromString,
         )
+        self._get_service_logs = channel.unary_stream(
+            "/dcloud.container.v1.ContainerService/GetServiceLogs",
+            request_serializer=container_pb2.GetServiceLogsRequest.SerializeToString,
+            response_deserializer=container_pb2.LogLine.FromString,
+        )
 
     @classmethod
     def new(cls) -> "ContainerClient":
@@ -157,6 +162,30 @@ class ContainerClient:
             "startupScript": service.startup_script or None,
             "env": [{"name": e.name, "value": e.value} for e in service.env] or None,
         }
+
+    def get_service_logs(
+        self,
+        user_id: str,
+        project_id: str,
+        name: str,
+        tail_lines: int = 200,
+        follow: bool = True,
+    ):
+        """Yields dicts {"text": str, "timestamp": str} until the stream closes."""
+        try:
+            stream = self._get_service_logs(
+                container_pb2.GetServiceLogsRequest(
+                    user_id=user_id,
+                    project_id=project_id,
+                    name=name,
+                    tail_lines=tail_lines,
+                    follow=follow,
+                )
+            )
+            for line in stream:
+                yield {"text": line.text, "timestamp": line.timestamp}
+        except grpc.RpcError as error:
+            raise self._map_error(error) from error
 
     @staticmethod
     def _map_error(error: grpc.RpcError) -> Exception:

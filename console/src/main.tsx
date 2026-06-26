@@ -160,6 +160,7 @@ function AppContent() {
             selectedService={controller.selectedService}
             selectedStatus={controller.selectedStatus}
             containers={controller.containers}
+            activeProjectId={controller.activeProjectId}
           />
         ) : visibleSection === "compute" && controller.route.selectedComputeMachineName ? (
           <ComputeDetailSection

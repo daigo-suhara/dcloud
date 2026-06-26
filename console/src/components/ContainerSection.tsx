@@ -11,6 +11,7 @@ import type { FormEvent } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import type { DeployedService, UpdateForm } from "../types";
 import { EnvVarEditor } from "./EnvVarEditor";
+import { ContainerLogsViewer } from "./ContainerLogsViewer";
 import { actionLinkButtonSx } from "../theme";
 import { formatServiceStatus, formatServiceTimestamp, getServiceStatus } from "../utils";
 
@@ -28,6 +29,7 @@ type ContainerSectionProps = {
   selectedService: DeployedService | null;
   selectedStatus: ReturnType<typeof getServiceStatus> | null;
   containers: DeployedService[];
+  activeProjectId: string;
 };
 
 export function ContainerSection({
@@ -43,7 +45,8 @@ export function ContainerSection({
   onUpdateService,
   selectedService,
   selectedStatus,
-  containers
+  containers,
+  activeProjectId
 }: ContainerSectionProps) {
   const [domainInput, setDomainInput] = useState("");
   const [savingDomain, setSavingDomain] = useState(false);
@@ -308,6 +311,12 @@ export function ContainerSection({
                   </Box>
                 )}
               </Box>
+
+              <ContainerLogsViewer
+                serviceName={selectedService.name}
+                projectId={activeProjectId}
+                enabled={selectedService.ready}
+              />
 
               <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                 <Button

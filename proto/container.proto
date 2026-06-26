@@ -11,6 +11,7 @@ service ContainerService {
   rpc DeleteService(DeleteServiceRequest) returns (DeleteServiceResponse);
   rpc GetOperation(GetOperationRequest) returns (GetOperationResponse);
   rpc SetServiceDomain(SetServiceDomainRequest) returns (SetServiceDomainResponse);
+  rpc GetServiceLogs(GetServiceLogsRequest) returns (stream LogLine);
 }
 
 message Empty {}
@@ -107,4 +108,20 @@ message SetServiceDomainRequest {
 
 message SetServiceDomainResponse {
   Service service = 1;
+}
+
+message GetServiceLogsRequest {
+  string user_id = 1;
+  string project_id = 2;
+  string name = 3;
+  // Number of lines from the tail to seed the stream with. <=0 means "all".
+  int32 tail_lines = 4;
+  // If true, the stream stays open and continues sending new lines.
+  bool follow = 5;
+}
+
+message LogLine {
+  string text = 1;
+  // RFC3339 timestamp when present (k8s timestamps=true).
+  string timestamp = 2;
 }
