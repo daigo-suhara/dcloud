@@ -675,6 +675,7 @@ def delete_database(
 def get_database_connection(
     name: str,
     request: Request,
+    schema: str | None = None,
     x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
 ) -> dict[str, Any]:
     user = current_user(request)
@@ -682,11 +683,83 @@ def get_database_connection(
     if not project_id:
         raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
     try:
-        return app.state.database_client.get_connection_string(user["id"], project_id, name)
+        return app.state.database_client.get_connection_string(
+            user["id"], project_id, name, (schema or "").strip()
+        )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="データベースが見つかりません") from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/database/{name}/schemas")
+def list_database_schemas(
+    name: str,
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, Any]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    try:
+        schemas = app.state.database_client.list_schemas(user["id"], project_id, name)
+        return {"schemas": schemas}
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="データベースが見つかりません") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/database/{name}/schemas")
+def create_database_schema(
+    name: str,
+    body: dict[str, Any],
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, Any]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    schema_name = str(body.get("schemaName", "")).strip()
+    if not schema_name:
+        raise HTTPException(status_code=400, detail="スキーマ名は必須です")
+    charset = str(body.get("charset", "")).strip()
+    try:
+        return app.state.database_client.create_schema(
+            user["id"], project_id, name, schema_name, charset
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=409, detail="スキーマは既に存在します") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.delete("/api/v1/database/{name}/schemas/{schema_name}")
+def delete_database_schema(
+    name: str,
+    schema_name: str,
+    request: Request,
+    x_dcp_project: str | None = Header(default=None, alias="X-DCP-Project"),
+) -> dict[str, str]:
+    user = current_user(request)
+    project_id = (x_dcp_project or "").strip()
+    if not project_id:
+        raise HTTPException(status_code=400, detail="プロジェクトを選択してください")
+    try:
+        app.state.database_client.delete_schema(user["id"], project_id, name, schema_name)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="スキーマが見つかりません") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {"status": "deleted"}
 
 
 def _s3_client(user_id: str, project_id: str, bucket_name: str) -> tuple[Any, str]:

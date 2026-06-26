@@ -698,10 +698,13 @@ func (x *GetDatabaseResponse) GetDatabase() *Database {
 }
 
 type GetConnectionStringRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	ProjectId     string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
-	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	UserId    string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ProjectId string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	Name      string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	// Optional: when provided, the returned connection_string targets this
+	// schema (database). Defaults to the instance's default DB name.
+	SchemaName    string `protobuf:"bytes,4,opt,name=schema_name,json=schemaName,proto3" json:"schema_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -753,6 +756,13 @@ func (x *GetConnectionStringRequest) GetProjectId() string {
 func (x *GetConnectionStringRequest) GetName() string {
 	if x != nil {
 		return x.Name
+	}
+	return ""
+}
+
+func (x *GetConnectionStringRequest) GetSchemaName() string {
+	if x != nil {
+		return x.SchemaName
 	}
 	return ""
 }
@@ -945,6 +955,388 @@ func (x *GetOperationResponse) GetError() string {
 	return ""
 }
 
+type Schema struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Charset       string                 `protobuf:"bytes,2,opt,name=charset,proto3" json:"charset,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Schema) Reset() {
+	*x = Schema{}
+	mi := &file_database_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Schema) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Schema) ProtoMessage() {}
+
+func (x *Schema) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Schema.ProtoReflect.Descriptor instead.
+func (*Schema) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *Schema) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Schema) GetCharset() string {
+	if x != nil {
+		return x.Charset
+	}
+	return ""
+}
+
+type ListSchemasRequest struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	UserId    string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ProjectId string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	// Instance name (user-facing).
+	Name          string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListSchemasRequest) Reset() {
+	*x = ListSchemasRequest{}
+	mi := &file_database_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSchemasRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSchemasRequest) ProtoMessage() {}
+
+func (x *ListSchemasRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSchemasRequest.ProtoReflect.Descriptor instead.
+func (*ListSchemasRequest) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ListSchemasRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *ListSchemasRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *ListSchemasRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type ListSchemasResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Schemas       []*Schema              `protobuf:"bytes,1,rep,name=schemas,proto3" json:"schemas,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListSchemasResponse) Reset() {
+	*x = ListSchemasResponse{}
+	mi := &file_database_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSchemasResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSchemasResponse) ProtoMessage() {}
+
+func (x *ListSchemasResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSchemasResponse.ProtoReflect.Descriptor instead.
+func (*ListSchemasResponse) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ListSchemasResponse) GetSchemas() []*Schema {
+	if x != nil {
+		return x.Schemas
+	}
+	return nil
+}
+
+type CreateSchemaRequest struct {
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	UserId     string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ProjectId  string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	Name       string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	SchemaName string                 `protobuf:"bytes,4,opt,name=schema_name,json=schemaName,proto3" json:"schema_name,omitempty"`
+	// Optional. MySQL: e.g. utf8mb4. Postgres: ignored.
+	Charset       string `protobuf:"bytes,5,opt,name=charset,proto3" json:"charset,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateSchemaRequest) Reset() {
+	*x = CreateSchemaRequest{}
+	mi := &file_database_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateSchemaRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateSchemaRequest) ProtoMessage() {}
+
+func (x *CreateSchemaRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateSchemaRequest.ProtoReflect.Descriptor instead.
+func (*CreateSchemaRequest) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *CreateSchemaRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *CreateSchemaRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *CreateSchemaRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateSchemaRequest) GetSchemaName() string {
+	if x != nil {
+		return x.SchemaName
+	}
+	return ""
+}
+
+func (x *CreateSchemaRequest) GetCharset() string {
+	if x != nil {
+		return x.Charset
+	}
+	return ""
+}
+
+type CreateSchemaResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Schema        *Schema                `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateSchemaResponse) Reset() {
+	*x = CreateSchemaResponse{}
+	mi := &file_database_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateSchemaResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateSchemaResponse) ProtoMessage() {}
+
+func (x *CreateSchemaResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateSchemaResponse.ProtoReflect.Descriptor instead.
+func (*CreateSchemaResponse) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *CreateSchemaResponse) GetSchema() *Schema {
+	if x != nil {
+		return x.Schema
+	}
+	return nil
+}
+
+type DeleteSchemaRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ProjectId     string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	SchemaName    string                 `protobuf:"bytes,4,opt,name=schema_name,json=schemaName,proto3" json:"schema_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteSchemaRequest) Reset() {
+	*x = DeleteSchemaRequest{}
+	mi := &file_database_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteSchemaRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteSchemaRequest) ProtoMessage() {}
+
+func (x *DeleteSchemaRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteSchemaRequest.ProtoReflect.Descriptor instead.
+func (*DeleteSchemaRequest) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *DeleteSchemaRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *DeleteSchemaRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *DeleteSchemaRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *DeleteSchemaRequest) GetSchemaName() string {
+	if x != nil {
+		return x.SchemaName
+	}
+	return ""
+}
+
+type DeleteSchemaResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteSchemaResponse) Reset() {
+	*x = DeleteSchemaResponse{}
+	mi := &file_database_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteSchemaResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteSchemaResponse) ProtoMessage() {}
+
+func (x *DeleteSchemaResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteSchemaResponse.ProtoReflect.Descriptor instead.
+func (*DeleteSchemaResponse) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{21}
+}
+
 var File_database_proto protoreflect.FileDescriptor
 
 const file_database_proto_rawDesc = "" +
@@ -1003,12 +1395,14 @@ const file_database_proto_rawDesc = "" +
 	"project_id\x18\x02 \x01(\tR\tprojectId\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\"O\n" +
 	"\x13GetDatabaseResponse\x128\n" +
-	"\bdatabase\x18\x01 \x01(\v2\x1c.dcloud.database.v1.DatabaseR\bdatabase\"h\n" +
+	"\bdatabase\x18\x01 \x01(\v2\x1c.dcloud.database.v1.DatabaseR\bdatabase\"\x89\x01\n" +
 	"\x1aGetConnectionStringRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x02 \x01(\tR\tprojectId\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\"\xcf\x01\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1f\n" +
+	"\vschema_name\x18\x04 \x01(\tR\n" +
+	"schemaName\"\xcf\x01\n" +
 	"\x1bGetConnectionStringResponse\x12+\n" +
 	"\x11connection_string\x18\x01 \x01(\tR\x10connectionString\x12\x12\n" +
 	"\x04host\x18\x02 \x01(\tR\x04host\x12\x12\n" +
@@ -1021,7 +1415,35 @@ const file_database_proto_rawDesc = "" +
 	"\x14GetOperationResponse\x12!\n" +
 	"\foperation_id\x18\x01 \x01(\tR\voperationId\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12\x14\n" +
-	"\x05error\x18\x03 \x01(\tR\x05error2\xd5\x05\n" +
+	"\x05error\x18\x03 \x01(\tR\x05error\"6\n" +
+	"\x06Schema\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
+	"\acharset\x18\x02 \x01(\tR\acharset\"`\n" +
+	"\x12ListSchemasRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\"K\n" +
+	"\x13ListSchemasResponse\x124\n" +
+	"\aschemas\x18\x01 \x03(\v2\x1a.dcloud.database.v1.SchemaR\aschemas\"\x9c\x01\n" +
+	"\x13CreateSchemaRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1f\n" +
+	"\vschema_name\x18\x04 \x01(\tR\n" +
+	"schemaName\x12\x18\n" +
+	"\acharset\x18\x05 \x01(\tR\acharset\"J\n" +
+	"\x14CreateSchemaResponse\x122\n" +
+	"\x06schema\x18\x01 \x01(\v2\x1a.dcloud.database.v1.SchemaR\x06schema\"\x82\x01\n" +
+	"\x13DeleteSchemaRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1f\n" +
+	"\vschema_name\x18\x04 \x01(\tR\n" +
+	"schemaName\"\x16\n" +
+	"\x14DeleteSchemaResponse2\xfb\a\n" +
 	"\x0fDatabaseService\x12O\n" +
 	"\x06Health\x12!.dcloud.database.v1.HealthRequest\x1a\".dcloud.database.v1.HealthResponse\x12d\n" +
 	"\rListDatabases\x12(.dcloud.database.v1.ListDatabasesRequest\x1a).dcloud.database.v1.ListDatabasesResponse\x12g\n" +
@@ -1029,7 +1451,10 @@ const file_database_proto_rawDesc = "" +
 	"\x0eDeleteDatabase\x12).dcloud.database.v1.DeleteDatabaseRequest\x1a*.dcloud.database.v1.DeleteDatabaseResponse\x12^\n" +
 	"\vGetDatabase\x12&.dcloud.database.v1.GetDatabaseRequest\x1a'.dcloud.database.v1.GetDatabaseResponse\x12v\n" +
 	"\x13GetConnectionString\x12..dcloud.database.v1.GetConnectionStringRequest\x1a/.dcloud.database.v1.GetConnectionStringResponse\x12a\n" +
-	"\fGetOperation\x12'.dcloud.database.v1.GetOperationRequest\x1a(.dcloud.database.v1.GetOperationResponseBBZ@github.com/daigo-suhara/dcloud/internal/pb/databasepb;databasepbb\x06proto3"
+	"\fGetOperation\x12'.dcloud.database.v1.GetOperationRequest\x1a(.dcloud.database.v1.GetOperationResponse\x12^\n" +
+	"\vListSchemas\x12&.dcloud.database.v1.ListSchemasRequest\x1a'.dcloud.database.v1.ListSchemasResponse\x12a\n" +
+	"\fCreateSchema\x12'.dcloud.database.v1.CreateSchemaRequest\x1a(.dcloud.database.v1.CreateSchemaResponse\x12a\n" +
+	"\fDeleteSchema\x12'.dcloud.database.v1.DeleteSchemaRequest\x1a(.dcloud.database.v1.DeleteSchemaResponseBBZ@github.com/daigo-suhara/dcloud/internal/pb/databasepb;databasepbb\x06proto3"
 
 var (
 	file_database_proto_rawDescOnce sync.Once
@@ -1043,7 +1468,7 @@ func file_database_proto_rawDescGZIP() []byte {
 	return file_database_proto_rawDescData
 }
 
-var file_database_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_database_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_database_proto_goTypes = []any{
 	(*HealthRequest)(nil),               // 0: dcloud.database.v1.HealthRequest
 	(*HealthResponse)(nil),              // 1: dcloud.database.v1.HealthResponse
@@ -1060,30 +1485,45 @@ var file_database_proto_goTypes = []any{
 	(*GetConnectionStringResponse)(nil), // 12: dcloud.database.v1.GetConnectionStringResponse
 	(*GetOperationRequest)(nil),         // 13: dcloud.database.v1.GetOperationRequest
 	(*GetOperationResponse)(nil),        // 14: dcloud.database.v1.GetOperationResponse
+	(*Schema)(nil),                      // 15: dcloud.database.v1.Schema
+	(*ListSchemasRequest)(nil),          // 16: dcloud.database.v1.ListSchemasRequest
+	(*ListSchemasResponse)(nil),         // 17: dcloud.database.v1.ListSchemasResponse
+	(*CreateSchemaRequest)(nil),         // 18: dcloud.database.v1.CreateSchemaRequest
+	(*CreateSchemaResponse)(nil),        // 19: dcloud.database.v1.CreateSchemaResponse
+	(*DeleteSchemaRequest)(nil),         // 20: dcloud.database.v1.DeleteSchemaRequest
+	(*DeleteSchemaResponse)(nil),        // 21: dcloud.database.v1.DeleteSchemaResponse
 }
 var file_database_proto_depIdxs = []int32{
 	2,  // 0: dcloud.database.v1.ListDatabasesResponse.databases:type_name -> dcloud.database.v1.Database
 	2,  // 1: dcloud.database.v1.CreateDatabaseResponse.database:type_name -> dcloud.database.v1.Database
 	2,  // 2: dcloud.database.v1.GetDatabaseResponse.database:type_name -> dcloud.database.v1.Database
-	0,  // 3: dcloud.database.v1.DatabaseService.Health:input_type -> dcloud.database.v1.HealthRequest
-	3,  // 4: dcloud.database.v1.DatabaseService.ListDatabases:input_type -> dcloud.database.v1.ListDatabasesRequest
-	5,  // 5: dcloud.database.v1.DatabaseService.CreateDatabase:input_type -> dcloud.database.v1.CreateDatabaseRequest
-	7,  // 6: dcloud.database.v1.DatabaseService.DeleteDatabase:input_type -> dcloud.database.v1.DeleteDatabaseRequest
-	9,  // 7: dcloud.database.v1.DatabaseService.GetDatabase:input_type -> dcloud.database.v1.GetDatabaseRequest
-	11, // 8: dcloud.database.v1.DatabaseService.GetConnectionString:input_type -> dcloud.database.v1.GetConnectionStringRequest
-	13, // 9: dcloud.database.v1.DatabaseService.GetOperation:input_type -> dcloud.database.v1.GetOperationRequest
-	1,  // 10: dcloud.database.v1.DatabaseService.Health:output_type -> dcloud.database.v1.HealthResponse
-	4,  // 11: dcloud.database.v1.DatabaseService.ListDatabases:output_type -> dcloud.database.v1.ListDatabasesResponse
-	6,  // 12: dcloud.database.v1.DatabaseService.CreateDatabase:output_type -> dcloud.database.v1.CreateDatabaseResponse
-	8,  // 13: dcloud.database.v1.DatabaseService.DeleteDatabase:output_type -> dcloud.database.v1.DeleteDatabaseResponse
-	10, // 14: dcloud.database.v1.DatabaseService.GetDatabase:output_type -> dcloud.database.v1.GetDatabaseResponse
-	12, // 15: dcloud.database.v1.DatabaseService.GetConnectionString:output_type -> dcloud.database.v1.GetConnectionStringResponse
-	14, // 16: dcloud.database.v1.DatabaseService.GetOperation:output_type -> dcloud.database.v1.GetOperationResponse
-	10, // [10:17] is the sub-list for method output_type
-	3,  // [3:10] is the sub-list for method input_type
-	3,  // [3:3] is the sub-list for extension type_name
-	3,  // [3:3] is the sub-list for extension extendee
-	0,  // [0:3] is the sub-list for field type_name
+	15, // 3: dcloud.database.v1.ListSchemasResponse.schemas:type_name -> dcloud.database.v1.Schema
+	15, // 4: dcloud.database.v1.CreateSchemaResponse.schema:type_name -> dcloud.database.v1.Schema
+	0,  // 5: dcloud.database.v1.DatabaseService.Health:input_type -> dcloud.database.v1.HealthRequest
+	3,  // 6: dcloud.database.v1.DatabaseService.ListDatabases:input_type -> dcloud.database.v1.ListDatabasesRequest
+	5,  // 7: dcloud.database.v1.DatabaseService.CreateDatabase:input_type -> dcloud.database.v1.CreateDatabaseRequest
+	7,  // 8: dcloud.database.v1.DatabaseService.DeleteDatabase:input_type -> dcloud.database.v1.DeleteDatabaseRequest
+	9,  // 9: dcloud.database.v1.DatabaseService.GetDatabase:input_type -> dcloud.database.v1.GetDatabaseRequest
+	11, // 10: dcloud.database.v1.DatabaseService.GetConnectionString:input_type -> dcloud.database.v1.GetConnectionStringRequest
+	13, // 11: dcloud.database.v1.DatabaseService.GetOperation:input_type -> dcloud.database.v1.GetOperationRequest
+	16, // 12: dcloud.database.v1.DatabaseService.ListSchemas:input_type -> dcloud.database.v1.ListSchemasRequest
+	18, // 13: dcloud.database.v1.DatabaseService.CreateSchema:input_type -> dcloud.database.v1.CreateSchemaRequest
+	20, // 14: dcloud.database.v1.DatabaseService.DeleteSchema:input_type -> dcloud.database.v1.DeleteSchemaRequest
+	1,  // 15: dcloud.database.v1.DatabaseService.Health:output_type -> dcloud.database.v1.HealthResponse
+	4,  // 16: dcloud.database.v1.DatabaseService.ListDatabases:output_type -> dcloud.database.v1.ListDatabasesResponse
+	6,  // 17: dcloud.database.v1.DatabaseService.CreateDatabase:output_type -> dcloud.database.v1.CreateDatabaseResponse
+	8,  // 18: dcloud.database.v1.DatabaseService.DeleteDatabase:output_type -> dcloud.database.v1.DeleteDatabaseResponse
+	10, // 19: dcloud.database.v1.DatabaseService.GetDatabase:output_type -> dcloud.database.v1.GetDatabaseResponse
+	12, // 20: dcloud.database.v1.DatabaseService.GetConnectionString:output_type -> dcloud.database.v1.GetConnectionStringResponse
+	14, // 21: dcloud.database.v1.DatabaseService.GetOperation:output_type -> dcloud.database.v1.GetOperationResponse
+	17, // 22: dcloud.database.v1.DatabaseService.ListSchemas:output_type -> dcloud.database.v1.ListSchemasResponse
+	19, // 23: dcloud.database.v1.DatabaseService.CreateSchema:output_type -> dcloud.database.v1.CreateSchemaResponse
+	21, // 24: dcloud.database.v1.DatabaseService.DeleteSchema:output_type -> dcloud.database.v1.DeleteSchemaResponse
+	15, // [15:25] is the sub-list for method output_type
+	5,  // [5:15] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_database_proto_init() }
@@ -1097,7 +1537,7 @@ func file_database_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_database_proto_rawDesc), len(file_database_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

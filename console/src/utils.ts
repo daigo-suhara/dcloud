@@ -5,44 +5,54 @@ export function parseRoute(pathname: string): RouteState {
   const route = pathname.replace(/^\/+/, "");
 
   if (!route) {
-    return { section: "home", selectedServiceName: null, selectedComputeMachineName: null };
+    return { section: "home", selectedServiceName: null, selectedComputeMachineName: null, selectedDatabaseName: null };
   }
 
   const [section, ...rest] = route.split("/");
   const normalizedSection = section;
 
   if (normalizedSection === "container" && rest[0] === "deploy") {
-    return { section: "deploy", selectedServiceName: null, selectedComputeMachineName: null };
+    return { section: "deploy", selectedServiceName: null, selectedComputeMachineName: null, selectedDatabaseName: null };
   }
   if (normalizedSection === "compute") {
     if (rest[0] === "new") {
-      return { section: "compute-create", selectedServiceName: null, selectedComputeMachineName: null };
+      return { section: "compute-create", selectedServiceName: null, selectedComputeMachineName: null, selectedDatabaseName: null };
     }
     if (rest.length > 0) {
       return {
         section: "compute",
         selectedServiceName: null,
-        selectedComputeMachineName: decodeURIComponent(rest.join("/"))
+        selectedComputeMachineName: decodeURIComponent(rest.join("/")),
+        selectedDatabaseName: null
       };
     }
-    return { section: "compute", selectedServiceName: null, selectedComputeMachineName: null };
+    return { section: "compute", selectedServiceName: null, selectedComputeMachineName: null, selectedDatabaseName: null };
   }
   if (normalizedSection === "container" && rest[0] === "repository") {
-    return { section: "repository", selectedServiceName: null, selectedComputeMachineName: null };
+    return { section: "repository", selectedServiceName: null, selectedComputeMachineName: null, selectedDatabaseName: null };
   }
   if (normalizedSection === "container" && rest.length > 0) {
     return {
       section: "container",
       selectedServiceName: decodeURIComponent(rest.join("/")),
-      selectedComputeMachineName: null
+      selectedComputeMachineName: null,
+      selectedDatabaseName: null
+    };
+  }
+  if (normalizedSection === "database" && rest.length > 0) {
+    return {
+      section: "database-detail",
+      selectedServiceName: null,
+      selectedComputeMachineName: null,
+      selectedDatabaseName: decodeURIComponent(rest.join("/"))
     };
   }
 
   if (normalizedSection === "home" || normalizedSection === "container" || normalizedSection === "deploy" || normalizedSection === "compute" || normalizedSection === "compute-create" || normalizedSection === "project-create" || normalizedSection === "repository" || normalizedSection === "storage" || normalizedSection === "database") {
-    return { section: normalizedSection, selectedServiceName: null, selectedComputeMachineName: null };
+    return { section: normalizedSection, selectedServiceName: null, selectedComputeMachineName: null, selectedDatabaseName: null };
   }
 
-  return { section: "home", selectedServiceName: null, selectedComputeMachineName: null };
+  return { section: "home", selectedServiceName: null, selectedComputeMachineName: null, selectedDatabaseName: null };
 }
 
 export function getServiceStatus(service: DeployedService) {

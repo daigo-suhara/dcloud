@@ -54,6 +54,21 @@ class DatabaseClient:
             request_serializer=database_pb2.GetOperationRequest.SerializeToString,
             response_deserializer=database_pb2.GetOperationResponse.FromString,
         )
+        self._list_schemas = channel.unary_unary(
+            "/dcloud.database.v1.DatabaseService/ListSchemas",
+            request_serializer=database_pb2.ListSchemasRequest.SerializeToString,
+            response_deserializer=database_pb2.ListSchemasResponse.FromString,
+        )
+        self._create_schema = channel.unary_unary(
+            "/dcloud.database.v1.DatabaseService/CreateSchema",
+            request_serializer=database_pb2.CreateSchemaRequest.SerializeToString,
+            response_deserializer=database_pb2.CreateSchemaResponse.FromString,
+        )
+        self._delete_schema = channel.unary_unary(
+            "/dcloud.database.v1.DatabaseService/DeleteSchema",
+            request_serializer=database_pb2.DeleteSchemaRequest.SerializeToString,
+            response_deserializer=database_pb2.DeleteSchemaResponse.FromString,
+        )
 
     @classmethod
     def new(cls) -> "DatabaseClient":
@@ -118,10 +133,14 @@ class DatabaseClient:
             raise self._map_error(error) from error
         return self._db_to_dict(response.database)
 
-    def get_connection_string(self, user_id: str, project_id: str, name: str) -> dict[str, Any]:
+    def get_connection_string(
+        self, user_id: str, project_id: str, name: str, schema_name: str = ""
+    ) -> dict[str, Any]:
         try:
             response = self._get_connection_string(
-                database_pb2.GetConnectionStringRequest(user_id=user_id, project_id=project_id, name=name)
+                database_pb2.GetConnectionStringRequest(
+                    user_id=user_id, project_id=project_id, name=name, schema_name=schema_name
+                )
             )
         except grpc.RpcError as error:
             raise self._map_error(error) from error
@@ -133,6 +152,42 @@ class DatabaseClient:
             "password": response.password,
             "databaseName": response.database_name,
         }
+
+    def list_schemas(self, user_id: str, project_id: str, name: str) -> list[dict[str, Any]]:
+        try:
+            response = self._list_schemas(
+                database_pb2.ListSchemasRequest(user_id=user_id, project_id=project_id, name=name)
+            )
+        except grpc.RpcError as error:
+            raise self._map_error(error) from error
+        return [{"name": s.name, "charset": s.charset} for s in response.schemas]
+
+    def create_schema(
+        self, user_id: str, project_id: str, name: str, schema_name: str, charset: str = ""
+    ) -> dict[str, Any]:
+        try:
+            response = self._create_schema(
+                database_pb2.CreateSchemaRequest(
+                    user_id=user_id,
+                    project_id=project_id,
+                    name=name,
+                    schema_name=schema_name,
+                    charset=charset,
+                )
+            )
+        except grpc.RpcError as error:
+            raise self._map_error(error) from error
+        return {"name": response.schema.name, "charset": response.schema.charset}
+
+    def delete_schema(self, user_id: str, project_id: str, name: str, schema_name: str) -> None:
+        try:
+            self._delete_schema(
+                database_pb2.DeleteSchemaRequest(
+                    user_id=user_id, project_id=project_id, name=name, schema_name=schema_name
+                )
+            )
+        except grpc.RpcError as error:
+            raise self._map_error(error) from error
 
     def get_operation(self, operation_id: str) -> dict[str, Any]:
         try:

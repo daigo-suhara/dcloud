@@ -26,6 +26,9 @@ const (
 	DatabaseService_GetDatabase_FullMethodName         = "/dcloud.database.v1.DatabaseService/GetDatabase"
 	DatabaseService_GetConnectionString_FullMethodName = "/dcloud.database.v1.DatabaseService/GetConnectionString"
 	DatabaseService_GetOperation_FullMethodName        = "/dcloud.database.v1.DatabaseService/GetOperation"
+	DatabaseService_ListSchemas_FullMethodName         = "/dcloud.database.v1.DatabaseService/ListSchemas"
+	DatabaseService_CreateSchema_FullMethodName        = "/dcloud.database.v1.DatabaseService/CreateSchema"
+	DatabaseService_DeleteSchema_FullMethodName        = "/dcloud.database.v1.DatabaseService/DeleteSchema"
 )
 
 // DatabaseServiceClient is the client API for DatabaseService service.
@@ -39,6 +42,10 @@ type DatabaseServiceClient interface {
 	GetDatabase(ctx context.Context, in *GetDatabaseRequest, opts ...grpc.CallOption) (*GetDatabaseResponse, error)
 	GetConnectionString(ctx context.Context, in *GetConnectionStringRequest, opts ...grpc.CallOption) (*GetConnectionStringResponse, error)
 	GetOperation(ctx context.Context, in *GetOperationRequest, opts ...grpc.CallOption) (*GetOperationResponse, error)
+	// Schema (logical database) management inside a DB instance.
+	ListSchemas(ctx context.Context, in *ListSchemasRequest, opts ...grpc.CallOption) (*ListSchemasResponse, error)
+	CreateSchema(ctx context.Context, in *CreateSchemaRequest, opts ...grpc.CallOption) (*CreateSchemaResponse, error)
+	DeleteSchema(ctx context.Context, in *DeleteSchemaRequest, opts ...grpc.CallOption) (*DeleteSchemaResponse, error)
 }
 
 type databaseServiceClient struct {
@@ -119,6 +126,36 @@ func (c *databaseServiceClient) GetOperation(ctx context.Context, in *GetOperati
 	return out, nil
 }
 
+func (c *databaseServiceClient) ListSchemas(ctx context.Context, in *ListSchemasRequest, opts ...grpc.CallOption) (*ListSchemasResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListSchemasResponse)
+	err := c.cc.Invoke(ctx, DatabaseService_ListSchemas_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *databaseServiceClient) CreateSchema(ctx context.Context, in *CreateSchemaRequest, opts ...grpc.CallOption) (*CreateSchemaResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateSchemaResponse)
+	err := c.cc.Invoke(ctx, DatabaseService_CreateSchema_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *databaseServiceClient) DeleteSchema(ctx context.Context, in *DeleteSchemaRequest, opts ...grpc.CallOption) (*DeleteSchemaResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteSchemaResponse)
+	err := c.cc.Invoke(ctx, DatabaseService_DeleteSchema_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DatabaseServiceServer is the server API for DatabaseService service.
 // All implementations must embed UnimplementedDatabaseServiceServer
 // for forward compatibility.
@@ -130,6 +167,10 @@ type DatabaseServiceServer interface {
 	GetDatabase(context.Context, *GetDatabaseRequest) (*GetDatabaseResponse, error)
 	GetConnectionString(context.Context, *GetConnectionStringRequest) (*GetConnectionStringResponse, error)
 	GetOperation(context.Context, *GetOperationRequest) (*GetOperationResponse, error)
+	// Schema (logical database) management inside a DB instance.
+	ListSchemas(context.Context, *ListSchemasRequest) (*ListSchemasResponse, error)
+	CreateSchema(context.Context, *CreateSchemaRequest) (*CreateSchemaResponse, error)
+	DeleteSchema(context.Context, *DeleteSchemaRequest) (*DeleteSchemaResponse, error)
 	mustEmbedUnimplementedDatabaseServiceServer()
 }
 
@@ -160,6 +201,15 @@ func (UnimplementedDatabaseServiceServer) GetConnectionString(context.Context, *
 }
 func (UnimplementedDatabaseServiceServer) GetOperation(context.Context, *GetOperationRequest) (*GetOperationResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetOperation not implemented")
+}
+func (UnimplementedDatabaseServiceServer) ListSchemas(context.Context, *ListSchemasRequest) (*ListSchemasResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListSchemas not implemented")
+}
+func (UnimplementedDatabaseServiceServer) CreateSchema(context.Context, *CreateSchemaRequest) (*CreateSchemaResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateSchema not implemented")
+}
+func (UnimplementedDatabaseServiceServer) DeleteSchema(context.Context, *DeleteSchemaRequest) (*DeleteSchemaResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteSchema not implemented")
 }
 func (UnimplementedDatabaseServiceServer) mustEmbedUnimplementedDatabaseServiceServer() {}
 func (UnimplementedDatabaseServiceServer) testEmbeddedByValue()                         {}
@@ -308,6 +358,60 @@ func _DatabaseService_GetOperation_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DatabaseService_ListSchemas_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListSchemasRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DatabaseServiceServer).ListSchemas(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DatabaseService_ListSchemas_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DatabaseServiceServer).ListSchemas(ctx, req.(*ListSchemasRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DatabaseService_CreateSchema_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateSchemaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DatabaseServiceServer).CreateSchema(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DatabaseService_CreateSchema_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DatabaseServiceServer).CreateSchema(ctx, req.(*CreateSchemaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DatabaseService_DeleteSchema_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSchemaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DatabaseServiceServer).DeleteSchema(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DatabaseService_DeleteSchema_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DatabaseServiceServer).DeleteSchema(ctx, req.(*DeleteSchemaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DatabaseService_ServiceDesc is the grpc.ServiceDesc for DatabaseService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -342,6 +446,18 @@ var DatabaseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetOperation",
 			Handler:    _DatabaseService_GetOperation_Handler,
+		},
+		{
+			MethodName: "ListSchemas",
+			Handler:    _DatabaseService_ListSchemas_Handler,
+		},
+		{
+			MethodName: "CreateSchema",
+			Handler:    _DatabaseService_CreateSchema_Handler,
+		},
+		{
+			MethodName: "DeleteSchema",
+			Handler:    _DatabaseService_DeleteSchema_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

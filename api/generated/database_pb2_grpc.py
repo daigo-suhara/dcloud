@@ -49,6 +49,21 @@ class DatabaseServiceStub:
                 request_serializer=database__pb2.GetOperationRequest.SerializeToString,
                 response_deserializer=database__pb2.GetOperationResponse.FromString,
                 _registered_method=True)
+        self.ListSchemas = channel.unary_unary(
+                '/dcloud.database.v1.DatabaseService/ListSchemas',
+                request_serializer=database__pb2.ListSchemasRequest.SerializeToString,
+                response_deserializer=database__pb2.ListSchemasResponse.FromString,
+                _registered_method=True)
+        self.CreateSchema = channel.unary_unary(
+                '/dcloud.database.v1.DatabaseService/CreateSchema',
+                request_serializer=database__pb2.CreateSchemaRequest.SerializeToString,
+                response_deserializer=database__pb2.CreateSchemaResponse.FromString,
+                _registered_method=True)
+        self.DeleteSchema = channel.unary_unary(
+                '/dcloud.database.v1.DatabaseService/DeleteSchema',
+                request_serializer=database__pb2.DeleteSchemaRequest.SerializeToString,
+                response_deserializer=database__pb2.DeleteSchemaResponse.FromString,
+                _registered_method=True)
 
 
 class DatabaseServiceServicer:
@@ -96,6 +111,25 @@ class DatabaseServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ListSchemas(self, request, context):
+        """Schema (logical database) management inside a DB instance.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateSchema(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteSchema(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DatabaseServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -133,6 +167,21 @@ def add_DatabaseServiceServicer_to_server(servicer, server):
                     servicer.GetOperation,
                     request_deserializer=database__pb2.GetOperationRequest.FromString,
                     response_serializer=database__pb2.GetOperationResponse.SerializeToString,
+            ),
+            'ListSchemas': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListSchemas,
+                    request_deserializer=database__pb2.ListSchemasRequest.FromString,
+                    response_serializer=database__pb2.ListSchemasResponse.SerializeToString,
+            ),
+            'CreateSchema': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateSchema,
+                    request_deserializer=database__pb2.CreateSchemaRequest.FromString,
+                    response_serializer=database__pb2.CreateSchemaResponse.SerializeToString,
+            ),
+            'DeleteSchema': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteSchema,
+                    request_deserializer=database__pb2.DeleteSchemaRequest.FromString,
+                    response_serializer=database__pb2.DeleteSchemaResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -324,6 +373,87 @@ class DatabaseService:
             '/dcloud.database.v1.DatabaseService/GetOperation',
             database__pb2.GetOperationRequest.SerializeToString,
             database__pb2.GetOperationResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListSchemas(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/dcloud.database.v1.DatabaseService/ListSchemas',
+            database__pb2.ListSchemasRequest.SerializeToString,
+            database__pb2.ListSchemasResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateSchema(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/dcloud.database.v1.DatabaseService/CreateSchema',
+            database__pb2.CreateSchemaRequest.SerializeToString,
+            database__pb2.CreateSchemaResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeleteSchema(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/dcloud.database.v1.DatabaseService/DeleteSchema',
+            database__pb2.DeleteSchemaRequest.SerializeToString,
+            database__pb2.DeleteSchemaResponse.FromString,
             options,
             channel_credentials,
             insecure,

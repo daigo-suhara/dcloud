@@ -48,6 +48,13 @@ type GetConnectionStringRequest = databasepb.GetConnectionStringRequest
 type GetConnectionStringResponse = databasepb.GetConnectionStringResponse
 type GetOperationRequest = databasepb.GetOperationRequest
 type GetOperationResponse = databasepb.GetOperationResponse
+type ListSchemasRequest = databasepb.ListSchemasRequest
+type ListSchemasResponse = databasepb.ListSchemasResponse
+type CreateSchemaRequest = databasepb.CreateSchemaRequest
+type CreateSchemaResponse = databasepb.CreateSchemaResponse
+type DeleteSchemaRequest = databasepb.DeleteSchemaRequest
+type DeleteSchemaResponse = databasepb.DeleteSchemaResponse
+type Schema = databasepb.Schema
 type DatabaseServer = databasepb.DatabaseServiceServer
 
 // KubeBlocks uses a unified Cluster CRD for all DB types.
@@ -338,7 +345,7 @@ func (s *databaseServer) GetConnectionString(ctx context.Context, req *GetConnec
 	if found == nil {
 		return nil, status.Error(codes.NotFound, "database not found")
 	}
-	connInfo, err := s.kube.getConnectionString(ctx, s.namespace, found)
+	connInfo, err := s.kube.getConnectionString(ctx, s.namespace, found, strings.TrimSpace(req.SchemaName))
 	if err != nil {
 		if errors.Is(err, errNotFound) {
 			return nil, status.Error(codes.FailedPrecondition, "database is not ready yet")
@@ -346,6 +353,88 @@ func (s *databaseServer) GetConnectionString(ctx context.Context, req *GetConnec
 		return nil, status.Error(codes.Internal, "failed to get connection string")
 	}
 	return connInfo, nil
+}
+
+func (s *databaseServer) ListSchemas(ctx context.Context, req *ListSchemasRequest) (*ListSchemasResponse, error) {
+	rec, err := s.lookupInstance(ctx, req.UserId, req.ProjectId, req.Name)
+	if err != nil {
+		return nil, err
+	}
+	names, err := s.kube.listSchemas(ctx, s.namespace, rec)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to list schemas")
+	}
+	out := make([]*Schema, 0, len(names))
+	for _, n := range names {
+		out = append(out, &Schema{Name: n})
+	}
+	return &ListSchemasResponse{Schemas: out}, nil
+}
+
+func (s *databaseServer) CreateSchema(ctx context.Context, req *CreateSchemaRequest) (*CreateSchemaResponse, error) {
+	rec, err := s.lookupInstance(ctx, req.UserId, req.ProjectId, req.Name)
+	if err != nil {
+		return nil, err
+	}
+	schemaName := strings.TrimSpace(req.SchemaName)
+	if schemaName == "" {
+		return nil, status.Error(codes.InvalidArgument, "schemaName is required")
+	}
+	if err := s.kube.createSchema(ctx, s.namespace, rec, schemaName, strings.TrimSpace(req.Charset)); err != nil {
+		if errors.Is(err, errInvalidArgument) {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		return nil, status.Error(codes.Internal, "failed to create schema: "+err.Error())
+	}
+	return &CreateSchemaResponse{Schema: &Schema{Name: schemaName, Charset: strings.TrimSpace(req.Charset)}}, nil
+}
+
+func (s *databaseServer) DeleteSchema(ctx context.Context, req *DeleteSchemaRequest) (*DeleteSchemaResponse, error) {
+	rec, err := s.lookupInstance(ctx, req.UserId, req.ProjectId, req.Name)
+	if err != nil {
+		return nil, err
+	}
+	schemaName := strings.TrimSpace(req.SchemaName)
+	if schemaName == "" {
+		return nil, status.Error(codes.InvalidArgument, "schemaName is required")
+	}
+	if err := s.kube.deleteSchema(ctx, s.namespace, rec, schemaName); err != nil {
+		if errors.Is(err, errInvalidArgument) {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		return nil, status.Error(codes.Internal, "failed to delete schema: "+err.Error())
+	}
+	return &DeleteSchemaResponse{}, nil
+}
+
+// lookupInstance validates project ownership and finds the DB instance by user-facing name.
+func (s *databaseServer) lookupInstance(ctx context.Context, userID, projectID, name string) (*dbRecord, error) {
+	userID = strings.TrimSpace(userID)
+	projectID = strings.TrimSpace(projectID)
+	name = strings.TrimSpace(name)
+	if userID == "" || projectID == "" || name == "" {
+		return nil, status.Error(codes.InvalidArgument, "userId, projectId, and name are required")
+	}
+	exists, err := s.projectExists(ctx, userID, projectID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to query project")
+	}
+	if !exists {
+		return nil, status.Error(codes.NotFound, "project not found")
+	}
+	records, err := s.kube.listDatabases(ctx, s.namespace, userID, projectID)
+	if err != nil {
+		if errors.Is(err, errUnavailable) {
+			return nil, status.Error(codes.FailedPrecondition, err.Error())
+		}
+		return nil, status.Error(codes.Internal, "failed to find database")
+	}
+	for i := range records {
+		if records[i].Name == name {
+			return &records[i], nil
+		}
+	}
+	return nil, status.Error(codes.NotFound, "database not found")
 }
 
 func (s *databaseServer) GetOperation(ctx context.Context, req *GetOperationRequest) (*GetOperationResponse, error) {
@@ -664,7 +753,7 @@ func (c *kubeClient) deleteDatabase(ctx context.Context, namespace, resourceName
 
 // getConnectionString reads the KubeBlocks-generated conn-credential Secret.
 // KubeBlocks creates "{cluster-name}-conn-credential" with keys: username, password, host, port, endpoint.
-func (c *kubeClient) getConnectionString(ctx context.Context, namespace string, r *dbRecord) (*GetConnectionStringResponse, error) {
+func (c *kubeClient) getConnectionString(ctx context.Context, namespace string, r *dbRecord, schemaName string) (*GetConnectionStringResponse, error) {
 	secretName := r.ResourceName + "-conn-credential"
 	var secret kubeSecret
 	if err := c.doJSON(ctx, http.MethodGet, fmt.Sprintf("/api/v1/namespaces/%s/secrets/%s", namespace, secretName), nil, &secret); err != nil {
@@ -680,7 +769,10 @@ func (c *kubeClient) getConnectionString(ctx context.Context, namespace string, 
 	if port == "" {
 		port = dbPorts[r.Type]
 	}
-	dbName := r.ResourceName
+	dbName := strings.TrimSpace(schemaName)
+	if dbName == "" {
+		dbName = r.ResourceName
+	}
 	var connStr string
 	switch r.Type {
 	case "postgres":

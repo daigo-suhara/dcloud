@@ -49,7 +49,7 @@ export function DrawerNav({ onCloseSidebar, onNavigate, route, sidebarOpen }: Dr
           {navItems.map((item) => (
             <ListItemButton
               key={item.id}
-              selected={route.section === item.id}
+              selected={(route.section === item.id || (item.id === "database" && route.section === "database-detail"))}
               onClick={() => {
                 onNavigate(item.id);
                 if (window.matchMedia("(max-width: 760px)").matches) {
@@ -65,7 +65,7 @@ export function DrawerNav({ onCloseSidebar, onNavigate, route, sidebarOpen }: Dr
               }}
             >
               <ListItemIcon sx={{ minWidth: 40 }}>
-                <Box sx={{ width: 28, height: 28, borderRadius: "999px", display: "grid", placeItems: "center", bgcolor: route.section === item.id ? alpha("#2563eb", 0.12) : alpha("#0f172a", 0.04), color: route.section === item.id ? "primary.main" : "text.secondary" }}>
+                <Box sx={{ width: 28, height: 28, borderRadius: "999px", display: "grid", placeItems: "center", bgcolor: (route.section === item.id || (item.id === "database" && route.section === "database-detail")) ? alpha("#2563eb", 0.12) : alpha("#0f172a", 0.04), color: (route.section === item.id || (item.id === "database" && route.section === "database-detail")) ? "primary.main" : "text.secondary" }}>
                   {item.id === "home" ? (
                     <Box component={BiHomeAlt2} sx={{ fontSize: 18 }} />
                   ) : item.id === "container" ? (

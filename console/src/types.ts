@@ -131,9 +131,24 @@ export type DatabaseCreateForm = {
 };
 
 export type RouteState = {
-  section: "home" | "container" | "compute" | "compute-create" | "deploy" | "project-create" | "repository" | "storage" | "database";
+  section: "home" | "container" | "compute" | "compute-create" | "deploy" | "project-create" | "repository" | "storage" | "database" | "database-detail";
   selectedServiceName: string | null;
   selectedComputeMachineName: string | null;
+  selectedDatabaseName: string | null;
+};
+
+export type DatabaseSchema = {
+  name: string;
+  charset?: string;
+};
+
+export type DatabaseConnectionInfo = {
+  connectionString: string;
+  host: string;
+  port: string;
+  username: string;
+  password: string;
+  databaseName: string;
 };
 
 export type RepositoryConfig = {

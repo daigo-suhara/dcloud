@@ -12,6 +12,11 @@ service DatabaseService {
   rpc GetDatabase(GetDatabaseRequest) returns (GetDatabaseResponse);
   rpc GetConnectionString(GetConnectionStringRequest) returns (GetConnectionStringResponse);
   rpc GetOperation(GetOperationRequest) returns (GetOperationResponse);
+
+  // Schema (logical database) management inside a DB instance.
+  rpc ListSchemas(ListSchemasRequest) returns (ListSchemasResponse);
+  rpc CreateSchema(CreateSchemaRequest) returns (CreateSchemaResponse);
+  rpc DeleteSchema(DeleteSchemaRequest) returns (DeleteSchemaResponse);
 }
 
 message HealthRequest {}
@@ -85,6 +90,9 @@ message GetConnectionStringRequest {
   string user_id = 1;
   string project_id = 2;
   string name = 3;
+  // Optional: when provided, the returned connection_string targets this
+  // schema (database). Defaults to the instance's default DB name.
+  string schema_name = 4;
 }
 
 message GetConnectionStringResponse {
@@ -105,3 +113,43 @@ message GetOperationResponse {
   string status = 2;
   string error = 3;
 }
+
+// ---- Schemas (logical databases) ----
+
+message Schema {
+  string name = 1;
+  string charset = 2;
+}
+
+message ListSchemasRequest {
+  string user_id = 1;
+  string project_id = 2;
+  // Instance name (user-facing).
+  string name = 3;
+}
+
+message ListSchemasResponse {
+  repeated Schema schemas = 1;
+}
+
+message CreateSchemaRequest {
+  string user_id = 1;
+  string project_id = 2;
+  string name = 3;
+  string schema_name = 4;
+  // Optional. MySQL: e.g. utf8mb4. Postgres: ignored.
+  string charset = 5;
+}
+
+message CreateSchemaResponse {
+  Schema schema = 1;
+}
+
+message DeleteSchemaRequest {
+  string user_id = 1;
+  string project_id = 2;
+  string name = 3;
+  string schema_name = 4;
+}
+
+message DeleteSchemaResponse {}

@@ -47,6 +47,7 @@ type DatabaseSectionProps = {
   deletingDatabaseName: string;
   onDeleteDatabase: (name: string) => void;
   onCreateDatabase: (form: DatabaseCreateForm) => Promise<void>;
+  onOpenDatabase: (name: string) => void;
   activeProjectId: string;
 };
 
@@ -56,6 +57,7 @@ export function DatabaseSection({
   deletingDatabaseName,
   onDeleteDatabase,
   onCreateDatabase,
+  onOpenDatabase,
   activeProjectId
 }: DatabaseSectionProps) {
   const [createOpen, setCreateOpen] = useState(false);
@@ -181,7 +183,11 @@ export function DatabaseSection({
                           </Box>
                         </Box>
                         <Box sx={{ minWidth: 0 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 700, wordBreak: "break-all" }}>
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: 700, wordBreak: "break-all", cursor: "pointer", "&:hover": { textDecoration: "underline" } }}
+                            onClick={() => onOpenDatabase(db.name)}
+                          >
                             {db.name}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">{db.version}</Typography>

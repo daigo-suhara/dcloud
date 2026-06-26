@@ -16,6 +16,7 @@ import { LoadingScreen } from "./components/LoadingScreen";
 import { HomeSection } from "./components/HomeSection";
 import { StorageSection } from "./components/StorageSection";
 import { DatabaseSection } from "./components/DatabaseSection";
+import { DatabaseDetailSection } from "./components/DatabaseDetailSection";
 import { theme } from "./theme";
 import { useConsoleController } from "./hooks/useConsoleController";
 
@@ -35,6 +36,9 @@ function AppContent() {
   const visibleSection = forceProjectCreate ? "project-create" : controller.route.section;
   const selectedComputeMachine = controller.route.selectedComputeMachineName
     ? controller.computeMachines.find((machine) => machine.name === controller.route.selectedComputeMachineName) ?? null
+    : null;
+  const selectedDatabase = controller.route.selectedDatabaseName
+    ? controller.databases.find((db) => db.name === controller.route.selectedDatabaseName) ?? null
     : null;
 
   React.useEffect(() => {
@@ -200,7 +204,16 @@ function AppContent() {
             deletingDatabaseName={controller.deletingDatabaseName}
             onDeleteDatabase={controller.handleDeleteDatabase}
             onCreateDatabase={controller.handleCreateDatabase}
+            onOpenDatabase={(name) => navigate(`/database/${encodeURIComponent(name)}`)}
             activeProjectId={controller.activeProjectId}
+          />
+        ) : visibleSection === "database-detail" ? (
+          <DatabaseDetailSection
+            database={selectedDatabase}
+            databaseName={controller.route.selectedDatabaseName ?? ""}
+            loading={controller.databaseLoading}
+            activeProjectId={controller.activeProjectId}
+            onBack={() => navigate("/database")}
           />
         ) : visibleSection === "deploy" ? (
           <DeploySection

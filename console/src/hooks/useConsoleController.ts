@@ -812,7 +812,7 @@ export function useConsoleController() {
   }, [route.section, activeProjectId, currentUser]);
 
   useEffect(() => {
-    if (route.section !== "database") {
+    if (route.section !== "database" && route.section !== "database-detail") {
       setDatabases([]);
       return;
     }
