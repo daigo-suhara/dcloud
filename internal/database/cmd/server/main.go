@@ -67,7 +67,7 @@ var (
 	}
 	defaultVersionRefs = map[string]string{
 		"postgres": "postgresql-16.4.0",
-		"mysql":    "mysql-8.0.35",
+		"mysql":    "mysql-8.4.2",
 		"redis":    "redis-7.2.4",
 	}
 	dbPorts = map[string]string{

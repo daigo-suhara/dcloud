@@ -19,7 +19,7 @@ const DB_TYPES = [
 
 const DEFAULT_VERSIONS: Record<string, string> = {
   postgres: "postgresql-16.4.0",
-  mysql: "mysql-8.0.35",
+  mysql: "mysql-8.4.2",
   redis: "redis-7.2.4",
 };
 
