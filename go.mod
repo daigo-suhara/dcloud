@@ -4,6 +4,7 @@ go 1.25.0
 
 require (
 	connectrpc.com/connect v1.20.0
+	github.com/coder/websocket v1.8.15
 	github.com/go-sql-driver/mysql v1.10.0
 	github.com/jackc/pgx/v5 v5.10.0
 	golang.org/x/crypto v0.48.0
