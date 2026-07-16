@@ -72,7 +72,7 @@ export function RepositorySection({
                 label="リポジトリオーナー"
                 value={form.repositoryOwner}
                 onChange={(event) => onChange({ repositoryOwner: event.target.value })}
-                placeholder="daigo-suhara"
+                placeholder="octocat"
                 fullWidth
               />
               <TextField

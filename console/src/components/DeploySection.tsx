@@ -24,7 +24,7 @@ export function DeploySection({ error, form, onBack, onChange, onSubmit, submitt
   function fillTestImage() {
     onChange({
       name: "hello",
-      image: "ghcr.io/daigo-suhara/hello-world:latest"
+      image: "gcr.io/knative-samples/helloworld-go:latest"
     });
   }
   return (
