@@ -24,6 +24,63 @@ ConnectRPC / gRPC API served by the services themselves.
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    user((User))
+    subgraph edge[Public edge]
+        cf[Cloudflare Tunnel]
+    end
+    subgraph console[Console pod]
+        nginx[nginx SPA + REST router]
+    end
+    subgraph svc[dcloud services]
+        identity[[identity<br/>JWT + JWKS]]
+        project[[project<br/>+ delete fan-out]]
+        container[[container]]
+        compute[[compute<br/>+ VM console WS]]
+        storage[[storage<br/>+ S3 proxy]]
+        database[[database]]
+    end
+    subgraph platform[Cluster platform]
+        pg[(PostgreSQL HA)]
+        knative[Knative Serving]
+        kubevirt[KubeVirt]
+        rgw[Ceph RGW / OBC]
+        kubeblocks[KubeBlocks]
+    end
+
+    user -->|HTTPS| cf --> nginx
+    nginx -->|/api/v1/auth| identity
+    nginx -->|/api/v1/projects| project
+    nginx -->|/api/v1/container| container
+    nginx -->|/api/v1/compute| compute
+    nginx -->|/api/v1/storage| storage
+    nginx -->|/api/v1/database| database
+
+    identity -.->|JWKS| project
+    identity -.->|JWKS| container
+    identity -.->|JWKS| compute
+    identity -.->|JWKS| storage
+    identity -.->|JWKS| database
+
+    project -->|Connect| container
+    project -->|Connect| compute
+    project -->|Connect| storage
+    project -->|Connect| database
+
+    identity --> pg
+    project --> pg
+    container --> pg
+    compute --> pg
+    storage --> pg
+    database --> pg
+
+    container --> knative
+    compute --> kubevirt
+    storage --> rgw
+    database --> kubeblocks
+```
+
 Each domain is a standalone Go binary that speaks three protocols on
 two ports:
 
