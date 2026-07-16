@@ -1,0 +1,28 @@
+name: release-please
+
+# release-please watches the main branch for Conventional Commits and
+# maintains a "release PR" that keeps CHANGELOG.md, chart versions, and
+# the tag in sync. Merging the PR pushes a semver tag, which in turn
+# triggers .github/workflows/release.yml to build and publish images
+# and the Helm chart.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          release-type: simple
+          package-name: dcloud
+          # Sync the Helm chart version fields alongside the release tag
+          # so consumers see the same version everywhere.
+          extra-files: |
+            charts/dcloud/Chart.yaml
