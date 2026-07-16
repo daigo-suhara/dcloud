@@ -1,0 +1,85 @@
+{{- if .Values.ingress.enabled -}}
+{{- /*
+Optional Ingress for the dcloud console + (optionally) the tenant
+container catch-all.
+
+- Rule 1 (console.publicHostname): routes to the console Service. The
+  console pod's nginx does the /api/v1 -> per-service fan-out
+  internally, so the Ingress just needs one backend.
+
+- Rule 2 (*.publicServiceDomain): only rendered when
+  ingress.tenantWildcard.enabled is true. Forwards every subdomain to
+  istio-ingressgateway so Knative can match Routes by Host header.
+*/}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "dcloud.fullname" . }}-console
+  labels:
+    {{- include "dcloud.labels" . | nindent 4 }}
+    app.kubernetes.io/component: console
+  annotations:
+    {{- if .Values.ingress.tls.enabled }}
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.tls.clusterIssuer | quote }}
+    {{- end }}
+    # Long timeouts for streaming (container logs SSE, VM console WS,
+    # S3 uploads that can take minutes).
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10g"
+spec:
+  ingressClassName: {{ .Values.ingress.className | quote }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.console.publicHostname | quote }}
+      secretName: {{ printf "%s-console-tls" (include "dcloud.fullname" .) | quote }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.console.publicHostname | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "dcloud.fullname" . }}-console
+                port:
+                  number: {{ .Values.console.service.port }}
+{{- if .Values.ingress.tenantWildcard.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "dcloud.fullname" . }}-tenants
+  labels:
+    {{- include "dcloud.labels" . | nindent 4 }}
+    app.kubernetes.io/component: tenant-router
+  annotations:
+    {{- if .Values.ingress.tls.enabled }}
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.tls.clusterIssuer | quote }}
+    {{- end }}
+    # Tenant container payloads may be websocket-heavy; keep long-poll open.
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  ingressClassName: {{ .Values.ingress.className | quote }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ printf "*.%s" .Values.publicServiceDomain | quote }}
+      secretName: {{ printf "%s-tenants-tls" (include "dcloud.fullname" .) | quote }}
+  {{- end }}
+  rules:
+    - host: {{ printf "*.%s" .Values.publicServiceDomain | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.ingress.tenantWildcard.upstreamService | trimSuffix ".svc.cluster.local" | splitList "." | first }}
+                port:
+                  number: {{ .Values.ingress.tenantWildcard.upstreamPort }}
+{{- end }}
+{{- end -}}

@@ -26,8 +26,15 @@ compute:
     port: 8084
 
 storageClass:
-  createClass: true
-  className: ceph-rbd
+  # Set createClass: true only when your cluster does not already have a
+  # default StorageClass and you want dcloud to render one. Most users
+  # should keep this false and rely on the cluster's default (e.g. rook's
+  # `general` StorageClass with isDefault=true).
+  createClass: false
+  # Name of the StorageClass PostgreSQL persistence + KubeBlocks Clusters
+  # bind to. Empty means "use the cluster's default StorageClass".
+  className: ""
+  # Only consulted when createClass: true.
   clusterID: rook-ceph
   pool: rbd
 
@@ -73,16 +80,27 @@ database:
     repository: database
   service:
     port: 8086
-  storageClass: ceph-rbd
+  # Storage class for KubeBlocks Clusters the database service creates.
+  # Empty (default) means "use the cluster's default StorageClass".
+  storageClass: ""
+  # Set to a pre-created Secret name to bring your own DB credentials
+  # instead of the auto-generated dcloud-database secret. The secret
+  # must contain the same keys (password/postgres-password/repmgr-password
+  # /sr-check-password/admin-password/DCLD_DATABASE_URL/DCLD_DATABASE_MIGRATION_URL).
+  externalSecret: ""
 
 postgresql-ha:
   global:
     security:
       allowInsecureImages: true
-    defaultStorageClass: ceph-rbd
+    # Empty means "use the cluster's default StorageClass" - see also
+    # storageClass.className at the top of this file.
+    defaultStorageClass: ""
     postgresql:
       username: dcloud
       database: dcloud
+      # References the secret rendered by templates/database-secret.yaml
+      # (or the user-supplied one when database.externalSecret is set).
       existingSecret: dcloud-database
       repmgrUsername: repmgr
     pgpool:
@@ -96,7 +114,7 @@ postgresql-ha:
     replicaCount: 2
     existingSecret: dcloud-database
     persistence:
-      storageClass: ceph-rbd
+      storageClass: ""
   pgpool:
     image:
       repository: soldevelo/pgpool
@@ -108,3 +126,22 @@ postgresql-ha:
       limits:
         memory: 512Mi
         cpu: 375m
+
+# Console publishing options. Set ingress.enabled: true to render an
+# Ingress in addition to the Service. In that mode the browser reaches
+# the console via the Ingress (typically ingress-nginx) with TLS
+# terminated by cert-manager.
+ingress:
+  enabled: false
+  className: nginx
+  tls:
+    enabled: true
+    # cert-manager ClusterIssuer to request certs from.
+    clusterIssuer: letsencrypt-prod
+  # Tenant *.<publicServiceDomain> traffic is forwarded to istio-ingressgateway
+  # so Knative can match Routes by Host. Set enabled: false if you serve
+  # tenants some other way.
+  tenantWildcard:
+    enabled: true
+    upstreamService: istio-ingressgateway.istio-system.svc.cluster.local
+    upstreamPort: 80
