@@ -25,9 +25,14 @@ import (
 	"syscall"
 	"time"
 
+	"connectrpc.com/connect"
+	"github.com/daigo-suhara/dcloud/internal/auth/jwtverify"
 	"github.com/daigo-suhara/dcloud/internal/db"
 	dbsqlc "github.com/daigo-suhara/dcloud/internal/db/sqlc"
 	databasepb "github.com/daigo-suhara/dcloud/internal/pb/databasepb"
+	"github.com/daigo-suhara/dcloud/internal/pb/databasepb/databasepbconnect"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -506,10 +511,13 @@ func (s *databaseServer) reconcileResourceType(ctx context.Context, resourceType
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	addr := env("DCLD_DATABASE_ADDR", ":8086")
-	lis, err := net.Listen("tcp", addr)
+	grpcAddr := env("DCLD_DATABASE_ADDR", ":8086")
+	httpAddr := env("DCLD_DATABASE_HTTP_ADDR", ":8096")
+	jwksURL := env("DCLD_IDENTITY_JWKS_URL", "http://identity:8093/.well-known/jwks.json")
+
+	lis, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
-		logger.Error("failed to listen", "addr", addr, "error", err)
+		logger.Error("failed to listen", "addr", grpcAddr, "error", err)
 		os.Exit(1)
 	}
 	server, err := newDatabaseServer(env("DCLD_TARGET_NAMESPACE", "dcloud-system"))
@@ -521,10 +529,30 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 	databasepb.RegisterDatabaseServiceServer(grpcServer, server)
-	errc := make(chan error, 1)
+
+	verifier := jwtverify.New(jwksURL)
+	adapter := &connectAdapter{inner: server}
+	mux := http.NewServeMux()
+	connectPath, connectHandler := databasepbconnect.NewDatabaseServiceHandler(
+		adapter,
+		connect.WithInterceptors(verifier.ConnectInterceptor()),
+	)
+	mux.Handle(connectPath, connectHandler)
+	httpServer := &http.Server{
+		Addr:    httpAddr,
+		Handler: h2c.NewHandler(mux, &http2.Server{}),
+	}
+
+	errc := make(chan error, 2)
 	go func() {
-		logger.Info("database grpc listening", "addr", addr)
+		logger.Info("database grpc listening", "addr", grpcAddr)
 		errc <- grpcServer.Serve(lis)
+	}()
+	go func() {
+		logger.Info("database http listening", "addr", httpAddr)
+		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errc <- err
+		}
 	}()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -535,6 +563,9 @@ func main() {
 	case <-sigc:
 		cancel()
 		grpcServer.GracefulStop()
+		shutdownCtx, cshut := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cshut()
+		_ = httpServer.Shutdown(shutdownCtx)
 	case err := <-errc:
 		if err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 			logger.Error("server failed", "error", err)

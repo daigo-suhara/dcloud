@@ -16,10 +16,14 @@ import (
 	"syscall"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/daigo-suhara/dcloud/internal/db"
 	"github.com/daigo-suhara/dcloud/internal/identity/keys"
 	identitypb "github.com/daigo-suhara/dcloud/internal/pb/identitypb"
+	"github.com/daigo-suhara/dcloud/internal/pb/identitypb/identitypbconnect"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -368,7 +372,10 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/.well-known/jwks.json", server.signer.HandleJWKS)
-	httpServer := &http.Server{Addr: httpAddr, Handler: mux}
+	adapter := &connectAdapter{inner: server}
+	connectPath, connectHandler := identitypbconnect.NewIdentityServiceHandler(adapter, connect.WithHandlerOptions())
+	mux.Handle(connectPath, connectHandler)
+	httpServer := &http.Server{Addr: httpAddr, Handler: h2c.NewHandler(mux, &http2.Server{})}
 
 	errC := make(chan error, 2)
 	go func() {
