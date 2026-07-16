@@ -13,7 +13,3 @@ plugins:
     out: .
     opt:
       - module=github.com/daigo-suhara/dcloud
-  - remote: buf.build/protocolbuffers/python
-    out: api/generated
-  - remote: buf.build/grpc/python
-    out: api/generated

@@ -7,6 +7,11 @@ metadata:
     app.kubernetes.io/component: console
 data:
   default.conf: |
+    # The public dcloud console. Each /api/v1/<service>/ prefix is
+    # routed straight to the owning Go service (identity, project,
+    # container, compute, storage, database) since the Python api
+    # gateway has been retired. All services listen h2c so
+    # HTTP/1.1 keepalive plus WebSocket upgrade work as-is.
     server {
       listen 8080;
       server_name {{ .Values.console.publicHostname | quote }};
@@ -21,22 +26,88 @@ data:
         try_files $uri $uri/ /index.html;
       }
 
-      location /api/ {
-        proxy_pass http://{{ include "dcloud.fullname" . }}-api:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-Host $host;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Port 443;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_read_timeout 3600s;
-        proxy_send_timeout 3600s;
+      # identity: /api/v1/auth/*
+      location /api/v1/auth/ {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-identity:8093;
+        include /etc/nginx/dcloud-proxy.conf;
       }
 
+      # project: /api/v1/projects and /api/v1/projects/*
+      location = /api/v1/projects {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-project:8091;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
+      location /api/v1/projects/ {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-project:8091;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
+
+      # container
+      location = /api/v1/container {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-container:8092;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
+      location /api/v1/container/ {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-container:8092;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
+
+      # compute (also handles /api/v1/compute/{name}/console WebSocket)
+      location = /api/v1/compute {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-compute:8094;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
+      location /api/v1/compute/ {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-compute:8094;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
+
+      # storage (bucket-level via REST + object-level via s3_proxy)
+      location = /api/v1/storage {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-storage:8095;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
+      location /api/v1/storage/ {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-storage:8095;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
+
+      # database
+      location = /api/v1/database {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-database:8096;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
+      location /api/v1/database/ {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-database:8096;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
+
+      # operations - route by ID prefix to the owning service.
+      location ~ ^/api/v1/operations/container-op- {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-container:8092;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
+      location ~ ^/api/v1/operations/compute-op- {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-compute:8094;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
+      location ~ ^/api/v1/operations/storage-op- {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-storage:8095;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
+      location ~ ^/api/v1/operations/database-op- {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-database:8096;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
+      location ~ ^/api/v1/operations/project-op- {
+        proxy_pass http://{{ include "dcloud.fullname" . }}-project:8091;
+        include /etc/nginx/dcloud-proxy.conf;
+      }
     }
 
+    # Tenant service domains (e.g. hello.drkatana.com) are terminated by
+    # Knative's ingress. Route everything through to istio-ingressgateway
+    # so Knative's Route reconciler picks up the request by Host header.
     server {
       listen 8080;
       server_name ~^(?!{{ first (splitList "." .Values.console.publicHostname) }}$)[a-z0-9-]+\.{{ .Values.console.publicServiceDomain | replace "." "\\." }}$;
@@ -44,7 +115,7 @@ data:
       port_in_redirect off;
 
       location / {
-        proxy_pass http://{{ include "dcloud.fullname" . }}-api:8000;
+        proxy_pass http://istio-ingressgateway.istio-system.svc.cluster.local:80;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -57,3 +128,14 @@ data:
         proxy_send_timeout 3600s;
       }
     }
+  dcloud-proxy.conf: |
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Port 443;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;

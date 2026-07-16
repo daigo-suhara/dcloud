@@ -36,14 +36,6 @@ console:
   publicServiceDomain: drkatana.com
   publicHostname: cloud.daigo-suhara.com
 
-api:
-  replicaCount: 2
-  image:
-    repository: api
-  service:
-    type: ClusterIP
-    port: 8000
-
 project:
   replicaCount: 2
   image:
