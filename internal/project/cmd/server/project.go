@@ -57,16 +57,17 @@ type ProjectServer = projectpb.ProjectServiceServer
 
 type projectServer struct {
 	projectpb.UnimplementedProjectServiceServer
-	db *sql.DB
-	q  *dbsqlc.Queries
+	db       *sql.DB
+	q        *dbsqlc.Queries
+	resource *resourceClients
 }
 
-func newProjectServer() (*projectServer, error) {
+func newProjectServer(resource *resourceClients) (*projectServer, error) {
 	database, err := db.Open()
 	if err != nil {
 		return nil, err
 	}
-	return &projectServer{db: database, q: dbsqlc.New(database)}, nil
+	return &projectServer{db: database, q: dbsqlc.New(database), resource: resource}, nil
 }
 
 func (s *projectServer) Close() error {
@@ -233,6 +234,12 @@ func (s *projectServer) CreateProjectDeleteOperation(ctx context.Context, req *C
 	if userID == "" || projectID == "" {
 		return nil, status.Error(codes.InvalidArgument, "userId and projectId are required")
 	}
+	// Best-effort fan-out delete of every resource type across the four
+	// sibling services. The caller's JWT is forwarded via context so each
+	// service's jwtverify interceptor accepts the calls.
+	if s.resource != nil {
+		s.resource.deleteAllResources(ctx, userID, projectID)
+	}
 	opID := fmt.Sprintf("project-op-%s", shortID())
 	ts := time.Now().UTC().Format(time.RFC3339Nano)
 	if _, err := s.q.CreateOperation(ctx, dbsqlc.CreateOperationParams{
@@ -275,7 +282,7 @@ func main() {
 		logger.Error("failed to listen", "addr", grpcAddr, "error", err)
 		os.Exit(1)
 	}
-	server, err := newProjectServer()
+	server, err := newProjectServer(newResourceClients())
 	if err != nil {
 		logger.Error("failed to open database", "error", err)
 		os.Exit(1)

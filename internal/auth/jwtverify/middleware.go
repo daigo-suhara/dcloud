@@ -10,6 +10,7 @@ import (
 )
 
 type claimsKey struct{}
+type tokenKey struct{}
 
 // FromContext returns the Claims stored in ctx by a middleware/interceptor.
 func FromContext(ctx context.Context) (*Claims, bool) {
@@ -20,6 +21,20 @@ func FromContext(ctx context.Context) (*Claims, bool) {
 // WithClaims returns a new context that carries the claims.
 func WithClaims(ctx context.Context, claims *Claims) context.Context {
 	return context.WithValue(ctx, claimsKey{}, claims)
+}
+
+// TokenFromContext returns the raw bearer token stored in ctx by a
+// middleware/interceptor. Services that need to make outbound calls on
+// behalf of the caller (e.g. project's cross-service delete fan-out)
+// forward this token on their outgoing Authorization headers.
+func TokenFromContext(ctx context.Context) (string, bool) {
+	token, ok := ctx.Value(tokenKey{}).(string)
+	return token, ok
+}
+
+// WithToken returns a new context that carries the raw bearer token.
+func WithToken(ctx context.Context, token string) context.Context {
+	return context.WithValue(ctx, tokenKey{}, token)
 }
 
 func extractBearer(header string) (string, error) {
@@ -48,7 +63,9 @@ func (v *Verifier) HTTPMiddleware(next http.Handler) http.Handler {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		next.ServeHTTP(w, r.WithContext(WithClaims(r.Context(), claims)))
+		ctx := WithClaims(r.Context(), claims)
+		ctx = WithToken(ctx, token)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -64,7 +81,9 @@ func (v *Verifier) ConnectInterceptor() connect.UnaryInterceptorFunc {
 			if err != nil {
 				return nil, connect.NewError(connect.CodeUnauthenticated, err)
 			}
-			return next(WithClaims(ctx, claims), req)
+			ctx = WithClaims(ctx, claims)
+			ctx = WithToken(ctx, token)
+			return next(ctx, req)
 		})
 	})
 }
