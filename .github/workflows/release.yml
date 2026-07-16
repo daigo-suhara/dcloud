@@ -1,0 +1,92 @@
+name: release
+
+# Fires when a semver tag is pushed. Publishes each component's
+# container image and the Helm chart to ghcr.io under the repo owner's
+# namespace.
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write   # keyless container image signing via cosign
+
+jobs:
+  container-images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: project
+            dockerfile: internal/project/Dockerfile
+          - name: container
+            dockerfile: internal/container/Dockerfile
+          - name: identity
+            dockerfile: internal/identity/Dockerfile
+          - name: compute
+            dockerfile: internal/compute/Dockerfile
+          - name: storage
+            dockerfile: internal/storage/Dockerfile
+          - name: database
+            dockerfile: internal/database/Dockerfile
+          - name: db-migrate
+            dockerfile: internal/db/Dockerfile
+          - name: console
+            dockerfile: console/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compute tags
+        id: tags
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          OWNER="${{ github.repository_owner }}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tags=ghcr.io/${OWNER}/${{ matrix.name }}:${VERSION},ghcr.io/${OWNER}/${{ matrix.name }}:latest" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v6
+        id: build
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          provenance: mode=max
+          sbom: true
+          tags: ${{ steps.tags.outputs.tags }}
+      - uses: sigstore/cosign-installer@v3
+      - name: Sign image
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+        run: |
+          cosign sign --yes \
+            "ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}@${{ steps.build.outputs.digest }}"
+
+  helm-chart:
+    runs-on: ubuntu-latest
+    needs: container-images
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Package and push chart
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          OWNER="${{ github.repository_owner }}"
+          # Keep chart version and appVersion in sync with the tag.
+          yq -i ".version = \"${VERSION}\" | .appVersion = \"${VERSION}\"" \
+            charts/dcloud/Chart.yaml
+          helm dependency update charts/dcloud
+          helm package charts/dcloud --destination /tmp
+          helm push "/tmp/dcloud-${VERSION}.tgz" "oci://ghcr.io/${OWNER}/charts"
