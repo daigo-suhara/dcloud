@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eidentity.proto\x12\x12\x64\x63loud.identity.v1\"\x07\n\x05\x45mpty\"\x0f\n\rHealthRequest\"`\n\x0eHealthResponse\x12\x16\n\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n\x07service\x18\x02 \x01(\tR\x07service\x12\x1c\n\ttimestamp\x18\x03 \x01(\tR\ttimestamp\"\x9a\x01\n\x04User\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n\x08username\x18\x02 \x01(\tR\x08username\x12\x14\n\x05\x65mail\x18\x03 \x01(\tR\x05\x65mail\x12\x12\n\x04name\x18\x04 \x01(\tR\x04name\x12\x1d\n\ncreated_at\x18\x05 \x01(\tR\tcreatedAt\x12\x1d\n\nupdated_at\x18\x06 \x01(\tR\tupdatedAt\">\n\x07Session\x12\x14\n\x05token\x18\x01 \x01(\tR\x05token\x12\x1d\n\nexpires_at\x18\x02 \x01(\tR\texpiresAt\"w\n\x10RegisterResponse\x12,\n\x04user\x18\x01 \x01(\x0b\x32\x18.dcloud.identity.v1.UserR\x04user\x12\x35\n\x07session\x18\x02 \x01(\x0b\x32\x1b.dcloud.identity.v1.SessionR\x07session\"t\n\rLoginResponse\x12,\n\x04user\x18\x01 \x01(\x0b\x32\x18.dcloud.identity.v1.UserR\x04user\x12\x35\n\x07session\x18\x02 \x01(\x0b\x32\x1b.dcloud.identity.v1.SessionR\x07session\"W\n\x0fRegisterRequest\x12\x14\n\x05\x65mail\x18\x01 \x01(\tR\x05\x65mail\x12\x1a\n\x08password\x18\x02 \x01(\tR\x08password\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\"@\n\x0cLoginRequest\x12\x14\n\x05\x65mail\x18\x01 \x01(\tR\x05\x65mail\x12\x1a\n\x08password\x18\x02 \x01(\tR\x08password\"0\n\tMeRequest\x12#\n\rsession_token\x18\x01 \x01(\tR\x0csessionToken\":\n\nMeResponse\x12,\n\x04user\x18\x01 \x01(\x0b\x32\x18.dcloud.identity.v1.UserR\x04user\"4\n\rLogoutRequest\x12#\n\rsession_token\x18\x01 \x01(\tR\x0csessionToken\"\x10\n\x0eLogoutResponse2\x9d\x03\n\x0fIdentityService\x12O\n\x06Health\x12!.dcloud.identity.v1.HealthRequest\x1a\".dcloud.identity.v1.HealthResponse\x12U\n\x08Register\x12#.dcloud.identity.v1.RegisterRequest\x1a$.dcloud.identity.v1.RegisterResponse\x12L\n\x05Login\x12 .dcloud.identity.v1.LoginRequest\x1a!.dcloud.identity.v1.LoginResponse\x12\x43\n\x02Me\x12\x1d.dcloud.identity.v1.MeRequest\x1a\x1e.dcloud.identity.v1.MeResponse\x12O\n\x06Logout\x12!.dcloud.identity.v1.LogoutRequest\x1a\".dcloud.identity.v1.LogoutResponseBBZ@github.com/daigo-suhara/dcloud/internal/pb/identitypb;identitypbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eidentity.proto\x12\x12\x64\x63loud.identity.v1\"\x07\n\x05\x45mpty\"\x0f\n\rHealthRequest\"`\n\x0eHealthResponse\x12\x16\n\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n\x07service\x18\x02 \x01(\tR\x07service\x12\x1c\n\ttimestamp\x18\x03 \x01(\tR\ttimestamp\"\x9a\x01\n\x04User\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n\x08username\x18\x02 \x01(\tR\x08username\x12\x14\n\x05\x65mail\x18\x03 \x01(\tR\x05\x65mail\x12\x12\n\x04name\x18\x04 \x01(\tR\x04name\x12\x1d\n\ncreated_at\x18\x05 \x01(\tR\tcreatedAt\x12\x1d\n\nupdated_at\x18\x06 \x01(\tR\tupdatedAt\"P\n\x07Session\x12\x14\n\x05token\x18\x01 \x01(\tR\x05token\x12\x1d\n\nexpires_at\x18\x02 \x01(\tR\texpiresAt\x12\x10\n\x03jwt\x18\x03 \x01(\tR\x03jwt\"w\n\x10RegisterResponse\x12,\n\x04user\x18\x01 \x01(\x0b\x32\x18.dcloud.identity.v1.UserR\x04user\x12\x35\n\x07session\x18\x02 \x01(\x0b\x32\x1b.dcloud.identity.v1.SessionR\x07session\"t\n\rLoginResponse\x12,\n\x04user\x18\x01 \x01(\x0b\x32\x18.dcloud.identity.v1.UserR\x04user\x12\x35\n\x07session\x18\x02 \x01(\x0b\x32\x1b.dcloud.identity.v1.SessionR\x07session\"W\n\x0fRegisterRequest\x12\x14\n\x05\x65mail\x18\x01 \x01(\tR\x05\x65mail\x12\x1a\n\x08password\x18\x02 \x01(\tR\x08password\x12\x12\n\x04name\x18\x03 \x01(\tR\x04name\"@\n\x0cLoginRequest\x12\x14\n\x05\x65mail\x18\x01 \x01(\tR\x05\x65mail\x12\x1a\n\x08password\x18\x02 \x01(\tR\x08password\"0\n\tMeRequest\x12#\n\rsession_token\x18\x01 \x01(\tR\x0csessionToken\":\n\nMeResponse\x12,\n\x04user\x18\x01 \x01(\x0b\x32\x18.dcloud.identity.v1.UserR\x04user\"4\n\rLogoutRequest\x12#\n\rsession_token\x18\x01 \x01(\tR\x0csessionToken\"\x10\n\x0eLogoutResponse2\x9d\x03\n\x0fIdentityService\x12O\n\x06Health\x12!.dcloud.identity.v1.HealthRequest\x1a\".dcloud.identity.v1.HealthResponse\x12U\n\x08Register\x12#.dcloud.identity.v1.RegisterRequest\x1a$.dcloud.identity.v1.RegisterResponse\x12L\n\x05Login\x12 .dcloud.identity.v1.LoginRequest\x1a!.dcloud.identity.v1.LoginResponse\x12\x43\n\x02Me\x12\x1d.dcloud.identity.v1.MeRequest\x1a\x1e.dcloud.identity.v1.MeResponse\x12O\n\x06Logout\x12!.dcloud.identity.v1.LogoutRequest\x1a\".dcloud.identity.v1.LogoutResponseBBZ@github.com/daigo-suhara/dcloud/internal/pb/identitypb;identitypbb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -41,23 +41,23 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_USER']._serialized_start=163
   _globals['_USER']._serialized_end=317
   _globals['_SESSION']._serialized_start=319
-  _globals['_SESSION']._serialized_end=381
-  _globals['_REGISTERRESPONSE']._serialized_start=383
-  _globals['_REGISTERRESPONSE']._serialized_end=502
-  _globals['_LOGINRESPONSE']._serialized_start=504
-  _globals['_LOGINRESPONSE']._serialized_end=620
-  _globals['_REGISTERREQUEST']._serialized_start=622
-  _globals['_REGISTERREQUEST']._serialized_end=709
-  _globals['_LOGINREQUEST']._serialized_start=711
-  _globals['_LOGINREQUEST']._serialized_end=775
-  _globals['_MEREQUEST']._serialized_start=777
-  _globals['_MEREQUEST']._serialized_end=825
-  _globals['_MERESPONSE']._serialized_start=827
-  _globals['_MERESPONSE']._serialized_end=885
-  _globals['_LOGOUTREQUEST']._serialized_start=887
-  _globals['_LOGOUTREQUEST']._serialized_end=939
-  _globals['_LOGOUTRESPONSE']._serialized_start=941
-  _globals['_LOGOUTRESPONSE']._serialized_end=957
-  _globals['_IDENTITYSERVICE']._serialized_start=960
-  _globals['_IDENTITYSERVICE']._serialized_end=1373
+  _globals['_SESSION']._serialized_end=399
+  _globals['_REGISTERRESPONSE']._serialized_start=401
+  _globals['_REGISTERRESPONSE']._serialized_end=520
+  _globals['_LOGINRESPONSE']._serialized_start=522
+  _globals['_LOGINRESPONSE']._serialized_end=638
+  _globals['_REGISTERREQUEST']._serialized_start=640
+  _globals['_REGISTERREQUEST']._serialized_end=727
+  _globals['_LOGINREQUEST']._serialized_start=729
+  _globals['_LOGINREQUEST']._serialized_end=793
+  _globals['_MEREQUEST']._serialized_start=795
+  _globals['_MEREQUEST']._serialized_end=843
+  _globals['_MERESPONSE']._serialized_start=845
+  _globals['_MERESPONSE']._serialized_end=903
+  _globals['_LOGOUTREQUEST']._serialized_start=905
+  _globals['_LOGOUTREQUEST']._serialized_end=957
+  _globals['_LOGOUTRESPONSE']._serialized_start=959
+  _globals['_LOGOUTRESPONSE']._serialized_end=975
+  _globals['_IDENTITYSERVICE']._serialized_start=978
+  _globals['_IDENTITYSERVICE']._serialized_end=1391
 # @@protoc_insertion_point(module_scope)

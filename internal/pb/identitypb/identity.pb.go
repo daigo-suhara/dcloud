@@ -241,6 +241,7 @@ type Session struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 	ExpiresAt     string                 `protobuf:"bytes,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Jwt           string                 `protobuf:"bytes,3,opt,name=jwt,proto3" json:"jwt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -285,6 +286,13 @@ func (x *Session) GetToken() string {
 func (x *Session) GetExpiresAt() string {
 	if x != nil {
 		return x.ExpiresAt
+	}
+	return ""
+}
+
+func (x *Session) GetJwt() string {
+	if x != nil {
+		return x.Jwt
 	}
 	return ""
 }
@@ -692,11 +700,12 @@ const file_identity_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x05 \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\x06 \x01(\tR\tupdatedAt\">\n" +
+	"updated_at\x18\x06 \x01(\tR\tupdatedAt\"P\n" +
 	"\aSession\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x02 \x01(\tR\texpiresAt\"w\n" +
+	"expires_at\x18\x02 \x01(\tR\texpiresAt\x12\x10\n" +
+	"\x03jwt\x18\x03 \x01(\tR\x03jwt\"w\n" +
 	"\x10RegisterResponse\x12,\n" +
 	"\x04user\x18\x01 \x01(\v2\x18.dcloud.identity.v1.UserR\x04user\x125\n" +
 	"\asession\x18\x02 \x01(\v2\x1b.dcloud.identity.v1.SessionR\asession\"t\n" +

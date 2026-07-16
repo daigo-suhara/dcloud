@@ -10,6 +10,11 @@ service ProjectService {
   rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse);
   rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse);
   rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse);
+  rpc IsProjectDeleting(IsProjectDeletingRequest) returns (IsProjectDeletingResponse);
+  rpc ProjectExists(ProjectExistsRequest) returns (ProjectExistsResponse);
+  rpc GetProjectRepository(GetProjectRepositoryRequest) returns (GetProjectRepositoryResponse);
+  rpc UpsertProjectRepository(UpsertProjectRepositoryRequest) returns (UpsertProjectRepositoryResponse);
+  rpc CreateProjectDeleteOperation(CreateProjectDeleteOperationRequest) returns (CreateProjectDeleteOperationResponse);
 }
 
 message Empty {}
@@ -35,6 +40,64 @@ message Project {
   string name = 2;
   string owner = 3;
   string created_at = 4;
+  bool deleting = 5;
+}
+
+message ProjectRepository {
+  string project_id = 1;
+  string user_id = 2;
+  string repository_owner = 3;
+  string repository_name = 4;
+  string repository_branch = 5;
+  string connected_at = 6;
+  string updated_at = 7;
+}
+
+message IsProjectDeletingRequest {
+  string project_id = 1;
+}
+
+message IsProjectDeletingResponse {
+  bool deleting = 1;
+}
+
+message ProjectExistsRequest {
+  string user_id = 1;
+  string project_id = 2;
+}
+
+message ProjectExistsResponse {
+  bool exists = 1;
+}
+
+message GetProjectRepositoryRequest {
+  string user_id = 1;
+  string project_id = 2;
+}
+
+message GetProjectRepositoryResponse {
+  ProjectRepository repository = 1;
+}
+
+message UpsertProjectRepositoryRequest {
+  string user_id = 1;
+  string project_id = 2;
+  string repository_owner = 3;
+  string repository_name = 4;
+  string repository_branch = 5;
+}
+
+message UpsertProjectRepositoryResponse {
+  ProjectRepository repository = 1;
+}
+
+message CreateProjectDeleteOperationRequest {
+  string user_id = 1;
+  string project_id = 2;
+}
+
+message CreateProjectDeleteOperationResponse {
+  string operation_id = 1;
 }
 
 message ListProjectsRequest {

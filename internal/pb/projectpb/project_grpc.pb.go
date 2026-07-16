@@ -19,11 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ProjectService_Health_FullMethodName        = "/dcloud.project.v1.ProjectService/Health"
-	ProjectService_Platform_FullMethodName      = "/dcloud.project.v1.ProjectService/Platform"
-	ProjectService_ListProjects_FullMethodName  = "/dcloud.project.v1.ProjectService/ListProjects"
-	ProjectService_CreateProject_FullMethodName = "/dcloud.project.v1.ProjectService/CreateProject"
-	ProjectService_DeleteProject_FullMethodName = "/dcloud.project.v1.ProjectService/DeleteProject"
+	ProjectService_Health_FullMethodName                       = "/dcloud.project.v1.ProjectService/Health"
+	ProjectService_Platform_FullMethodName                     = "/dcloud.project.v1.ProjectService/Platform"
+	ProjectService_ListProjects_FullMethodName                 = "/dcloud.project.v1.ProjectService/ListProjects"
+	ProjectService_CreateProject_FullMethodName                = "/dcloud.project.v1.ProjectService/CreateProject"
+	ProjectService_DeleteProject_FullMethodName                = "/dcloud.project.v1.ProjectService/DeleteProject"
+	ProjectService_IsProjectDeleting_FullMethodName            = "/dcloud.project.v1.ProjectService/IsProjectDeleting"
+	ProjectService_ProjectExists_FullMethodName                = "/dcloud.project.v1.ProjectService/ProjectExists"
+	ProjectService_GetProjectRepository_FullMethodName         = "/dcloud.project.v1.ProjectService/GetProjectRepository"
+	ProjectService_UpsertProjectRepository_FullMethodName      = "/dcloud.project.v1.ProjectService/UpsertProjectRepository"
+	ProjectService_CreateProjectDeleteOperation_FullMethodName = "/dcloud.project.v1.ProjectService/CreateProjectDeleteOperation"
 )
 
 // ProjectServiceClient is the client API for ProjectService service.
@@ -35,6 +40,11 @@ type ProjectServiceClient interface {
 	ListProjects(ctx context.Context, in *ListProjectsRequest, opts ...grpc.CallOption) (*ListProjectsResponse, error)
 	CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*CreateProjectResponse, error)
 	DeleteProject(ctx context.Context, in *DeleteProjectRequest, opts ...grpc.CallOption) (*DeleteProjectResponse, error)
+	IsProjectDeleting(ctx context.Context, in *IsProjectDeletingRequest, opts ...grpc.CallOption) (*IsProjectDeletingResponse, error)
+	ProjectExists(ctx context.Context, in *ProjectExistsRequest, opts ...grpc.CallOption) (*ProjectExistsResponse, error)
+	GetProjectRepository(ctx context.Context, in *GetProjectRepositoryRequest, opts ...grpc.CallOption) (*GetProjectRepositoryResponse, error)
+	UpsertProjectRepository(ctx context.Context, in *UpsertProjectRepositoryRequest, opts ...grpc.CallOption) (*UpsertProjectRepositoryResponse, error)
+	CreateProjectDeleteOperation(ctx context.Context, in *CreateProjectDeleteOperationRequest, opts ...grpc.CallOption) (*CreateProjectDeleteOperationResponse, error)
 }
 
 type projectServiceClient struct {
@@ -95,6 +105,56 @@ func (c *projectServiceClient) DeleteProject(ctx context.Context, in *DeleteProj
 	return out, nil
 }
 
+func (c *projectServiceClient) IsProjectDeleting(ctx context.Context, in *IsProjectDeletingRequest, opts ...grpc.CallOption) (*IsProjectDeletingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IsProjectDeletingResponse)
+	err := c.cc.Invoke(ctx, ProjectService_IsProjectDeleting_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *projectServiceClient) ProjectExists(ctx context.Context, in *ProjectExistsRequest, opts ...grpc.CallOption) (*ProjectExistsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProjectExistsResponse)
+	err := c.cc.Invoke(ctx, ProjectService_ProjectExists_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *projectServiceClient) GetProjectRepository(ctx context.Context, in *GetProjectRepositoryRequest, opts ...grpc.CallOption) (*GetProjectRepositoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetProjectRepositoryResponse)
+	err := c.cc.Invoke(ctx, ProjectService_GetProjectRepository_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *projectServiceClient) UpsertProjectRepository(ctx context.Context, in *UpsertProjectRepositoryRequest, opts ...grpc.CallOption) (*UpsertProjectRepositoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpsertProjectRepositoryResponse)
+	err := c.cc.Invoke(ctx, ProjectService_UpsertProjectRepository_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *projectServiceClient) CreateProjectDeleteOperation(ctx context.Context, in *CreateProjectDeleteOperationRequest, opts ...grpc.CallOption) (*CreateProjectDeleteOperationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateProjectDeleteOperationResponse)
+	err := c.cc.Invoke(ctx, ProjectService_CreateProjectDeleteOperation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProjectServiceServer is the server API for ProjectService service.
 // All implementations must embed UnimplementedProjectServiceServer
 // for forward compatibility.
@@ -104,6 +164,11 @@ type ProjectServiceServer interface {
 	ListProjects(context.Context, *ListProjectsRequest) (*ListProjectsResponse, error)
 	CreateProject(context.Context, *CreateProjectRequest) (*CreateProjectResponse, error)
 	DeleteProject(context.Context, *DeleteProjectRequest) (*DeleteProjectResponse, error)
+	IsProjectDeleting(context.Context, *IsProjectDeletingRequest) (*IsProjectDeletingResponse, error)
+	ProjectExists(context.Context, *ProjectExistsRequest) (*ProjectExistsResponse, error)
+	GetProjectRepository(context.Context, *GetProjectRepositoryRequest) (*GetProjectRepositoryResponse, error)
+	UpsertProjectRepository(context.Context, *UpsertProjectRepositoryRequest) (*UpsertProjectRepositoryResponse, error)
+	CreateProjectDeleteOperation(context.Context, *CreateProjectDeleteOperationRequest) (*CreateProjectDeleteOperationResponse, error)
 	mustEmbedUnimplementedProjectServiceServer()
 }
 
@@ -128,6 +193,21 @@ func (UnimplementedProjectServiceServer) CreateProject(context.Context, *CreateP
 }
 func (UnimplementedProjectServiceServer) DeleteProject(context.Context, *DeleteProjectRequest) (*DeleteProjectResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteProject not implemented")
+}
+func (UnimplementedProjectServiceServer) IsProjectDeleting(context.Context, *IsProjectDeletingRequest) (*IsProjectDeletingResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method IsProjectDeleting not implemented")
+}
+func (UnimplementedProjectServiceServer) ProjectExists(context.Context, *ProjectExistsRequest) (*ProjectExistsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ProjectExists not implemented")
+}
+func (UnimplementedProjectServiceServer) GetProjectRepository(context.Context, *GetProjectRepositoryRequest) (*GetProjectRepositoryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetProjectRepository not implemented")
+}
+func (UnimplementedProjectServiceServer) UpsertProjectRepository(context.Context, *UpsertProjectRepositoryRequest) (*UpsertProjectRepositoryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpsertProjectRepository not implemented")
+}
+func (UnimplementedProjectServiceServer) CreateProjectDeleteOperation(context.Context, *CreateProjectDeleteOperationRequest) (*CreateProjectDeleteOperationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateProjectDeleteOperation not implemented")
 }
 func (UnimplementedProjectServiceServer) mustEmbedUnimplementedProjectServiceServer() {}
 func (UnimplementedProjectServiceServer) testEmbeddedByValue()                        {}
@@ -240,6 +320,96 @@ func _ProjectService_DeleteProject_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProjectService_IsProjectDeleting_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IsProjectDeletingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProjectServiceServer).IsProjectDeleting(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProjectService_IsProjectDeleting_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProjectServiceServer).IsProjectDeleting(ctx, req.(*IsProjectDeletingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProjectService_ProjectExists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProjectExistsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProjectServiceServer).ProjectExists(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProjectService_ProjectExists_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProjectServiceServer).ProjectExists(ctx, req.(*ProjectExistsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProjectService_GetProjectRepository_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProjectRepositoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProjectServiceServer).GetProjectRepository(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProjectService_GetProjectRepository_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProjectServiceServer).GetProjectRepository(ctx, req.(*GetProjectRepositoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProjectService_UpsertProjectRepository_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertProjectRepositoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProjectServiceServer).UpsertProjectRepository(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProjectService_UpsertProjectRepository_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProjectServiceServer).UpsertProjectRepository(ctx, req.(*UpsertProjectRepositoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProjectService_CreateProjectDeleteOperation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateProjectDeleteOperationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProjectServiceServer).CreateProjectDeleteOperation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProjectService_CreateProjectDeleteOperation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProjectServiceServer).CreateProjectDeleteOperation(ctx, req.(*CreateProjectDeleteOperationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProjectService_ServiceDesc is the grpc.ServiceDesc for ProjectService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -266,6 +436,26 @@ var ProjectService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteProject",
 			Handler:    _ProjectService_DeleteProject_Handler,
+		},
+		{
+			MethodName: "IsProjectDeleting",
+			Handler:    _ProjectService_IsProjectDeleting_Handler,
+		},
+		{
+			MethodName: "ProjectExists",
+			Handler:    _ProjectService_ProjectExists_Handler,
+		},
+		{
+			MethodName: "GetProjectRepository",
+			Handler:    _ProjectService_GetProjectRepository_Handler,
+		},
+		{
+			MethodName: "UpsertProjectRepository",
+			Handler:    _ProjectService_UpsertProjectRepository_Handler,
+		},
+		{
+			MethodName: "CreateProjectDeleteOperation",
+			Handler:    _ProjectService_CreateProjectDeleteOperation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

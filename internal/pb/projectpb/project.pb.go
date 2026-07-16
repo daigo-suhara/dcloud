@@ -255,6 +255,7 @@ type Project struct {
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Owner         string                 `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
 	CreatedAt     string                 `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	Deleting      bool                   `protobuf:"varint,5,opt,name=deleting,proto3" json:"deleting,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -317,6 +318,601 @@ func (x *Project) GetCreatedAt() string {
 	return ""
 }
 
+func (x *Project) GetDeleting() bool {
+	if x != nil {
+		return x.Deleting
+	}
+	return false
+}
+
+type ProjectRepository struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ProjectId        string                 `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	UserId           string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	RepositoryOwner  string                 `protobuf:"bytes,3,opt,name=repository_owner,json=repositoryOwner,proto3" json:"repository_owner,omitempty"`
+	RepositoryName   string                 `protobuf:"bytes,4,opt,name=repository_name,json=repositoryName,proto3" json:"repository_name,omitempty"`
+	RepositoryBranch string                 `protobuf:"bytes,5,opt,name=repository_branch,json=repositoryBranch,proto3" json:"repository_branch,omitempty"`
+	ConnectedAt      string                 `protobuf:"bytes,6,opt,name=connected_at,json=connectedAt,proto3" json:"connected_at,omitempty"`
+	UpdatedAt        string                 `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *ProjectRepository) Reset() {
+	*x = ProjectRepository{}
+	mi := &file_project_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProjectRepository) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProjectRepository) ProtoMessage() {}
+
+func (x *ProjectRepository) ProtoReflect() protoreflect.Message {
+	mi := &file_project_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProjectRepository.ProtoReflect.Descriptor instead.
+func (*ProjectRepository) Descriptor() ([]byte, []int) {
+	return file_project_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ProjectRepository) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *ProjectRepository) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *ProjectRepository) GetRepositoryOwner() string {
+	if x != nil {
+		return x.RepositoryOwner
+	}
+	return ""
+}
+
+func (x *ProjectRepository) GetRepositoryName() string {
+	if x != nil {
+		return x.RepositoryName
+	}
+	return ""
+}
+
+func (x *ProjectRepository) GetRepositoryBranch() string {
+	if x != nil {
+		return x.RepositoryBranch
+	}
+	return ""
+}
+
+func (x *ProjectRepository) GetConnectedAt() string {
+	if x != nil {
+		return x.ConnectedAt
+	}
+	return ""
+}
+
+func (x *ProjectRepository) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
+type IsProjectDeletingRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProjectId     string                 `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IsProjectDeletingRequest) Reset() {
+	*x = IsProjectDeletingRequest{}
+	mi := &file_project_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IsProjectDeletingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IsProjectDeletingRequest) ProtoMessage() {}
+
+func (x *IsProjectDeletingRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_project_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IsProjectDeletingRequest.ProtoReflect.Descriptor instead.
+func (*IsProjectDeletingRequest) Descriptor() ([]byte, []int) {
+	return file_project_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *IsProjectDeletingRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+type IsProjectDeletingResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Deleting      bool                   `protobuf:"varint,1,opt,name=deleting,proto3" json:"deleting,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IsProjectDeletingResponse) Reset() {
+	*x = IsProjectDeletingResponse{}
+	mi := &file_project_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IsProjectDeletingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IsProjectDeletingResponse) ProtoMessage() {}
+
+func (x *IsProjectDeletingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_project_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IsProjectDeletingResponse.ProtoReflect.Descriptor instead.
+func (*IsProjectDeletingResponse) Descriptor() ([]byte, []int) {
+	return file_project_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *IsProjectDeletingResponse) GetDeleting() bool {
+	if x != nil {
+		return x.Deleting
+	}
+	return false
+}
+
+type ProjectExistsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ProjectId     string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProjectExistsRequest) Reset() {
+	*x = ProjectExistsRequest{}
+	mi := &file_project_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProjectExistsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProjectExistsRequest) ProtoMessage() {}
+
+func (x *ProjectExistsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_project_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProjectExistsRequest.ProtoReflect.Descriptor instead.
+func (*ProjectExistsRequest) Descriptor() ([]byte, []int) {
+	return file_project_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ProjectExistsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *ProjectExistsRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+type ProjectExistsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Exists        bool                   `protobuf:"varint,1,opt,name=exists,proto3" json:"exists,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProjectExistsResponse) Reset() {
+	*x = ProjectExistsResponse{}
+	mi := &file_project_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProjectExistsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProjectExistsResponse) ProtoMessage() {}
+
+func (x *ProjectExistsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_project_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProjectExistsResponse.ProtoReflect.Descriptor instead.
+func (*ProjectExistsResponse) Descriptor() ([]byte, []int) {
+	return file_project_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ProjectExistsResponse) GetExists() bool {
+	if x != nil {
+		return x.Exists
+	}
+	return false
+}
+
+type GetProjectRepositoryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ProjectId     string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProjectRepositoryRequest) Reset() {
+	*x = GetProjectRepositoryRequest{}
+	mi := &file_project_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProjectRepositoryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProjectRepositoryRequest) ProtoMessage() {}
+
+func (x *GetProjectRepositoryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_project_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProjectRepositoryRequest.ProtoReflect.Descriptor instead.
+func (*GetProjectRepositoryRequest) Descriptor() ([]byte, []int) {
+	return file_project_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *GetProjectRepositoryRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *GetProjectRepositoryRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+type GetProjectRepositoryResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Repository    *ProjectRepository     `protobuf:"bytes,1,opt,name=repository,proto3" json:"repository,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProjectRepositoryResponse) Reset() {
+	*x = GetProjectRepositoryResponse{}
+	mi := &file_project_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProjectRepositoryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProjectRepositoryResponse) ProtoMessage() {}
+
+func (x *GetProjectRepositoryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_project_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProjectRepositoryResponse.ProtoReflect.Descriptor instead.
+func (*GetProjectRepositoryResponse) Descriptor() ([]byte, []int) {
+	return file_project_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *GetProjectRepositoryResponse) GetRepository() *ProjectRepository {
+	if x != nil {
+		return x.Repository
+	}
+	return nil
+}
+
+type UpsertProjectRepositoryRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	UserId           string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ProjectId        string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	RepositoryOwner  string                 `protobuf:"bytes,3,opt,name=repository_owner,json=repositoryOwner,proto3" json:"repository_owner,omitempty"`
+	RepositoryName   string                 `protobuf:"bytes,4,opt,name=repository_name,json=repositoryName,proto3" json:"repository_name,omitempty"`
+	RepositoryBranch string                 `protobuf:"bytes,5,opt,name=repository_branch,json=repositoryBranch,proto3" json:"repository_branch,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *UpsertProjectRepositoryRequest) Reset() {
+	*x = UpsertProjectRepositoryRequest{}
+	mi := &file_project_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpsertProjectRepositoryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpsertProjectRepositoryRequest) ProtoMessage() {}
+
+func (x *UpsertProjectRepositoryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_project_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpsertProjectRepositoryRequest.ProtoReflect.Descriptor instead.
+func (*UpsertProjectRepositoryRequest) Descriptor() ([]byte, []int) {
+	return file_project_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *UpsertProjectRepositoryRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *UpsertProjectRepositoryRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *UpsertProjectRepositoryRequest) GetRepositoryOwner() string {
+	if x != nil {
+		return x.RepositoryOwner
+	}
+	return ""
+}
+
+func (x *UpsertProjectRepositoryRequest) GetRepositoryName() string {
+	if x != nil {
+		return x.RepositoryName
+	}
+	return ""
+}
+
+func (x *UpsertProjectRepositoryRequest) GetRepositoryBranch() string {
+	if x != nil {
+		return x.RepositoryBranch
+	}
+	return ""
+}
+
+type UpsertProjectRepositoryResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Repository    *ProjectRepository     `protobuf:"bytes,1,opt,name=repository,proto3" json:"repository,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpsertProjectRepositoryResponse) Reset() {
+	*x = UpsertProjectRepositoryResponse{}
+	mi := &file_project_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpsertProjectRepositoryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpsertProjectRepositoryResponse) ProtoMessage() {}
+
+func (x *UpsertProjectRepositoryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_project_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpsertProjectRepositoryResponse.ProtoReflect.Descriptor instead.
+func (*UpsertProjectRepositoryResponse) Descriptor() ([]byte, []int) {
+	return file_project_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *UpsertProjectRepositoryResponse) GetRepository() *ProjectRepository {
+	if x != nil {
+		return x.Repository
+	}
+	return nil
+}
+
+type CreateProjectDeleteOperationRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ProjectId     string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateProjectDeleteOperationRequest) Reset() {
+	*x = CreateProjectDeleteOperationRequest{}
+	mi := &file_project_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateProjectDeleteOperationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateProjectDeleteOperationRequest) ProtoMessage() {}
+
+func (x *CreateProjectDeleteOperationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_project_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateProjectDeleteOperationRequest.ProtoReflect.Descriptor instead.
+func (*CreateProjectDeleteOperationRequest) Descriptor() ([]byte, []int) {
+	return file_project_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *CreateProjectDeleteOperationRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *CreateProjectDeleteOperationRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+type CreateProjectDeleteOperationResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OperationId   string                 `protobuf:"bytes,1,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateProjectDeleteOperationResponse) Reset() {
+	*x = CreateProjectDeleteOperationResponse{}
+	mi := &file_project_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateProjectDeleteOperationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateProjectDeleteOperationResponse) ProtoMessage() {}
+
+func (x *CreateProjectDeleteOperationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_project_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateProjectDeleteOperationResponse.ProtoReflect.Descriptor instead.
+func (*CreateProjectDeleteOperationResponse) Descriptor() ([]byte, []int) {
+	return file_project_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *CreateProjectDeleteOperationResponse) GetOperationId() string {
+	if x != nil {
+		return x.OperationId
+	}
+	return ""
+}
+
 type ListProjectsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
@@ -326,7 +922,7 @@ type ListProjectsRequest struct {
 
 func (x *ListProjectsRequest) Reset() {
 	*x = ListProjectsRequest{}
-	mi := &file_project_proto_msgTypes[6]
+	mi := &file_project_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -338,7 +934,7 @@ func (x *ListProjectsRequest) String() string {
 func (*ListProjectsRequest) ProtoMessage() {}
 
 func (x *ListProjectsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_project_proto_msgTypes[6]
+	mi := &file_project_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -351,7 +947,7 @@ func (x *ListProjectsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListProjectsRequest.ProtoReflect.Descriptor instead.
 func (*ListProjectsRequest) Descriptor() ([]byte, []int) {
-	return file_project_proto_rawDescGZIP(), []int{6}
+	return file_project_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ListProjectsRequest) GetUserId() string {
@@ -371,7 +967,7 @@ type ListProjectsResponse struct {
 
 func (x *ListProjectsResponse) Reset() {
 	*x = ListProjectsResponse{}
-	mi := &file_project_proto_msgTypes[7]
+	mi := &file_project_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -383,7 +979,7 @@ func (x *ListProjectsResponse) String() string {
 func (*ListProjectsResponse) ProtoMessage() {}
 
 func (x *ListProjectsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_project_proto_msgTypes[7]
+	mi := &file_project_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -396,7 +992,7 @@ func (x *ListProjectsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListProjectsResponse.ProtoReflect.Descriptor instead.
 func (*ListProjectsResponse) Descriptor() ([]byte, []int) {
-	return file_project_proto_rawDescGZIP(), []int{7}
+	return file_project_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ListProjectsResponse) GetUserId() string {
@@ -423,7 +1019,7 @@ type CreateProjectRequest struct {
 
 func (x *CreateProjectRequest) Reset() {
 	*x = CreateProjectRequest{}
-	mi := &file_project_proto_msgTypes[8]
+	mi := &file_project_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -435,7 +1031,7 @@ func (x *CreateProjectRequest) String() string {
 func (*CreateProjectRequest) ProtoMessage() {}
 
 func (x *CreateProjectRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_project_proto_msgTypes[8]
+	mi := &file_project_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -448,7 +1044,7 @@ func (x *CreateProjectRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateProjectRequest.ProtoReflect.Descriptor instead.
 func (*CreateProjectRequest) Descriptor() ([]byte, []int) {
-	return file_project_proto_rawDescGZIP(), []int{8}
+	return file_project_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *CreateProjectRequest) GetUserId() string {
@@ -474,7 +1070,7 @@ type CreateProjectResponse struct {
 
 func (x *CreateProjectResponse) Reset() {
 	*x = CreateProjectResponse{}
-	mi := &file_project_proto_msgTypes[9]
+	mi := &file_project_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -486,7 +1082,7 @@ func (x *CreateProjectResponse) String() string {
 func (*CreateProjectResponse) ProtoMessage() {}
 
 func (x *CreateProjectResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_project_proto_msgTypes[9]
+	mi := &file_project_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -499,7 +1095,7 @@ func (x *CreateProjectResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateProjectResponse.ProtoReflect.Descriptor instead.
 func (*CreateProjectResponse) Descriptor() ([]byte, []int) {
-	return file_project_proto_rawDescGZIP(), []int{9}
+	return file_project_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *CreateProjectResponse) GetProject() *Project {
@@ -519,7 +1115,7 @@ type DeleteProjectRequest struct {
 
 func (x *DeleteProjectRequest) Reset() {
 	*x = DeleteProjectRequest{}
-	mi := &file_project_proto_msgTypes[10]
+	mi := &file_project_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -531,7 +1127,7 @@ func (x *DeleteProjectRequest) String() string {
 func (*DeleteProjectRequest) ProtoMessage() {}
 
 func (x *DeleteProjectRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_project_proto_msgTypes[10]
+	mi := &file_project_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -544,7 +1140,7 @@ func (x *DeleteProjectRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteProjectRequest.ProtoReflect.Descriptor instead.
 func (*DeleteProjectRequest) Descriptor() ([]byte, []int) {
-	return file_project_proto_rawDescGZIP(), []int{10}
+	return file_project_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *DeleteProjectRequest) GetUserId() string {
@@ -569,7 +1165,7 @@ type DeleteProjectResponse struct {
 
 func (x *DeleteProjectResponse) Reset() {
 	*x = DeleteProjectResponse{}
-	mi := &file_project_proto_msgTypes[11]
+	mi := &file_project_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -581,7 +1177,7 @@ func (x *DeleteProjectResponse) String() string {
 func (*DeleteProjectResponse) ProtoMessage() {}
 
 func (x *DeleteProjectResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_project_proto_msgTypes[11]
+	mi := &file_project_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -594,7 +1190,7 @@ func (x *DeleteProjectResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteProjectResponse.ProtoReflect.Descriptor instead.
 func (*DeleteProjectResponse) Descriptor() ([]byte, []int) {
-	return file_project_proto_rawDescGZIP(), []int{11}
+	return file_project_proto_rawDescGZIP(), []int{22}
 }
 
 var File_project_proto protoreflect.FileDescriptor
@@ -614,13 +1210,60 @@ const file_project_proto_rawDesc = "" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x1e\n" +
 	"\n" +
 	"components\x18\x03 \x03(\tR\n" +
-	"components\"b\n" +
+	"components\"~\n" +
 	"\aProject\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
 	"\x05owner\x18\x03 \x01(\tR\x05owner\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x04 \x01(\tR\tcreatedAt\".\n" +
+	"created_at\x18\x04 \x01(\tR\tcreatedAt\x12\x1a\n" +
+	"\bdeleting\x18\x05 \x01(\bR\bdeleting\"\x8e\x02\n" +
+	"\x11ProjectRepository\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tR\tprojectId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12)\n" +
+	"\x10repository_owner\x18\x03 \x01(\tR\x0frepositoryOwner\x12'\n" +
+	"\x0frepository_name\x18\x04 \x01(\tR\x0erepositoryName\x12+\n" +
+	"\x11repository_branch\x18\x05 \x01(\tR\x10repositoryBranch\x12!\n" +
+	"\fconnected_at\x18\x06 \x01(\tR\vconnectedAt\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\a \x01(\tR\tupdatedAt\"9\n" +
+	"\x18IsProjectDeletingRequest\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tR\tprojectId\"7\n" +
+	"\x19IsProjectDeletingResponse\x12\x1a\n" +
+	"\bdeleting\x18\x01 \x01(\bR\bdeleting\"N\n" +
+	"\x14ProjectExistsRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\"/\n" +
+	"\x15ProjectExistsResponse\x12\x16\n" +
+	"\x06exists\x18\x01 \x01(\bR\x06exists\"U\n" +
+	"\x1bGetProjectRepositoryRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\"d\n" +
+	"\x1cGetProjectRepositoryResponse\x12D\n" +
+	"\n" +
+	"repository\x18\x01 \x01(\v2$.dcloud.project.v1.ProjectRepositoryR\n" +
+	"repository\"\xd9\x01\n" +
+	"\x1eUpsertProjectRepositoryRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\x12)\n" +
+	"\x10repository_owner\x18\x03 \x01(\tR\x0frepositoryOwner\x12'\n" +
+	"\x0frepository_name\x18\x04 \x01(\tR\x0erepositoryName\x12+\n" +
+	"\x11repository_branch\x18\x05 \x01(\tR\x10repositoryBranch\"g\n" +
+	"\x1fUpsertProjectRepositoryResponse\x12D\n" +
+	"\n" +
+	"repository\x18\x01 \x01(\v2$.dcloud.project.v1.ProjectRepositoryR\n" +
+	"repository\"]\n" +
+	"#CreateProjectDeleteOperationRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\"I\n" +
+	"$CreateProjectDeleteOperationResponse\x12!\n" +
+	"\foperation_id\x18\x01 \x01(\tR\voperationId\".\n" +
 	"\x13ListProjectsRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"g\n" +
 	"\x14ListProjectsResponse\x12\x17\n" +
@@ -635,13 +1278,18 @@ const file_project_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x02 \x01(\tR\tprojectId\"\x17\n" +
-	"\x15DeleteProjectResponse2\xdd\x03\n" +
+	"\x15DeleteProjectResponse2\xbf\b\n" +
 	"\x0eProjectService\x12M\n" +
 	"\x06Health\x12 .dcloud.project.v1.HealthRequest\x1a!.dcloud.project.v1.HealthResponse\x12S\n" +
 	"\bPlatform\x12\".dcloud.project.v1.PlatformRequest\x1a#.dcloud.project.v1.PlatformResponse\x12_\n" +
 	"\fListProjects\x12&.dcloud.project.v1.ListProjectsRequest\x1a'.dcloud.project.v1.ListProjectsResponse\x12b\n" +
 	"\rCreateProject\x12'.dcloud.project.v1.CreateProjectRequest\x1a(.dcloud.project.v1.CreateProjectResponse\x12b\n" +
-	"\rDeleteProject\x12'.dcloud.project.v1.DeleteProjectRequest\x1a(.dcloud.project.v1.DeleteProjectResponseB@Z>github.com/daigo-suhara/dcloud/internal/pb/projectpb;projectpbb\x06proto3"
+	"\rDeleteProject\x12'.dcloud.project.v1.DeleteProjectRequest\x1a(.dcloud.project.v1.DeleteProjectResponse\x12n\n" +
+	"\x11IsProjectDeleting\x12+.dcloud.project.v1.IsProjectDeletingRequest\x1a,.dcloud.project.v1.IsProjectDeletingResponse\x12b\n" +
+	"\rProjectExists\x12'.dcloud.project.v1.ProjectExistsRequest\x1a(.dcloud.project.v1.ProjectExistsResponse\x12w\n" +
+	"\x14GetProjectRepository\x12..dcloud.project.v1.GetProjectRepositoryRequest\x1a/.dcloud.project.v1.GetProjectRepositoryResponse\x12\x80\x01\n" +
+	"\x17UpsertProjectRepository\x121.dcloud.project.v1.UpsertProjectRepositoryRequest\x1a2.dcloud.project.v1.UpsertProjectRepositoryResponse\x12\x8f\x01\n" +
+	"\x1cCreateProjectDeleteOperation\x126.dcloud.project.v1.CreateProjectDeleteOperationRequest\x1a7.dcloud.project.v1.CreateProjectDeleteOperationResponseB@Z>github.com/daigo-suhara/dcloud/internal/pb/projectpb;projectpbb\x06proto3"
 
 var (
 	file_project_proto_rawDescOnce sync.Once
@@ -655,39 +1303,62 @@ func file_project_proto_rawDescGZIP() []byte {
 	return file_project_proto_rawDescData
 }
 
-var file_project_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_project_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_project_proto_goTypes = []any{
-	(*Empty)(nil),                 // 0: dcloud.project.v1.Empty
-	(*HealthRequest)(nil),         // 1: dcloud.project.v1.HealthRequest
-	(*HealthResponse)(nil),        // 2: dcloud.project.v1.HealthResponse
-	(*PlatformRequest)(nil),       // 3: dcloud.project.v1.PlatformRequest
-	(*PlatformResponse)(nil),      // 4: dcloud.project.v1.PlatformResponse
-	(*Project)(nil),               // 5: dcloud.project.v1.Project
-	(*ListProjectsRequest)(nil),   // 6: dcloud.project.v1.ListProjectsRequest
-	(*ListProjectsResponse)(nil),  // 7: dcloud.project.v1.ListProjectsResponse
-	(*CreateProjectRequest)(nil),  // 8: dcloud.project.v1.CreateProjectRequest
-	(*CreateProjectResponse)(nil), // 9: dcloud.project.v1.CreateProjectResponse
-	(*DeleteProjectRequest)(nil),  // 10: dcloud.project.v1.DeleteProjectRequest
-	(*DeleteProjectResponse)(nil), // 11: dcloud.project.v1.DeleteProjectResponse
+	(*Empty)(nil),                                // 0: dcloud.project.v1.Empty
+	(*HealthRequest)(nil),                        // 1: dcloud.project.v1.HealthRequest
+	(*HealthResponse)(nil),                       // 2: dcloud.project.v1.HealthResponse
+	(*PlatformRequest)(nil),                      // 3: dcloud.project.v1.PlatformRequest
+	(*PlatformResponse)(nil),                     // 4: dcloud.project.v1.PlatformResponse
+	(*Project)(nil),                              // 5: dcloud.project.v1.Project
+	(*ProjectRepository)(nil),                    // 6: dcloud.project.v1.ProjectRepository
+	(*IsProjectDeletingRequest)(nil),             // 7: dcloud.project.v1.IsProjectDeletingRequest
+	(*IsProjectDeletingResponse)(nil),            // 8: dcloud.project.v1.IsProjectDeletingResponse
+	(*ProjectExistsRequest)(nil),                 // 9: dcloud.project.v1.ProjectExistsRequest
+	(*ProjectExistsResponse)(nil),                // 10: dcloud.project.v1.ProjectExistsResponse
+	(*GetProjectRepositoryRequest)(nil),          // 11: dcloud.project.v1.GetProjectRepositoryRequest
+	(*GetProjectRepositoryResponse)(nil),         // 12: dcloud.project.v1.GetProjectRepositoryResponse
+	(*UpsertProjectRepositoryRequest)(nil),       // 13: dcloud.project.v1.UpsertProjectRepositoryRequest
+	(*UpsertProjectRepositoryResponse)(nil),      // 14: dcloud.project.v1.UpsertProjectRepositoryResponse
+	(*CreateProjectDeleteOperationRequest)(nil),  // 15: dcloud.project.v1.CreateProjectDeleteOperationRequest
+	(*CreateProjectDeleteOperationResponse)(nil), // 16: dcloud.project.v1.CreateProjectDeleteOperationResponse
+	(*ListProjectsRequest)(nil),                  // 17: dcloud.project.v1.ListProjectsRequest
+	(*ListProjectsResponse)(nil),                 // 18: dcloud.project.v1.ListProjectsResponse
+	(*CreateProjectRequest)(nil),                 // 19: dcloud.project.v1.CreateProjectRequest
+	(*CreateProjectResponse)(nil),                // 20: dcloud.project.v1.CreateProjectResponse
+	(*DeleteProjectRequest)(nil),                 // 21: dcloud.project.v1.DeleteProjectRequest
+	(*DeleteProjectResponse)(nil),                // 22: dcloud.project.v1.DeleteProjectResponse
 }
 var file_project_proto_depIdxs = []int32{
-	5,  // 0: dcloud.project.v1.ListProjectsResponse.projects:type_name -> dcloud.project.v1.Project
-	5,  // 1: dcloud.project.v1.CreateProjectResponse.project:type_name -> dcloud.project.v1.Project
-	1,  // 2: dcloud.project.v1.ProjectService.Health:input_type -> dcloud.project.v1.HealthRequest
-	3,  // 3: dcloud.project.v1.ProjectService.Platform:input_type -> dcloud.project.v1.PlatformRequest
-	6,  // 4: dcloud.project.v1.ProjectService.ListProjects:input_type -> dcloud.project.v1.ListProjectsRequest
-	8,  // 5: dcloud.project.v1.ProjectService.CreateProject:input_type -> dcloud.project.v1.CreateProjectRequest
-	10, // 6: dcloud.project.v1.ProjectService.DeleteProject:input_type -> dcloud.project.v1.DeleteProjectRequest
-	2,  // 7: dcloud.project.v1.ProjectService.Health:output_type -> dcloud.project.v1.HealthResponse
-	4,  // 8: dcloud.project.v1.ProjectService.Platform:output_type -> dcloud.project.v1.PlatformResponse
-	7,  // 9: dcloud.project.v1.ProjectService.ListProjects:output_type -> dcloud.project.v1.ListProjectsResponse
-	9,  // 10: dcloud.project.v1.ProjectService.CreateProject:output_type -> dcloud.project.v1.CreateProjectResponse
-	11, // 11: dcloud.project.v1.ProjectService.DeleteProject:output_type -> dcloud.project.v1.DeleteProjectResponse
-	7,  // [7:12] is the sub-list for method output_type
-	2,  // [2:7] is the sub-list for method input_type
-	2,  // [2:2] is the sub-list for extension type_name
-	2,  // [2:2] is the sub-list for extension extendee
-	0,  // [0:2] is the sub-list for field type_name
+	6,  // 0: dcloud.project.v1.GetProjectRepositoryResponse.repository:type_name -> dcloud.project.v1.ProjectRepository
+	6,  // 1: dcloud.project.v1.UpsertProjectRepositoryResponse.repository:type_name -> dcloud.project.v1.ProjectRepository
+	5,  // 2: dcloud.project.v1.ListProjectsResponse.projects:type_name -> dcloud.project.v1.Project
+	5,  // 3: dcloud.project.v1.CreateProjectResponse.project:type_name -> dcloud.project.v1.Project
+	1,  // 4: dcloud.project.v1.ProjectService.Health:input_type -> dcloud.project.v1.HealthRequest
+	3,  // 5: dcloud.project.v1.ProjectService.Platform:input_type -> dcloud.project.v1.PlatformRequest
+	17, // 6: dcloud.project.v1.ProjectService.ListProjects:input_type -> dcloud.project.v1.ListProjectsRequest
+	19, // 7: dcloud.project.v1.ProjectService.CreateProject:input_type -> dcloud.project.v1.CreateProjectRequest
+	21, // 8: dcloud.project.v1.ProjectService.DeleteProject:input_type -> dcloud.project.v1.DeleteProjectRequest
+	7,  // 9: dcloud.project.v1.ProjectService.IsProjectDeleting:input_type -> dcloud.project.v1.IsProjectDeletingRequest
+	9,  // 10: dcloud.project.v1.ProjectService.ProjectExists:input_type -> dcloud.project.v1.ProjectExistsRequest
+	11, // 11: dcloud.project.v1.ProjectService.GetProjectRepository:input_type -> dcloud.project.v1.GetProjectRepositoryRequest
+	13, // 12: dcloud.project.v1.ProjectService.UpsertProjectRepository:input_type -> dcloud.project.v1.UpsertProjectRepositoryRequest
+	15, // 13: dcloud.project.v1.ProjectService.CreateProjectDeleteOperation:input_type -> dcloud.project.v1.CreateProjectDeleteOperationRequest
+	2,  // 14: dcloud.project.v1.ProjectService.Health:output_type -> dcloud.project.v1.HealthResponse
+	4,  // 15: dcloud.project.v1.ProjectService.Platform:output_type -> dcloud.project.v1.PlatformResponse
+	18, // 16: dcloud.project.v1.ProjectService.ListProjects:output_type -> dcloud.project.v1.ListProjectsResponse
+	20, // 17: dcloud.project.v1.ProjectService.CreateProject:output_type -> dcloud.project.v1.CreateProjectResponse
+	22, // 18: dcloud.project.v1.ProjectService.DeleteProject:output_type -> dcloud.project.v1.DeleteProjectResponse
+	8,  // 19: dcloud.project.v1.ProjectService.IsProjectDeleting:output_type -> dcloud.project.v1.IsProjectDeletingResponse
+	10, // 20: dcloud.project.v1.ProjectService.ProjectExists:output_type -> dcloud.project.v1.ProjectExistsResponse
+	12, // 21: dcloud.project.v1.ProjectService.GetProjectRepository:output_type -> dcloud.project.v1.GetProjectRepositoryResponse
+	14, // 22: dcloud.project.v1.ProjectService.UpsertProjectRepository:output_type -> dcloud.project.v1.UpsertProjectRepositoryResponse
+	16, // 23: dcloud.project.v1.ProjectService.CreateProjectDeleteOperation:output_type -> dcloud.project.v1.CreateProjectDeleteOperationResponse
+	14, // [14:24] is the sub-list for method output_type
+	4,  // [4:14] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_project_proto_init() }
@@ -701,7 +1372,7 @@ func file_project_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_project_proto_rawDesc), len(file_project_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

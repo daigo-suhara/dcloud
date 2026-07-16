@@ -39,6 +39,31 @@ class ProjectServiceStub:
                 request_serializer=project__pb2.DeleteProjectRequest.SerializeToString,
                 response_deserializer=project__pb2.DeleteProjectResponse.FromString,
                 _registered_method=True)
+        self.IsProjectDeleting = channel.unary_unary(
+                '/dcloud.project.v1.ProjectService/IsProjectDeleting',
+                request_serializer=project__pb2.IsProjectDeletingRequest.SerializeToString,
+                response_deserializer=project__pb2.IsProjectDeletingResponse.FromString,
+                _registered_method=True)
+        self.ProjectExists = channel.unary_unary(
+                '/dcloud.project.v1.ProjectService/ProjectExists',
+                request_serializer=project__pb2.ProjectExistsRequest.SerializeToString,
+                response_deserializer=project__pb2.ProjectExistsResponse.FromString,
+                _registered_method=True)
+        self.GetProjectRepository = channel.unary_unary(
+                '/dcloud.project.v1.ProjectService/GetProjectRepository',
+                request_serializer=project__pb2.GetProjectRepositoryRequest.SerializeToString,
+                response_deserializer=project__pb2.GetProjectRepositoryResponse.FromString,
+                _registered_method=True)
+        self.UpsertProjectRepository = channel.unary_unary(
+                '/dcloud.project.v1.ProjectService/UpsertProjectRepository',
+                request_serializer=project__pb2.UpsertProjectRepositoryRequest.SerializeToString,
+                response_deserializer=project__pb2.UpsertProjectRepositoryResponse.FromString,
+                _registered_method=True)
+        self.CreateProjectDeleteOperation = channel.unary_unary(
+                '/dcloud.project.v1.ProjectService/CreateProjectDeleteOperation',
+                request_serializer=project__pb2.CreateProjectDeleteOperationRequest.SerializeToString,
+                response_deserializer=project__pb2.CreateProjectDeleteOperationResponse.FromString,
+                _registered_method=True)
 
 
 class ProjectServiceServicer:
@@ -74,6 +99,36 @@ class ProjectServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def IsProjectDeleting(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ProjectExists(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetProjectRepository(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpsertProjectRepository(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateProjectDeleteOperation(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ProjectServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -101,6 +156,31 @@ def add_ProjectServiceServicer_to_server(servicer, server):
                     servicer.DeleteProject,
                     request_deserializer=project__pb2.DeleteProjectRequest.FromString,
                     response_serializer=project__pb2.DeleteProjectResponse.SerializeToString,
+            ),
+            'IsProjectDeleting': grpc.unary_unary_rpc_method_handler(
+                    servicer.IsProjectDeleting,
+                    request_deserializer=project__pb2.IsProjectDeletingRequest.FromString,
+                    response_serializer=project__pb2.IsProjectDeletingResponse.SerializeToString,
+            ),
+            'ProjectExists': grpc.unary_unary_rpc_method_handler(
+                    servicer.ProjectExists,
+                    request_deserializer=project__pb2.ProjectExistsRequest.FromString,
+                    response_serializer=project__pb2.ProjectExistsResponse.SerializeToString,
+            ),
+            'GetProjectRepository': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetProjectRepository,
+                    request_deserializer=project__pb2.GetProjectRepositoryRequest.FromString,
+                    response_serializer=project__pb2.GetProjectRepositoryResponse.SerializeToString,
+            ),
+            'UpsertProjectRepository': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpsertProjectRepository,
+                    request_deserializer=project__pb2.UpsertProjectRepositoryRequest.FromString,
+                    response_serializer=project__pb2.UpsertProjectRepositoryResponse.SerializeToString,
+            ),
+            'CreateProjectDeleteOperation': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateProjectDeleteOperation,
+                    request_deserializer=project__pb2.CreateProjectDeleteOperationRequest.FromString,
+                    response_serializer=project__pb2.CreateProjectDeleteOperationResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -238,6 +318,141 @@ class ProjectService:
             '/dcloud.project.v1.ProjectService/DeleteProject',
             project__pb2.DeleteProjectRequest.SerializeToString,
             project__pb2.DeleteProjectResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def IsProjectDeleting(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/dcloud.project.v1.ProjectService/IsProjectDeleting',
+            project__pb2.IsProjectDeletingRequest.SerializeToString,
+            project__pb2.IsProjectDeletingResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ProjectExists(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/dcloud.project.v1.ProjectService/ProjectExists',
+            project__pb2.ProjectExistsRequest.SerializeToString,
+            project__pb2.ProjectExistsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetProjectRepository(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/dcloud.project.v1.ProjectService/GetProjectRepository',
+            project__pb2.GetProjectRepositoryRequest.SerializeToString,
+            project__pb2.GetProjectRepositoryResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpsertProjectRepository(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/dcloud.project.v1.ProjectService/UpsertProjectRepository',
+            project__pb2.UpsertProjectRepositoryRequest.SerializeToString,
+            project__pb2.UpsertProjectRepositoryResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateProjectDeleteOperation(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/dcloud.project.v1.ProjectService/CreateProjectDeleteOperation',
+            project__pb2.CreateProjectDeleteOperationRequest.SerializeToString,
+            project__pb2.CreateProjectDeleteOperationResponse.FromString,
             options,
             channel_credentials,
             insecure,
