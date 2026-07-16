@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/json"
@@ -8,12 +8,13 @@ import (
 
 	"github.com/daigo-suhara/dcloud/internal/auth/jwtverify"
 	projectpb "github.com/daigo-suhara/dcloud/internal/pb/projectpb"
+	"github.com/daigo-suhara/dcloud/internal/project/service"
 	"google.golang.org/grpc/status"
 )
 
-// registerRESTRoutes wires the /api/v1/projects/* routes the console
+// RegisterRESTRoutes wires the /api/v1/projects/* routes the console
 // currently reaches via api. Auth is via the dcloud_session JWT cookie.
-func registerRESTRoutes(mux *http.ServeMux, server *projectServer, verifier *jwtverify.Verifier) {
+func RegisterRESTRoutes(mux *http.ServeMux, server *service.Server, verifier *jwtverify.Verifier) {
 	cookie := envRest("DCLD_SESSION_COOKIE_NAME", "dcloud_session")
 
 	auth := func(w http.ResponseWriter, r *http.Request) *jwtverify.Claims {

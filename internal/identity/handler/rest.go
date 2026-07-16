@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/json"
@@ -8,14 +8,13 @@ import (
 	"time"
 
 	"github.com/daigo-suhara/dcloud/internal/auth/jwtverify"
+	"github.com/daigo-suhara/dcloud/internal/identity/service"
 	identitypb "github.com/daigo-suhara/dcloud/internal/pb/identitypb"
 	"google.golang.org/grpc/status"
 )
 
-// registerRESTRoutes mirrors the /api/v1/auth/* routes that the console
-// currently hits on api. Now that the api Python service is being
-// retired, identity serves these directly on its :8093 HTTP listener.
-func registerRESTRoutes(mux *http.ServeMux, server *identityServer, verifier *jwtverify.Verifier) {
+// RegisterRESTRoutes mirrors the /api/v1/auth/* routes.
+func RegisterRESTRoutes(mux *http.ServeMux, server *service.Server, verifier *jwtverify.Verifier) {
 	cookie := envDef("DCLD_SESSION_COOKIE_NAME", "dcloud_session")
 	secure := isCookieSecure()
 

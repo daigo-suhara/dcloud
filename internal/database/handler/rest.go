@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"net/http"
@@ -6,10 +6,11 @@ import (
 
 	"github.com/daigo-suhara/dcloud/internal/apihelp"
 	"github.com/daigo-suhara/dcloud/internal/auth/jwtverify"
+	"github.com/daigo-suhara/dcloud/internal/database/service"
 	databasepb "github.com/daigo-suhara/dcloud/internal/pb/databasepb"
 )
 
-func registerRESTRoutes(mux *http.ServeMux, server *databaseServer, verifier *jwtverify.Verifier) {
+func RegisterRESTRoutes(mux *http.ServeMux, server *service.Server, verifier *jwtverify.Verifier) {
 	cookie := apihelp.EnvOr("DCLD_SESSION_COOKIE_NAME", "dcloud_session")
 
 	auth := func(w http.ResponseWriter, r *http.Request) (*jwtverify.Claims, string) {

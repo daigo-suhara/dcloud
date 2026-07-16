@@ -1,6 +1,6 @@
-// Command identity-server is the IdentityService binary. Listens on
-// gRPC :8083 and, on :8093 (h2c), serves the JWKS document, ConnectRPC
-// handler and REST /api/v1/auth/* routes.
+// Command project-server is the ProjectService binary. Listens on gRPC
+// :8081 and, on h2c :8091, serves ConnectRPC and REST /api/v1/projects
+// routes with JWT auth.
 package main
 
 import (
@@ -16,10 +16,10 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/daigo-suhara/dcloud/internal/auth/jwtverify"
-	"github.com/daigo-suhara/dcloud/internal/identity/handler"
-	"github.com/daigo-suhara/dcloud/internal/identity/service"
-	identitypb "github.com/daigo-suhara/dcloud/internal/pb/identitypb"
-	"github.com/daigo-suhara/dcloud/internal/pb/identitypb/identitypbconnect"
+	projectpb "github.com/daigo-suhara/dcloud/internal/pb/projectpb"
+	"github.com/daigo-suhara/dcloud/internal/pb/projectpb/projectpbconnect"
+	"github.com/daigo-suhara/dcloud/internal/project/handler"
+	"github.com/daigo-suhara/dcloud/internal/project/service"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
@@ -27,12 +27,13 @@ import (
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	grpcAddr := env("DCLD_IDENTITY_ADDR", ":8083")
-	httpAddr := env("DCLD_IDENTITY_HTTP_ADDR", ":8093")
+	grpcAddr := env("DCP_PROJECT_ADDR", ":8081")
+	httpAddr := env("DCP_PROJECT_HTTP_ADDR", ":8091")
+	jwksURL := env("DCLD_IDENTITY_JWKS_URL", "http://identity:8093/.well-known/jwks.json")
 
-	svc, err := service.New(logger)
+	svc, err := service.New(NewResourceClients())
 	if err != nil {
-		logger.Error("failed to initialize identity server", "error", err)
+		logger.Error("failed to initialize project server", "error", err)
 		os.Exit(1)
 	}
 	defer svc.Close()
@@ -43,36 +44,38 @@ func main() {
 		os.Exit(1)
 	}
 	grpcServer := grpc.NewServer()
-	identitypb.RegisterIdentityServiceServer(grpcServer, handler.NewGRPC(svc))
+	projectpb.RegisterProjectServiceServer(grpcServer, handler.NewGRPC(svc))
 
-	verifier := jwtverify.New(env("DCLD_IDENTITY_JWKS_URL", "http://localhost:8093/.well-known/jwks.json"))
+	verifier := jwtverify.New(jwksURL)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/.well-known/jwks.json", svc.Signer.HandleJWKS)
-	connectPath, connectHandler := identitypbconnect.NewIdentityServiceHandler(handler.NewConnect(svc), connect.WithHandlerOptions())
+	connectPath, connectHandler := projectpbconnect.NewProjectServiceHandler(
+		handler.NewConnect(svc),
+		connect.WithInterceptors(verifier.ConnectInterceptor()),
+	)
 	mux.Handle(connectPath, connectHandler)
 	handler.RegisterRESTRoutes(mux, svc, verifier)
 	httpServer := &http.Server{Addr: httpAddr, Handler: h2c.NewHandler(mux, &http2.Server{})}
 
-	errC := make(chan error, 2)
+	errc := make(chan error, 2)
 	go func() {
-		logger.Info("identity grpc listening", "addr", grpcAddr)
-		errC <- grpcServer.Serve(lis)
+		logger.Info("project grpc listening", "addr", grpcAddr)
+		errc <- grpcServer.Serve(lis)
 	}()
 	go func() {
-		logger.Info("identity http listening", "addr", httpAddr)
+		logger.Info("project http listening", "addr", httpAddr)
 		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			errC <- err
+			errc <- err
 		}
 	}()
-	sigC := make(chan os.Signal, 1)
-	signal.Notify(sigC, syscall.SIGINT, syscall.SIGTERM)
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM)
 	select {
-	case <-sigC:
+	case <-sigc:
 		grpcServer.GracefulStop()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		_ = httpServer.Shutdown(shutdownCtx)
-	case err := <-errC:
+	case err := <-errc:
 		if err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 			logger.Error("server failed", "error", err)
 			os.Exit(1)

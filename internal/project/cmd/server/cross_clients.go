@@ -20,19 +20,19 @@ import (
 	"golang.org/x/net/http2"
 )
 
-// resourceClients bundles the Connect clients project uses to fan out
+// ResourceClients bundles the Connect clients project uses to fan out
 // deletes to the other service binaries during
 // CreateProjectDeleteOperation. Each Connect handler mounted by the
 // target services expects a JWT via Authorization: Bearer; project
 // forwards the caller's token from context.
-type resourceClients struct {
+type ResourceClients struct {
 	Compute   computepbconnect.ComputeServiceClient
 	Container containerpbconnect.ContainerServiceClient
 	Storage   storagepbconnect.ObjectStorageServiceClient
 	Database  databasepbconnect.DatabaseServiceClient
 }
 
-func newResourceClients() *resourceClients {
+func NewResourceClients() *ResourceClients {
 	// h2c client — cluster-internal, plaintext HTTP/2. The target services
 	// listen with h2c wrappers on their :809x ports.
 	client := &http.Client{
@@ -44,7 +44,7 @@ func newResourceClients() *resourceClients {
 			},
 		},
 	}
-	return &resourceClients{
+	return &ResourceClients{
 		Compute:   computepbconnect.NewComputeServiceClient(client, envDefault("DCLD_COMPUTE_CONNECT_URL", "http://compute:8094"), connect.WithGRPC()),
 		Container: containerpbconnect.NewContainerServiceClient(client, envDefault("DCLD_CONTAINER_CONNECT_URL", "http://container:8092"), connect.WithGRPC()),
 		Storage:   storagepbconnect.NewObjectStorageServiceClient(client, envDefault("DCLD_STORAGE_CONNECT_URL", "http://storage:8095"), connect.WithGRPC()),
@@ -60,11 +60,11 @@ func forwardAuth[T any](ctx context.Context, req *connect.Request[T]) {
 	}
 }
 
-// deleteAllResources best-effort deletes every resource owned by
+// DeleteAllResources best-effort deletes every resource owned by
 // (userID, projectID) across the four services. Errors are swallowed
 // so a single failed service doesn't block the overall project
 // deletion; the caller records the operation independently.
-func (r *resourceClients) deleteAllResources(ctx context.Context, userID, projectID string) {
+func (r *ResourceClients) DeleteAllResources(ctx context.Context, userID, projectID string) {
 	// Compute (VMs)
 	{
 		req := connect.NewRequest(&computepb.ListMachinesRequest{UserId: userID, ProjectId: projectID})
