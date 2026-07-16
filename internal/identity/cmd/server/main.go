@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/daigo-suhara/dcloud/internal/auth/jwtverify"
 	"github.com/daigo-suhara/dcloud/internal/db"
 	"github.com/daigo-suhara/dcloud/internal/identity/keys"
 	identitypb "github.com/daigo-suhara/dcloud/internal/pb/identitypb"
@@ -370,11 +371,13 @@ func main() {
 	grpcServer := grpc.NewServer()
 	RegisterIdentityServer(grpcServer, server)
 
+	verifier := jwtverify.New(env("DCLD_IDENTITY_JWKS_URL", "http://localhost:8093/.well-known/jwks.json"))
 	mux := http.NewServeMux()
 	mux.HandleFunc("/.well-known/jwks.json", server.signer.HandleJWKS)
 	adapter := &connectAdapter{inner: server}
 	connectPath, connectHandler := identitypbconnect.NewIdentityServiceHandler(adapter, connect.WithHandlerOptions())
 	mux.Handle(connectPath, connectHandler)
+	registerRESTRoutes(mux, server, verifier)
 	httpServer := &http.Server{Addr: httpAddr, Handler: h2c.NewHandler(mux, &http2.Server{})}
 
 	errC := make(chan error, 2)

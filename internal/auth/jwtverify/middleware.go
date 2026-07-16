@@ -69,6 +69,31 @@ func (v *Verifier) HTTPMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// VerifyCookieOrBearer extracts a JWT from either the named cookie or an
+// Authorization: Bearer header and verifies it. Convenience for REST
+// handlers that accept both browser (cookie) and CLI (bearer) callers.
+func (v *Verifier) VerifyCookieOrBearer(r *http.Request, cookieName string) (*Claims, string, error) {
+	token := ""
+	if cookieName != "" {
+		if cookie, err := r.Cookie(cookieName); err == nil {
+			token = strings.TrimSpace(cookie.Value)
+		}
+	}
+	if token == "" {
+		if auth := r.Header.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
+			token = strings.TrimSpace(strings.TrimPrefix(auth, "Bearer "))
+		}
+	}
+	if token == "" {
+		return nil, "", errors.New("missing JWT (cookie or Authorization header)")
+	}
+	claims, err := v.Verify(r.Context(), token)
+	if err != nil {
+		return nil, "", err
+	}
+	return claims, token, nil
+}
+
 // ConnectInterceptor validates JWT on every unary and streaming Connect RPC.
 func (v *Verifier) ConnectInterceptor() connect.UnaryInterceptorFunc {
 	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
