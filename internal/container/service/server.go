@@ -379,7 +379,7 @@ func (s *Server) SetServiceDomain(ctx context.Context, req *containerpb.SetServi
 // StreamServiceLogs is protocol-neutral. Both the gRPC streaming handler
 // and the ConnectRPC handler forward each LogLine through the send callback,
 // so the business logic here stays in one place.
-func (s *Server) StreamServiceLogs(ctx context.Context, req *containerpb.GetServiceLogsRequest, send func(*containerpb.LogLine) error) error {
+func (s *Server) StreamServiceLogs(ctx context.Context, req *containerpb.GetServiceLogsRequest, send func(*containerpb.GetServiceLogsResponse) error) error {
 	userID := strings.TrimSpace(req.UserId)
 	projectID := strings.TrimSpace(req.ProjectId)
 	name := strings.TrimSpace(req.Name)
@@ -421,7 +421,7 @@ func (s *Server) StreamServiceLogs(ctx context.Context, req *containerpb.GetServ
 	defer body.Close()
 
 	emitErr := knative.ForwardLogLines(ctx, body, func(timestamp, text string) error {
-		return send(&containerpb.LogLine{Text: text, Timestamp: timestamp})
+		return send(&containerpb.GetServiceLogsResponse{Text: text, Timestamp: timestamp})
 	})
 	if emitErr != nil && !errors.Is(emitErr, context.Canceled) {
 		return status.Errorf(codes.Internal, "log stream interrupted: %v", emitErr)

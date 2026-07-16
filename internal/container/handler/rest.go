@@ -169,7 +169,7 @@ func (h *REST) logs(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	err := h.svc.StreamServiceLogs(ctx, &containerpb.GetServiceLogsRequest{
 		UserId: claims.Subject, ProjectId: projectID, Name: name, TailLines: tail, Follow: follow,
-	}, func(line *containerpb.LogLine) error {
+	}, func(line *containerpb.GetServiceLogsResponse) error {
 		payload, _ := json.Marshal(map[string]any{"text": line.Text, "timestamp": line.Timestamp})
 		if _, err := fmt.Fprintf(w, "data: %s\n\n", payload); err != nil {
 			return err

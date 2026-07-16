@@ -63,7 +63,7 @@ type ContainerServiceClient interface {
 	DeleteService(context.Context, *connect.Request[containerpb.DeleteServiceRequest]) (*connect.Response[containerpb.DeleteServiceResponse], error)
 	GetOperation(context.Context, *connect.Request[containerpb.GetOperationRequest]) (*connect.Response[containerpb.GetOperationResponse], error)
 	SetServiceDomain(context.Context, *connect.Request[containerpb.SetServiceDomainRequest]) (*connect.Response[containerpb.SetServiceDomainResponse], error)
-	GetServiceLogs(context.Context, *connect.Request[containerpb.GetServiceLogsRequest]) (*connect.ServerStreamForClient[containerpb.LogLine], error)
+	GetServiceLogs(context.Context, *connect.Request[containerpb.GetServiceLogsRequest]) (*connect.ServerStreamForClient[containerpb.GetServiceLogsResponse], error)
 }
 
 // NewContainerServiceClient constructs a client for the dcloud.container.v1.ContainerService
@@ -113,7 +113,7 @@ func NewContainerServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(containerServiceMethods.ByName("SetServiceDomain")),
 			connect.WithClientOptions(opts...),
 		),
-		getServiceLogs: connect.NewClient[containerpb.GetServiceLogsRequest, containerpb.LogLine](
+		getServiceLogs: connect.NewClient[containerpb.GetServiceLogsRequest, containerpb.GetServiceLogsResponse](
 			httpClient,
 			baseURL+ContainerServiceGetServiceLogsProcedure,
 			connect.WithSchema(containerServiceMethods.ByName("GetServiceLogs")),
@@ -130,7 +130,7 @@ type containerServiceClient struct {
 	deleteService    *connect.Client[containerpb.DeleteServiceRequest, containerpb.DeleteServiceResponse]
 	getOperation     *connect.Client[containerpb.GetOperationRequest, containerpb.GetOperationResponse]
 	setServiceDomain *connect.Client[containerpb.SetServiceDomainRequest, containerpb.SetServiceDomainResponse]
-	getServiceLogs   *connect.Client[containerpb.GetServiceLogsRequest, containerpb.LogLine]
+	getServiceLogs   *connect.Client[containerpb.GetServiceLogsRequest, containerpb.GetServiceLogsResponse]
 }
 
 // Health calls dcloud.container.v1.ContainerService.Health.
@@ -164,7 +164,7 @@ func (c *containerServiceClient) SetServiceDomain(ctx context.Context, req *conn
 }
 
 // GetServiceLogs calls dcloud.container.v1.ContainerService.GetServiceLogs.
-func (c *containerServiceClient) GetServiceLogs(ctx context.Context, req *connect.Request[containerpb.GetServiceLogsRequest]) (*connect.ServerStreamForClient[containerpb.LogLine], error) {
+func (c *containerServiceClient) GetServiceLogs(ctx context.Context, req *connect.Request[containerpb.GetServiceLogsRequest]) (*connect.ServerStreamForClient[containerpb.GetServiceLogsResponse], error) {
 	return c.getServiceLogs.CallServerStream(ctx, req)
 }
 
@@ -176,7 +176,7 @@ type ContainerServiceHandler interface {
 	DeleteService(context.Context, *connect.Request[containerpb.DeleteServiceRequest]) (*connect.Response[containerpb.DeleteServiceResponse], error)
 	GetOperation(context.Context, *connect.Request[containerpb.GetOperationRequest]) (*connect.Response[containerpb.GetOperationResponse], error)
 	SetServiceDomain(context.Context, *connect.Request[containerpb.SetServiceDomainRequest]) (*connect.Response[containerpb.SetServiceDomainResponse], error)
-	GetServiceLogs(context.Context, *connect.Request[containerpb.GetServiceLogsRequest], *connect.ServerStream[containerpb.LogLine]) error
+	GetServiceLogs(context.Context, *connect.Request[containerpb.GetServiceLogsRequest], *connect.ServerStream[containerpb.GetServiceLogsResponse]) error
 }
 
 // NewContainerServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -277,6 +277,6 @@ func (UnimplementedContainerServiceHandler) SetServiceDomain(context.Context, *c
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dcloud.container.v1.ContainerService.SetServiceDomain is not implemented"))
 }
 
-func (UnimplementedContainerServiceHandler) GetServiceLogs(context.Context, *connect.Request[containerpb.GetServiceLogsRequest], *connect.ServerStream[containerpb.LogLine]) error {
+func (UnimplementedContainerServiceHandler) GetServiceLogs(context.Context, *connect.Request[containerpb.GetServiceLogsRequest], *connect.ServerStream[containerpb.GetServiceLogsResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("dcloud.container.v1.ContainerService.GetServiceLogs is not implemented"))
 }

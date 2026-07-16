@@ -63,6 +63,6 @@ func (h *Connect) SetServiceDomain(ctx context.Context, req *connect.Request[con
 	return connect.NewResponse(resp), nil
 }
 
-func (h *Connect) GetServiceLogs(ctx context.Context, req *connect.Request[containerpb.GetServiceLogsRequest], stream *connect.ServerStream[containerpb.LogLine]) error {
+func (h *Connect) GetServiceLogs(ctx context.Context, req *connect.Request[containerpb.GetServiceLogsRequest], stream *connect.ServerStream[containerpb.GetServiceLogsResponse]) error {
 	return h.svc.StreamServiceLogs(ctx, req.Msg, stream.Send)
 }

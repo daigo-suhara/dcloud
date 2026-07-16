@@ -38,7 +38,7 @@ type ContainerServiceClient interface {
 	DeleteService(ctx context.Context, in *DeleteServiceRequest, opts ...grpc.CallOption) (*DeleteServiceResponse, error)
 	GetOperation(ctx context.Context, in *GetOperationRequest, opts ...grpc.CallOption) (*GetOperationResponse, error)
 	SetServiceDomain(ctx context.Context, in *SetServiceDomainRequest, opts ...grpc.CallOption) (*SetServiceDomainResponse, error)
-	GetServiceLogs(ctx context.Context, in *GetServiceLogsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[LogLine], error)
+	GetServiceLogs(ctx context.Context, in *GetServiceLogsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetServiceLogsResponse], error)
 }
 
 type containerServiceClient struct {
@@ -109,13 +109,13 @@ func (c *containerServiceClient) SetServiceDomain(ctx context.Context, in *SetSe
 	return out, nil
 }
 
-func (c *containerServiceClient) GetServiceLogs(ctx context.Context, in *GetServiceLogsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[LogLine], error) {
+func (c *containerServiceClient) GetServiceLogs(ctx context.Context, in *GetServiceLogsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetServiceLogsResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &ContainerService_ServiceDesc.Streams[0], ContainerService_GetServiceLogs_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[GetServiceLogsRequest, LogLine]{ClientStream: stream}
+	x := &grpc.GenericClientStream[GetServiceLogsRequest, GetServiceLogsResponse]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (c *containerServiceClient) GetServiceLogs(ctx context.Context, in *GetServ
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ContainerService_GetServiceLogsClient = grpc.ServerStreamingClient[LogLine]
+type ContainerService_GetServiceLogsClient = grpc.ServerStreamingClient[GetServiceLogsResponse]
 
 // ContainerServiceServer is the server API for ContainerService service.
 // All implementations must embed UnimplementedContainerServiceServer
@@ -138,7 +138,7 @@ type ContainerServiceServer interface {
 	DeleteService(context.Context, *DeleteServiceRequest) (*DeleteServiceResponse, error)
 	GetOperation(context.Context, *GetOperationRequest) (*GetOperationResponse, error)
 	SetServiceDomain(context.Context, *SetServiceDomainRequest) (*SetServiceDomainResponse, error)
-	GetServiceLogs(*GetServiceLogsRequest, grpc.ServerStreamingServer[LogLine]) error
+	GetServiceLogs(*GetServiceLogsRequest, grpc.ServerStreamingServer[GetServiceLogsResponse]) error
 	mustEmbedUnimplementedContainerServiceServer()
 }
 
@@ -167,7 +167,7 @@ func (UnimplementedContainerServiceServer) GetOperation(context.Context, *GetOpe
 func (UnimplementedContainerServiceServer) SetServiceDomain(context.Context, *SetServiceDomainRequest) (*SetServiceDomainResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SetServiceDomain not implemented")
 }
-func (UnimplementedContainerServiceServer) GetServiceLogs(*GetServiceLogsRequest, grpc.ServerStreamingServer[LogLine]) error {
+func (UnimplementedContainerServiceServer) GetServiceLogs(*GetServiceLogsRequest, grpc.ServerStreamingServer[GetServiceLogsResponse]) error {
 	return status.Error(codes.Unimplemented, "method GetServiceLogs not implemented")
 }
 func (UnimplementedContainerServiceServer) mustEmbedUnimplementedContainerServiceServer() {}
@@ -304,11 +304,11 @@ func _ContainerService_GetServiceLogs_Handler(srv interface{}, stream grpc.Serve
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ContainerServiceServer).GetServiceLogs(m, &grpc.GenericServerStream[GetServiceLogsRequest, LogLine]{ServerStream: stream})
+	return srv.(ContainerServiceServer).GetServiceLogs(m, &grpc.GenericServerStream[GetServiceLogsRequest, GetServiceLogsResponse]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ContainerService_GetServiceLogsServer = grpc.ServerStreamingServer[LogLine]
+type ContainerService_GetServiceLogsServer = grpc.ServerStreamingServer[GetServiceLogsResponse]
 
 // ContainerService_ServiceDesc is the grpc.ServiceDesc for ContainerService service.
 // It's only intended for direct use with grpc.RegisterService,

@@ -1063,7 +1063,7 @@ func (x *GetServiceLogsRequest) GetFollow() bool {
 	return false
 }
 
-type LogLine struct {
+type GetServiceLogsResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Text  string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
 	// RFC3339 timestamp when present (k8s timestamps=true).
@@ -1072,20 +1072,20 @@ type LogLine struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *LogLine) Reset() {
-	*x = LogLine{}
+func (x *GetServiceLogsResponse) Reset() {
+	*x = GetServiceLogsResponse{}
 	mi := &file_container_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *LogLine) String() string {
+func (x *GetServiceLogsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*LogLine) ProtoMessage() {}
+func (*GetServiceLogsResponse) ProtoMessage() {}
 
-func (x *LogLine) ProtoReflect() protoreflect.Message {
+func (x *GetServiceLogsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_container_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1097,19 +1097,19 @@ func (x *LogLine) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use LogLine.ProtoReflect.Descriptor instead.
-func (*LogLine) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetServiceLogsResponse.ProtoReflect.Descriptor instead.
+func (*GetServiceLogsResponse) Descriptor() ([]byte, []int) {
 	return file_container_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *LogLine) GetText() string {
+func (x *GetServiceLogsResponse) GetText() string {
 	if x != nil {
 		return x.Text
 	}
 	return ""
 }
 
-func (x *LogLine) GetTimestamp() string {
+func (x *GetServiceLogsResponse) GetTimestamp() string {
 	if x != nil {
 		return x.Timestamp
 	}
@@ -1209,18 +1209,18 @@ const file_container_proto_rawDesc = "" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1d\n" +
 	"\n" +
 	"tail_lines\x18\x04 \x01(\x05R\ttailLines\x12\x16\n" +
-	"\x06follow\x18\x05 \x01(\bR\x06follow\";\n" +
-	"\aLogLine\x12\x12\n" +
+	"\x06follow\x18\x05 \x01(\bR\x06follow\"J\n" +
+	"\x16GetServiceLogsResponse\x12\x12\n" +
 	"\x04text\x18\x01 \x01(\tR\x04text\x12\x1c\n" +
-	"\ttimestamp\x18\x02 \x01(\tR\ttimestamp2\xce\x05\n" +
+	"\ttimestamp\x18\x02 \x01(\tR\ttimestamp2\xdd\x05\n" +
 	"\x10ContainerService\x12Q\n" +
 	"\x06Health\x12\".dcloud.container.v1.HealthRequest\x1a#.dcloud.container.v1.HealthResponse\x12c\n" +
 	"\fListServices\x12(.dcloud.container.v1.ListServicesRequest\x1a).dcloud.container.v1.ListServicesResponse\x12f\n" +
 	"\rDeployService\x12).dcloud.container.v1.DeployServiceRequest\x1a*.dcloud.container.v1.DeployServiceResponse\x12f\n" +
 	"\rDeleteService\x12).dcloud.container.v1.DeleteServiceRequest\x1a*.dcloud.container.v1.DeleteServiceResponse\x12c\n" +
 	"\fGetOperation\x12(.dcloud.container.v1.GetOperationRequest\x1a).dcloud.container.v1.GetOperationResponse\x12o\n" +
-	"\x10SetServiceDomain\x12,.dcloud.container.v1.SetServiceDomainRequest\x1a-.dcloud.container.v1.SetServiceDomainResponse\x12\\\n" +
-	"\x0eGetServiceLogs\x12*.dcloud.container.v1.GetServiceLogsRequest\x1a\x1c.dcloud.container.v1.LogLine0\x01BDZBgithub.com/daigo-suhara/dcloud/internal/pb/containerpb;containerpbb\x06proto3"
+	"\x10SetServiceDomain\x12,.dcloud.container.v1.SetServiceDomainRequest\x1a-.dcloud.container.v1.SetServiceDomainResponse\x12k\n" +
+	"\x0eGetServiceLogs\x12*.dcloud.container.v1.GetServiceLogsRequest\x1a+.dcloud.container.v1.GetServiceLogsResponse0\x01BDZBgithub.com/daigo-suhara/dcloud/internal/pb/containerpb;containerpbb\x06proto3"
 
 var (
 	file_container_proto_rawDescOnce sync.Once
@@ -1252,7 +1252,7 @@ var file_container_proto_goTypes = []any{
 	(*SetServiceDomainRequest)(nil),  // 13: dcloud.container.v1.SetServiceDomainRequest
 	(*SetServiceDomainResponse)(nil), // 14: dcloud.container.v1.SetServiceDomainResponse
 	(*GetServiceLogsRequest)(nil),    // 15: dcloud.container.v1.GetServiceLogsRequest
-	(*LogLine)(nil),                  // 16: dcloud.container.v1.LogLine
+	(*GetServiceLogsResponse)(nil),   // 16: dcloud.container.v1.GetServiceLogsResponse
 }
 var file_container_proto_depIdxs = []int32{
 	1,  // 0: dcloud.container.v1.Service.env:type_name -> dcloud.container.v1.EnvVar
@@ -1273,7 +1273,7 @@ var file_container_proto_depIdxs = []int32{
 	10, // 15: dcloud.container.v1.ContainerService.DeleteService:output_type -> dcloud.container.v1.DeleteServiceResponse
 	12, // 16: dcloud.container.v1.ContainerService.GetOperation:output_type -> dcloud.container.v1.GetOperationResponse
 	14, // 17: dcloud.container.v1.ContainerService.SetServiceDomain:output_type -> dcloud.container.v1.SetServiceDomainResponse
-	16, // 18: dcloud.container.v1.ContainerService.GetServiceLogs:output_type -> dcloud.container.v1.LogLine
+	16, // 18: dcloud.container.v1.ContainerService.GetServiceLogs:output_type -> dcloud.container.v1.GetServiceLogsResponse
 	12, // [12:19] is the sub-list for method output_type
 	5,  // [5:12] is the sub-list for method input_type
 	5,  // [5:5] is the sub-list for extension type_name

@@ -11,7 +11,7 @@ service ContainerService {
   rpc DeleteService(DeleteServiceRequest) returns (DeleteServiceResponse);
   rpc GetOperation(GetOperationRequest) returns (GetOperationResponse);
   rpc SetServiceDomain(SetServiceDomainRequest) returns (SetServiceDomainResponse);
-  rpc GetServiceLogs(GetServiceLogsRequest) returns (stream LogLine);
+  rpc GetServiceLogs(GetServiceLogsRequest) returns (stream GetServiceLogsResponse);
 }
 
 message Empty {}
@@ -120,7 +120,7 @@ message GetServiceLogsRequest {
   bool follow = 5;
 }
 
-message LogLine {
+message GetServiceLogsResponse {
   string text = 1;
   // RFC3339 timestamp when present (k8s timestamps=true).
   string timestamp = 2;
