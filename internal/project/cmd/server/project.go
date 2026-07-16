@@ -15,9 +15,16 @@ import (
 	"syscall"
 	"time"
 
+	"net/http"
+
+	"connectrpc.com/connect"
+	"github.com/daigo-suhara/dcloud/internal/auth/jwtverify"
 	"github.com/daigo-suhara/dcloud/internal/db"
 	dbsqlc "github.com/daigo-suhara/dcloud/internal/db/sqlc"
 	projectpb "github.com/daigo-suhara/dcloud/internal/pb/projectpb"
+	"github.com/daigo-suhara/dcloud/internal/pb/projectpb/projectpbconnect"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -29,12 +36,23 @@ type HealthResponse = projectpb.HealthResponse
 type PlatformRequest = projectpb.PlatformRequest
 type PlatformResponse = projectpb.PlatformResponse
 type Project = projectpb.Project
+type ProjectRepository = projectpb.ProjectRepository
 type ListProjectsRequest = projectpb.ListProjectsRequest
 type ListProjectsResponse = projectpb.ListProjectsResponse
 type CreateProjectRequest = projectpb.CreateProjectRequest
 type CreateProjectResponse = projectpb.CreateProjectResponse
 type DeleteProjectRequest = projectpb.DeleteProjectRequest
 type DeleteProjectResponse = projectpb.DeleteProjectResponse
+type IsProjectDeletingRequest = projectpb.IsProjectDeletingRequest
+type IsProjectDeletingResponse = projectpb.IsProjectDeletingResponse
+type ProjectExistsRequest = projectpb.ProjectExistsRequest
+type ProjectExistsResponse = projectpb.ProjectExistsResponse
+type GetProjectRepositoryRequest = projectpb.GetProjectRepositoryRequest
+type GetProjectRepositoryResponse = projectpb.GetProjectRepositoryResponse
+type UpsertProjectRepositoryRequest = projectpb.UpsertProjectRepositoryRequest
+type UpsertProjectRepositoryResponse = projectpb.UpsertProjectRepositoryResponse
+type CreateProjectDeleteOperationRequest = projectpb.CreateProjectDeleteOperationRequest
+type CreateProjectDeleteOperationResponse = projectpb.CreateProjectDeleteOperationResponse
 type ProjectServer = projectpb.ProjectServiceServer
 
 type projectServer struct {
@@ -71,7 +89,7 @@ func (s *projectServer) ListProjects(ctx context.Context, req *ListProjectsReque
 	if userID == "" {
 		return nil, status.Error(codes.InvalidArgument, "userId is required")
 	}
-	records, err := s.q.ListProjects(ctx, userID)
+	records, err := s.q.ListProjectsWithDeleting(ctx, userID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to query projects")
 	}
@@ -82,6 +100,7 @@ func (s *projectServer) ListProjects(ctx context.Context, req *ListProjectsReque
 			Name:      record.Name,
 			Owner:     record.UserID,
 			CreatedAt: record.CreatedAt,
+			Deleting:  record.Deleting,
 		})
 	}
 	return &ListProjectsResponse{UserId: userID, Projects: items}, nil
@@ -130,16 +149,130 @@ func (s *projectServer) DeleteProject(ctx context.Context, req *DeleteProjectReq
 	return &DeleteProjectResponse{}, nil
 }
 
+func (s *projectServer) ProjectExists(ctx context.Context, req *ProjectExistsRequest) (*ProjectExistsResponse, error) {
+	userID := strings.TrimSpace(req.UserId)
+	projectID := strings.TrimSpace(req.ProjectId)
+	if userID == "" || projectID == "" {
+		return &ProjectExistsResponse{Exists: false}, nil
+	}
+	exists, err := s.q.ProjectExists(ctx, dbsqlc.ProjectExistsParams{UserID: userID, ID: projectID})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to check project")
+	}
+	return &ProjectExistsResponse{Exists: exists}, nil
+}
+
+func (s *projectServer) IsProjectDeleting(ctx context.Context, req *IsProjectDeletingRequest) (*IsProjectDeletingResponse, error) {
+	projectID := strings.TrimSpace(req.ProjectId)
+	if projectID == "" {
+		return &IsProjectDeletingResponse{Deleting: false}, nil
+	}
+	deleting, err := s.q.IsProjectDeleting(ctx, sql.NullString{String: projectID, Valid: true})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to query operations")
+	}
+	return &IsProjectDeletingResponse{Deleting: deleting}, nil
+}
+
+func (s *projectServer) GetProjectRepository(ctx context.Context, req *GetProjectRepositoryRequest) (*GetProjectRepositoryResponse, error) {
+	userID := strings.TrimSpace(req.UserId)
+	projectID := strings.TrimSpace(req.ProjectId)
+	if userID == "" || projectID == "" {
+		return nil, status.Error(codes.InvalidArgument, "userId and projectId are required")
+	}
+	record, err := s.q.GetProjectRepository(ctx, dbsqlc.GetProjectRepositoryParams{UserID: userID, ProjectID: projectID})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, status.Error(codes.NotFound, "repository not configured")
+		}
+		return nil, status.Error(codes.Internal, "failed to query repository")
+	}
+	return &GetProjectRepositoryResponse{Repository: repositoryToProto(record)}, nil
+}
+
+func (s *projectServer) UpsertProjectRepository(ctx context.Context, req *UpsertProjectRepositoryRequest) (*UpsertProjectRepositoryResponse, error) {
+	userID := strings.TrimSpace(req.UserId)
+	projectID := strings.TrimSpace(req.ProjectId)
+	owner := strings.TrimSpace(req.RepositoryOwner)
+	name := strings.TrimSpace(req.RepositoryName)
+	branch := strings.TrimSpace(req.RepositoryBranch)
+	if branch == "" {
+		branch = "main"
+	}
+	if userID == "" || projectID == "" {
+		return nil, status.Error(codes.InvalidArgument, "userId and projectId are required")
+	}
+	if owner == "" || name == "" {
+		return nil, status.Error(codes.InvalidArgument, "repositoryOwner and repositoryName are required")
+	}
+	exists, err := s.q.ProjectExists(ctx, dbsqlc.ProjectExistsParams{UserID: userID, ID: projectID})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to check project")
+	}
+	if !exists {
+		return nil, status.Error(codes.NotFound, "project not found")
+	}
+	ts := time.Now().UTC().Format(time.RFC3339Nano)
+	record, err := s.q.UpsertProjectRepository(ctx, dbsqlc.UpsertProjectRepositoryParams{
+		ProjectID:        projectID,
+		UserID:           userID,
+		RepositoryOwner:  owner,
+		RepositoryName:   name,
+		RepositoryBranch: branch,
+		ConnectedAt:      ts,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to persist repository")
+	}
+	return &UpsertProjectRepositoryResponse{Repository: repositoryToProto(record)}, nil
+}
+
+func (s *projectServer) CreateProjectDeleteOperation(ctx context.Context, req *CreateProjectDeleteOperationRequest) (*CreateProjectDeleteOperationResponse, error) {
+	userID := strings.TrimSpace(req.UserId)
+	projectID := strings.TrimSpace(req.ProjectId)
+	if userID == "" || projectID == "" {
+		return nil, status.Error(codes.InvalidArgument, "userId and projectId are required")
+	}
+	opID := fmt.Sprintf("project-op-%s", shortID())
+	ts := time.Now().UTC().Format(time.RFC3339Nano)
+	if _, err := s.q.CreateOperation(ctx, dbsqlc.CreateOperationParams{
+		ID:           opID,
+		ResourceType: sql.NullString{String: "project", Valid: true},
+		ResourceName: sql.NullString{String: projectID, Valid: true},
+		UserID:       sql.NullString{String: userID, Valid: true},
+		ProjectID:    sql.NullString{String: projectID, Valid: true},
+		CreatedAt:    ts,
+	}); err != nil {
+		return nil, status.Error(codes.Internal, "failed to create operation")
+	}
+	return &CreateProjectDeleteOperationResponse{OperationId: opID}, nil
+}
+
+func repositoryToProto(r dbsqlc.ProjectRepository) *ProjectRepository {
+	return &ProjectRepository{
+		ProjectId:        r.ProjectID,
+		UserId:           r.UserID,
+		RepositoryOwner:  r.RepositoryOwner,
+		RepositoryName:   r.RepositoryName,
+		RepositoryBranch: r.RepositoryBranch,
+		ConnectedAt:      r.ConnectedAt,
+		UpdatedAt:        r.UpdatedAt,
+	}
+}
+
 func RegisterProjectServer(server *grpc.Server, impl ProjectServer) {
 	projectpb.RegisterProjectServiceServer(server, impl)
 }
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	addr := env("DCP_PROJECT_ADDR", ":8081")
-	lis, err := net.Listen("tcp", addr)
+	grpcAddr := env("DCP_PROJECT_ADDR", ":8081")
+	httpAddr := env("DCP_PROJECT_HTTP_ADDR", ":8091")
+	jwksURL := env("DCLD_IDENTITY_JWKS_URL", "http://identity:8093/.well-known/jwks.json")
+
+	lis, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
-		logger.Error("failed to listen", "addr", addr, "error", err)
+		logger.Error("failed to listen", "addr", grpcAddr, "error", err)
 		os.Exit(1)
 	}
 	server, err := newProjectServer()
@@ -151,16 +284,39 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 	RegisterProjectServer(grpcServer, server)
-	errc := make(chan error, 1)
+
+	verifier := jwtverify.New(jwksURL)
+	adapter := &connectAdapter{inner: server}
+	mux := http.NewServeMux()
+	path, handler := projectpbconnect.NewProjectServiceHandler(
+		adapter,
+		connect.WithInterceptors(verifier.ConnectInterceptor()),
+	)
+	mux.Handle(path, handler)
+	httpServer := &http.Server{
+		Addr:    httpAddr,
+		Handler: h2c.NewHandler(mux, &http2.Server{}),
+	}
+
+	errc := make(chan error, 2)
 	go func() {
-		logger.Info("project grpc listening", "addr", addr)
+		logger.Info("project grpc listening", "addr", grpcAddr)
 		errc <- grpcServer.Serve(lis)
+	}()
+	go func() {
+		logger.Info("project http listening", "addr", httpAddr)
+		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errc <- err
+		}
 	}()
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM)
 	select {
 	case <-sigc:
 		grpcServer.GracefulStop()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = httpServer.Shutdown(shutdownCtx)
 	case err := <-errc:
 		if err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 			logger.Error("server failed", "error", err)

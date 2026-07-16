@@ -198,6 +198,48 @@ func (q *Queries) GetOperation(ctx context.Context, id string) (GetOperationRow,
 	return i, err
 }
 
+const getProjectRepository = `-- name: GetProjectRepository :one
+SELECT project_id, user_id, repository_owner, repository_name, repository_branch, connected_at, updated_at
+FROM project_repositories
+WHERE user_id = $1 AND project_id = $2
+`
+
+type GetProjectRepositoryParams struct {
+	UserID    string
+	ProjectID string
+}
+
+func (q *Queries) GetProjectRepository(ctx context.Context, arg GetProjectRepositoryParams) (ProjectRepository, error) {
+	row := q.db.QueryRowContext(ctx, getProjectRepository, arg.UserID, arg.ProjectID)
+	var i ProjectRepository
+	err := row.Scan(
+		&i.ProjectID,
+		&i.UserID,
+		&i.RepositoryOwner,
+		&i.RepositoryName,
+		&i.RepositoryBranch,
+		&i.ConnectedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const isProjectDeleting = `-- name: IsProjectDeleting :one
+SELECT EXISTS (
+    SELECT 1 FROM operations
+    WHERE project_id = $1
+      AND resource_type = 'project'
+      AND status = 'pending'
+)
+`
+
+func (q *Queries) IsProjectDeleting(ctx context.Context, projectID sql.NullString) (bool, error) {
+	row := q.db.QueryRowContext(ctx, isProjectDeleting, projectID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const listContainers = `-- name: ListContainers :many
 SELECT project_id, name, image, url, ready, reason, created_at, updated_at, namespace, generation, custom_domain, port, min_scale, max_scale, startup_script, env
 FROM containers
@@ -317,6 +359,56 @@ func (q *Queries) ListProjects(ctx context.Context, userID string) ([]Project, e
 			&i.UserID,
 			&i.Name,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listProjectsWithDeleting = `-- name: ListProjectsWithDeleting :many
+SELECT p.id, p.user_id, p.name, p.created_at,
+       EXISTS (
+           SELECT 1 FROM operations o
+           WHERE o.project_id = p.id
+             AND o.resource_type = 'project'
+             AND o.status = 'pending'
+       ) AS deleting
+FROM projects p
+WHERE p.user_id = $1
+ORDER BY p.created_at, p.id
+`
+
+type ListProjectsWithDeletingRow struct {
+	ID        string
+	UserID    string
+	Name      string
+	CreatedAt string
+	Deleting  bool
+}
+
+func (q *Queries) ListProjectsWithDeleting(ctx context.Context, userID string) ([]ListProjectsWithDeletingRow, error) {
+	rows, err := q.db.QueryContext(ctx, listProjectsWithDeleting, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListProjectsWithDeletingRow
+	for rows.Next() {
+		var i ListProjectsWithDeletingRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Name,
+			&i.CreatedAt,
+			&i.Deleting,
 		); err != nil {
 			return nil, err
 		}
@@ -471,6 +563,51 @@ func (q *Queries) UpsertContainer(ctx context.Context, arg UpsertContainerParams
 		&i.MaxScale,
 		&i.StartupScript,
 		&i.Env,
+	)
+	return i, err
+}
+
+const upsertProjectRepository = `-- name: UpsertProjectRepository :one
+INSERT INTO project_repositories (
+    project_id, user_id, repository_owner, repository_name, repository_branch, connected_at, updated_at
+)
+VALUES ($1, $2, $3, $4, $5, $6, $6)
+ON CONFLICT (project_id) DO UPDATE SET
+    user_id = EXCLUDED.user_id,
+    repository_owner = EXCLUDED.repository_owner,
+    repository_name = EXCLUDED.repository_name,
+    repository_branch = EXCLUDED.repository_branch,
+    updated_at = EXCLUDED.updated_at
+RETURNING project_id, user_id, repository_owner, repository_name, repository_branch, connected_at, updated_at
+`
+
+type UpsertProjectRepositoryParams struct {
+	ProjectID        string
+	UserID           string
+	RepositoryOwner  string
+	RepositoryName   string
+	RepositoryBranch string
+	ConnectedAt      string
+}
+
+func (q *Queries) UpsertProjectRepository(ctx context.Context, arg UpsertProjectRepositoryParams) (ProjectRepository, error) {
+	row := q.db.QueryRowContext(ctx, upsertProjectRepository,
+		arg.ProjectID,
+		arg.UserID,
+		arg.RepositoryOwner,
+		arg.RepositoryName,
+		arg.RepositoryBranch,
+		arg.ConnectedAt,
+	)
+	var i ProjectRepository
+	err := row.Scan(
+		&i.ProjectID,
+		&i.UserID,
+		&i.RepositoryOwner,
+		&i.RepositoryName,
+		&i.RepositoryBranch,
+		&i.ConnectedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

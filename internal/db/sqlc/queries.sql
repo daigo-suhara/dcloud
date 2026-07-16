@@ -4,6 +4,44 @@ FROM projects
 WHERE user_id = $1
 ORDER BY created_at, id;
 
+-- name: ListProjectsWithDeleting :many
+SELECT p.id, p.user_id, p.name, p.created_at,
+       EXISTS (
+           SELECT 1 FROM operations o
+           WHERE o.project_id = p.id
+             AND o.resource_type = 'project'
+             AND o.status = 'pending'
+       ) AS deleting
+FROM projects p
+WHERE p.user_id = $1
+ORDER BY p.created_at, p.id;
+
+-- name: IsProjectDeleting :one
+SELECT EXISTS (
+    SELECT 1 FROM operations
+    WHERE project_id = $1
+      AND resource_type = 'project'
+      AND status = 'pending'
+);
+
+-- name: GetProjectRepository :one
+SELECT project_id, user_id, repository_owner, repository_name, repository_branch, connected_at, updated_at
+FROM project_repositories
+WHERE user_id = $1 AND project_id = $2;
+
+-- name: UpsertProjectRepository :one
+INSERT INTO project_repositories (
+    project_id, user_id, repository_owner, repository_name, repository_branch, connected_at, updated_at
+)
+VALUES ($1, $2, $3, $4, $5, $6, $6)
+ON CONFLICT (project_id) DO UPDATE SET
+    user_id = EXCLUDED.user_id,
+    repository_owner = EXCLUDED.repository_owner,
+    repository_name = EXCLUDED.repository_name,
+    repository_branch = EXCLUDED.repository_branch,
+    updated_at = EXCLUDED.updated_at
+RETURNING project_id, user_id, repository_owner, repository_name, repository_branch, connected_at, updated_at;
+
 -- name: CreateProject :one
 INSERT INTO projects (id, user_id, name, created_at)
 VALUES ($1, $2, $3, $4)
