@@ -1,4 +1,4 @@
-package main
+package knative
 
 import (
 	"bufio"
@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-type podSummary struct {
+type PodSummary struct {
 	Name           string
 	Phase          string
 	CreationTime   time.Time
@@ -21,7 +21,7 @@ type podSummary struct {
 }
 
 // listServingPods returns pods for the Knative service ordered newest-first.
-func (m *knativeServiceManager) listServingPods(ctx context.Context, resourceName string) ([]podSummary, error) {
+func (m *Manager) ListServingPods(ctx context.Context, resourceName string) ([]PodSummary, error) {
 	selector := url.QueryEscape("serving.knative.dev/service=" + resourceName)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/api/v1/namespaces/%s/pods?labelSelector=%s", m.baseURL, m.namespace, selector), nil)
@@ -58,13 +58,13 @@ func (m *knativeServiceManager) listServingPods(ctx context.Context, resourceNam
 	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
 		return nil, err
 	}
-	out := make([]podSummary, 0, len(payload.Items))
+	out := make([]PodSummary, 0, len(payload.Items))
 	for _, item := range payload.Items {
 		names := make([]string, 0, len(item.Spec.Containers))
 		for _, c := range item.Spec.Containers {
 			names = append(names, c.Name)
 		}
-		out = append(out, podSummary{
+		out = append(out, PodSummary{
 			Name:           item.Metadata.Name,
 			Phase:          item.Status.Phase,
 			CreationTime:   item.Metadata.CreationTimestamp,
@@ -91,8 +91,8 @@ func (m *knativeServiceManager) listServingPods(ctx context.Context, resourceNam
 	return out, nil
 }
 
-// pickUserContainerName returns the user container name (not queue-proxy/sidecars).
-func pickUserContainerName(p podSummary) string {
+// PickUserContainerName returns the user container name (not queue-proxy/sidecars).
+func PickUserContainerName(p PodSummary) string {
 	for _, n := range p.ContainerNames {
 		if n == "queue-proxy" || strings.HasSuffix(n, "-sidecar") {
 			continue
@@ -107,7 +107,7 @@ func pickUserContainerName(p podSummary) string {
 
 // streamPodLogs opens a streaming log connection. The caller must call resp.Body.Close().
 // tailLines <= 0 means: stream all (k8s default).
-func (m *knativeServiceManager) streamPodLogs(ctx context.Context, podName, containerName string, tailLines int32, follow bool) (io.ReadCloser, error) {
+func (m *Manager) StreamPodLogs(ctx context.Context, podName, containerName string, tailLines int32, follow bool) (io.ReadCloser, error) {
 	q := url.Values{}
 	q.Set("container", containerName)
 	q.Set("timestamps", "true")
@@ -136,10 +136,10 @@ func (m *knativeServiceManager) streamPodLogs(ctx context.Context, podName, cont
 	return res.Body, nil
 }
 
-// forwardLogLines reads from the k8s log body line by line and invokes emit
+// ForwardLogLines reads from the k8s log body line by line and invokes emit
 // for each one. Lines are split on '\n' and the trailing newline is removed.
 // k8s emits timestamps prepended like "2026-06-26T12:00:00.000Z message".
-func forwardLogLines(ctx context.Context, body io.Reader, emit func(timestamp, text string) error) error {
+func ForwardLogLines(ctx context.Context, body io.Reader, emit func(timestamp, text string) error) error {
 	reader := bufio.NewReaderSize(body, 64*1024)
 	for {
 		select {

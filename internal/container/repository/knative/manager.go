@@ -1,4 +1,4 @@
-package main
+package knative
 
 import (
 	"bytes"
@@ -15,7 +15,20 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/daigo-suhara/dcloud/internal/container/domain"
 )
+
+// env reads an environment variable with a fallback default. Duplicated
+// here (rather than importing a shared helper) to keep this package
+// self-contained; the constants baked in below are the runtime knobs
+// exposed by the container service deployment.
+func env(key, fallback string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return fallback
+}
 
 const (
 	userServiceManagerLabel   = "dcloud-container"
@@ -24,17 +37,17 @@ const (
 	serviceNameLabel          = "dcloud.dev/service-name"
 )
 
-var errKnativeServiceNotFound = errors.New("service not found")
+var ErrServiceNotFound = errors.New("service not found")
 
-type knativeServiceManager struct {
+type Manager struct {
 	namespace    string
-	publicDomain string
+	PublicDomain string
 	client       *http.Client
 	baseURL      string
 	token        string
 }
 
-func newKnativeServiceManager(namespace string, publicDomain string) (*knativeServiceManager, error) {
+func NewManager(namespace, publicDomain string) (*Manager, error) {
 	baseURL := fmt.Sprintf("https://%s", env("KUBERNETES_SERVICE_HOST", "kubernetes.default.svc"))
 	tokenPath := env("DCLD_KUBERNETES_TOKEN_FILE", "/var/run/secrets/kubernetes.io/serviceaccount/token")
 	caPath := env("DCLD_KUBERNETES_CA_FILE", "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
@@ -52,9 +65,9 @@ func newKnativeServiceManager(namespace string, publicDomain string) (*knativeSe
 		rootCAs.AppendCertsFromPEM(caBytes)
 	}
 
-	return &knativeServiceManager{
+	return &Manager{
 		namespace:    namespace,
-		publicDomain: publicDomain,
+		PublicDomain: publicDomain,
 		baseURL:      baseURL,
 		token:        strings.TrimSpace(string(tokenBytes)),
 		client: &http.Client{
@@ -66,15 +79,15 @@ func newKnativeServiceManager(namespace string, publicDomain string) (*knativeSe
 	}, nil
 }
 
-func (m *knativeServiceManager) publicURL(resourceName string) string {
-	return fmt.Sprintf("https://%s.%s", resourceName, m.publicDomain)
+func (m *Manager) PublicURL(resourceName string) string {
+	return fmt.Sprintf("https://%s.%s", resourceName, m.PublicDomain)
 }
 
-func (m *knativeServiceManager) customURL(domain string) string {
+func (m *Manager) CustomURL(domain string) string {
 	return fmt.Sprintf("https://%s", domain)
 }
 
-func (m *knativeServiceManager) applyDomainMapping(ctx context.Context, domainName, resourceName string, labels map[string]string) error {
+func (m *Manager) applyDomainMapping(ctx context.Context, domainName, resourceName string, labels map[string]string) error {
 	// Remove any legacy h1gw resources left from a previous implementation.
 	for _, path := range []string{
 		fmt.Sprintf("/apis/networking.internal.knative.dev/v1alpha1/namespaces/%s/ingresses/%s", m.namespace, domainName),
@@ -128,7 +141,7 @@ func (m *knativeServiceManager) applyDomainMapping(ctx context.Context, domainNa
 	return nil
 }
 
-func (m *knativeServiceManager) deleteDomainMapping(ctx context.Context, domainName string) error {
+func (m *Manager) DeleteDomainMapping(ctx context.Context, domainName string) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete,
 		fmt.Sprintf("%s/apis/serving.knative.dev/v1beta1/namespaces/%s/domainmappings/%s", m.baseURL, m.namespace, domainName),
 		nil)
@@ -149,7 +162,7 @@ func (m *knativeServiceManager) deleteDomainMapping(ctx context.Context, domainN
 
 // fetchDomainMappingReady fetches the Knative DomainMapping from the k8s API
 // and returns the Ready condition status ("True", "False", "Unknown") and reason.
-func (m *knativeServiceManager) fetchDomainMappingReady(ctx context.Context, domainName string) (status, reason string, err error) {
+func (m *Manager) fetchDomainMappingReady(ctx context.Context, domainName string) (status, reason string, err error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/apis/serving.knative.dev/v1beta1/namespaces/%s/domainmappings/%s",
 			m.baseURL, m.namespace, domainName),
@@ -164,7 +177,7 @@ func (m *knativeServiceManager) fetchDomainMappingReady(ctx context.Context, dom
 	}
 	defer res.Body.Close()
 	if res.StatusCode == http.StatusNotFound {
-		return "", "", errKnativeServiceNotFound
+		return "", "", ErrServiceNotFound
 	}
 	if res.StatusCode >= 300 {
 		return "", "", decodeAPIError(res)
@@ -197,7 +210,7 @@ func (m *knativeServiceManager) fetchDomainMappingReady(ctx context.Context, dom
 // getDomainMappingStatus checks the Knative DomainMapping's Ready condition for
 // a custom domain and, when not yet conclusive, falls back to a DNS CNAME lookup.
 // Returns ("ready"|"pending"|"error", reason).
-func (m *knativeServiceManager) getDomainMappingStatus(ctx context.Context, customDomain, defaultMapping string) (string, string) {
+func (m *Manager) GetDomainMappingStatus(ctx context.Context, customDomain, defaultMapping string) (string, string) {
 	dmCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
@@ -210,7 +223,7 @@ func (m *knativeServiceManager) getDomainMappingStatus(ctx context.Context, cust
 			defer dnsCancel()
 			if cname, lookupErr := net.DefaultResolver.LookupCNAME(dnsCtx, customDomain); lookupErr == nil {
 				target := strings.TrimSuffix(cname, ".")
-				if strings.HasSuffix(target, "."+m.publicDomain) || target == m.publicDomain {
+				if strings.HasSuffix(target, "."+m.PublicDomain) || target == m.PublicDomain {
 					return "ready", ""
 				}
 				// Apex domains use Cloudflare CNAME flattening: the CNAME is
@@ -245,15 +258,15 @@ func (m *knativeServiceManager) getDomainMappingStatus(ctx context.Context, cust
 	defer dnsCancel()
 	if cname, lookupErr := net.DefaultResolver.LookupCNAME(dnsCtx, customDomain); lookupErr == nil {
 		target := strings.TrimSuffix(cname, ".")
-		if strings.HasSuffix(target, "."+m.publicDomain) || target == m.publicDomain {
+		if strings.HasSuffix(target, "."+m.PublicDomain) || target == m.PublicDomain {
 			return "ready", ""
 		}
 	}
 	return "pending", fmt.Sprintf("CNAME を %s に設定してください", defaultMapping)
 }
 
-func (m *knativeServiceManager) setCustomDomain(ctx context.Context, scope projectScope, name, customDomain string) error {
-	resourceName := serviceResourceName(scope.ProjectID, name)
+func (m *Manager) SetCustomDomain(ctx context.Context, scope domain.ProjectScope, name, customDomain string) error {
+	resourceName := ServiceResourceName(scope.ProjectID, name)
 	labels := map[string]string{
 		"app.kubernetes.io/instance":   "dcloud",
 		"app.kubernetes.io/component":  "container",
@@ -265,7 +278,7 @@ func (m *knativeServiceManager) setCustomDomain(ctx context.Context, scope proje
 	return m.applyDomainMapping(ctx, customDomain, resourceName, labels)
 }
 
-func (m *knativeServiceManager) list(ctx context.Context, scope projectScope) ([]deployedService, error) {
+func (m *Manager) List(ctx context.Context, scope domain.ProjectScope) ([]domain.DeployedService, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/apis/serving.knative.dev/v1/namespaces/%s/services?labelSelector=%s", m.baseURL, m.namespace, strings.Join([]string{
 		projectLabelKey + "=" + strings.TrimSpace(scope.ProjectID),
 	}, ",")), nil)
@@ -321,16 +334,16 @@ func (m *knativeServiceManager) list(ctx context.Context, scope projectScope) ([
 		return nil, err
 	}
 
-	services := make([]deployedService, 0, len(payload.Items))
+	services := make([]domain.DeployedService, 0, len(payload.Items))
 	for _, item := range payload.Items {
 		displayName := strings.TrimSpace(item.Metadata.Labels[serviceNameLabel])
 		if displayName == "" {
 			displayName = item.Metadata.Name
 		}
-		svc := deployedService{
+		svc := domain.DeployedService{
 			Name:         displayName,
 			Image:        "",
-			URL:          m.publicURL(item.Metadata.Name),
+			URL:          m.PublicURL(item.Metadata.Name),
 			ResourceName: item.Metadata.Name,
 			CreatedAt:    item.Metadata.CreationTimestamp.UTC().Format(time.RFC3339),
 			UpdatedAt:    item.Metadata.CreationTimestamp.UTC().Format(time.RFC3339),
@@ -364,8 +377,8 @@ func (m *knativeServiceManager) list(ctx context.Context, scope projectScope) ([
 	return services, nil
 }
 
-func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, req deployRequest) (deployedService, error) {
-	resourceName := serviceResourceName(scope.ProjectID, req.Name)
+func (m *Manager) Deploy(ctx context.Context, scope domain.ProjectScope, req domain.DeployRequest) (domain.DeployedService, error) {
+	resourceName := ServiceResourceName(scope.ProjectID, req.Name)
 	manifest := knativeServiceManifest{
 		APIVersion: "serving.knative.dev/v1",
 		Kind:       "Service",
@@ -417,11 +430,11 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 
 	body, err := json.Marshal(manifest)
 	if err != nil {
-		return deployedService{}, err
+		return domain.DeployedService{}, err
 	}
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPatch, fmt.Sprintf("%s/apis/serving.knative.dev/v1/namespaces/%s/services/%s?fieldManager=dcloud-container&force=true", m.baseURL, m.namespace, resourceName), bytes.NewReader(body))
 	if err != nil {
-		return deployedService{}, err
+		return domain.DeployedService{}, err
 	}
 	m.authorize(httpReq)
 	httpReq.Header.Set("Content-Type", "application/apply-patch+yaml")
@@ -429,11 +442,11 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 
 	res, err := m.client.Do(httpReq)
 	if err != nil {
-		return deployedService{}, err
+		return domain.DeployedService{}, err
 	}
 	defer res.Body.Close()
 	if res.StatusCode >= 300 {
-		return deployedService{}, decodeAPIError(res)
+		return domain.DeployedService{}, decodeAPIError(res)
 	}
 
 	var payload struct {
@@ -462,7 +475,7 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 		} `json:"status"`
 	}
 	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-		return deployedService{}, err
+		return domain.DeployedService{}, err
 	}
 
 	defaultDomainLabels := map[string]string{
@@ -473,14 +486,14 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 		projectLabelKey:                scope.ProjectID,
 		serviceNameLabel:               req.Name,
 	}
-	if err := m.applyDomainMapping(ctx, fmt.Sprintf("%s.%s", resourceName, m.publicDomain), resourceName, defaultDomainLabels); err != nil {
-		return deployedService{}, err
+	if err := m.applyDomainMapping(ctx, fmt.Sprintf("%s.%s", resourceName, m.PublicDomain), resourceName, defaultDomainLabels); err != nil {
+		return domain.DeployedService{}, err
 	}
 
-	service := deployedService{
+	service := domain.DeployedService{
 		Name:          req.Name,
 		Image:         req.Image,
-		URL:           m.publicURL(resourceName),
+		URL:           m.PublicURL(resourceName),
 		ResourceName:  resourceName,
 		Namespace:     payload.Metadata.Namespace,
 		ProjectID:     scope.ProjectID,
@@ -509,14 +522,14 @@ func (m *knativeServiceManager) deploy(ctx context.Context, scope projectScope, 
 	return service, nil
 }
 
-func (m *knativeServiceManager) delete(ctx context.Context, scope projectScope, name, customDomain string) error {
-	resourceName := serviceResourceName(scope.ProjectID, name)
-	defaultDomain := fmt.Sprintf("%s.%s", resourceName, m.publicDomain)
+func (m *Manager) Delete(ctx context.Context, scope domain.ProjectScope, name, customDomain string) error {
+	resourceName := ServiceResourceName(scope.ProjectID, name)
+	defaultDomain := fmt.Sprintf("%s.%s", resourceName, m.PublicDomain)
 
 	if customDomain != "" {
-		_ = m.deleteDomainMapping(ctx, customDomain)
+		_ = m.DeleteDomainMapping(ctx, customDomain)
 	}
-	_ = m.deleteDomainMapping(ctx, defaultDomain)
+	_ = m.DeleteDomainMapping(ctx, defaultDomain)
 
 	// Clean up legacy h1gw resources.
 	legacyPaths := []string{
@@ -553,11 +566,11 @@ func (m *knativeServiceManager) delete(ctx context.Context, scope projectScope, 
 	return nil
 }
 
-func (m *knativeServiceManager) authorize(req *http.Request) {
+func (m *Manager) authorize(req *http.Request) {
 	req.Header.Set("Authorization", "Bearer "+m.token)
 }
 
-func serviceResourceName(projectID, name string) string {
+func ServiceResourceName(projectID, name string) string {
 	seed := strings.TrimSpace(projectID) + ":" + strings.TrimSpace(name)
 	sum := sha256.Sum256([]byte(seed))
 	suffix := hex.EncodeToString(sum[:4])
