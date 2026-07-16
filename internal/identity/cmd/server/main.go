@@ -17,11 +17,13 @@ import (
 	"time"
 
 	"github.com/daigo-suhara/dcloud/internal/db"
+	"github.com/daigo-suhara/dcloud/internal/identity/keys"
 	identitypb "github.com/daigo-suhara/dcloud/internal/pb/identitypb"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"net/http"
 )
 
 const sessionDuration = 30 * 24 * time.Hour
@@ -44,6 +46,7 @@ type IdentityServer = identitypb.IdentityServiceServer
 type identityServer struct {
 	identitypb.UnimplementedIdentityServiceServer
 	db     *sql.DB
+	signer *keys.Signer
 	logger *slog.Logger
 }
 
@@ -62,7 +65,12 @@ func newIdentityServer(logger *slog.Logger) (*identityServer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &identityServer{db: database, logger: logger}, nil
+	signer := keys.NewSigner(database)
+	if err := signer.EnsureActive(context.Background()); err != nil {
+		_ = database.Close()
+		return nil, fmt.Errorf("ensure signing key: %w", err)
+	}
+	return &identityServer{db: database, signer: signer, logger: logger}, nil
 }
 
 func (s *identityServer) Close() error {
@@ -126,7 +134,11 @@ func (s *identityServer) Register(ctx context.Context, req *RegisterRequest) (*R
 	if err := tx.Commit(); err != nil {
 		return nil, status.Error(codes.Internal, "failed to persist user")
 	}
-	return &RegisterResponse{User: userToProto(created), Session: sessionToProto(session)}, nil
+	sessionProto, err := s.buildSession(created, session)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to sign session token")
+	}
+	return &RegisterResponse{User: userToProto(created), Session: sessionProto}, nil
 }
 
 func (s *identityServer) Login(ctx context.Context, req *LoginRequest) (*LoginResponse, error) {
@@ -158,7 +170,11 @@ func (s *identityServer) Login(ctx context.Context, req *LoginRequest) (*LoginRe
 	if err := tx.Commit(); err != nil {
 		return nil, status.Error(codes.Internal, "failed to persist session")
 	}
-	return &LoginResponse{User: userToProto(user), Session: sessionToProto(session)}, nil
+	sessionProto, err := s.buildSession(user, session)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to sign session token")
+	}
+	return &LoginResponse{User: userToProto(user), Session: sessionProto}, nil
 }
 
 func (s *identityServer) Me(ctx context.Context, req *MeRequest) (*MeResponse, error) {
@@ -264,8 +280,20 @@ func userToProto(user userRecord) *User {
 	return proto
 }
 
-func sessionToProto(session sessionRecord) *Session {
-	return &Session{Token: session.Token, ExpiresAt: session.ExpiresAt}
+func (s *identityServer) buildSession(user userRecord, session sessionRecord) (*Session, error) {
+	claims := keys.NewClaims(user.ID, sessionHash(session.Token), sessionDuration)
+	claims.Username = user.Username
+	if user.Email.Valid {
+		claims.Email = user.Email.String
+	}
+	if user.Name.Valid {
+		claims.Name = user.Name.String
+	}
+	jwt, err := s.signer.Sign(claims)
+	if err != nil {
+		return nil, err
+	}
+	return &Session{Token: session.Token, ExpiresAt: session.ExpiresAt, Jwt: jwt}, nil
 }
 
 func nullableString(value sql.NullString) string {
@@ -321,31 +349,46 @@ func RegisterIdentityServer(server *grpc.Server, impl IdentityServer) {
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	addr := env("DCLD_IDENTITY_ADDR", ":8083")
-	lis, err := net.Listen("tcp", addr)
+	grpcAddr := env("DCLD_IDENTITY_ADDR", ":8083")
+	httpAddr := env("DCLD_IDENTITY_HTTP_ADDR", ":8093")
+	lis, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
-		logger.Error("failed to listen", "addr", addr, "error", err)
+		logger.Error("failed to listen", "addr", grpcAddr, "error", err)
 		os.Exit(1)
 	}
 	server, err := newIdentityServer(logger)
 	if err != nil {
-		logger.Error("failed to open database", "error", err)
+		logger.Error("failed to initialize identity server", "error", err)
 		os.Exit(1)
 	}
 	defer server.Close()
 
 	grpcServer := grpc.NewServer()
 	RegisterIdentityServer(grpcServer, server)
-	errC := make(chan error, 1)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/.well-known/jwks.json", server.signer.HandleJWKS)
+	httpServer := &http.Server{Addr: httpAddr, Handler: mux}
+
+	errC := make(chan error, 2)
 	go func() {
-		logger.Info("identity grpc listening", "addr", addr)
+		logger.Info("identity grpc listening", "addr", grpcAddr)
 		errC <- grpcServer.Serve(lis)
+	}()
+	go func() {
+		logger.Info("identity http listening", "addr", httpAddr)
+		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errC <- err
+		}
 	}()
 	sigC := make(chan os.Signal, 1)
 	signal.Notify(sigC, syscall.SIGINT, syscall.SIGTERM)
 	select {
 	case <-sigC:
 		grpcServer.GracefulStop()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = httpServer.Shutdown(shutdownCtx)
 	case err := <-errC:
 		if err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 			logger.Error("server failed", "error", err)

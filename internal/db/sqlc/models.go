@@ -35,6 +35,17 @@ type IdentitySession struct {
 	ExpiresAt string
 }
 
+type IdentitySigningKey struct {
+	Kid           string
+	Algorithm     string
+	PrivateKeyPem string
+	PublicKeyPem  string
+	CreatedAt     string
+	ActivatedAt   string
+	ExpiresAt     sql.NullString
+	RevokedAt     sql.NullString
+}
+
 type IdentityUser struct {
 	ID           string
 	Username     string

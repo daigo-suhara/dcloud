@@ -82,3 +82,17 @@ CREATE TABLE IF NOT EXISTS identity_sessions (
 
 CREATE INDEX IF NOT EXISTS idx_identity_sessions_user_expires
     ON identity_sessions (user_id, expires_at, token_hash);
+
+CREATE TABLE IF NOT EXISTS identity_signing_keys (
+    kid TEXT PRIMARY KEY,
+    algorithm TEXT NOT NULL,
+    private_key_pem TEXT NOT NULL,
+    public_key_pem TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    activated_at TEXT NOT NULL,
+    expires_at TEXT,
+    revoked_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_identity_signing_keys_active
+    ON identity_signing_keys (revoked_at, activated_at);
