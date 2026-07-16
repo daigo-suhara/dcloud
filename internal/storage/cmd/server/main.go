@@ -55,6 +55,7 @@ func main() {
 	)
 	mux.Handle(connectPath, connectHandler)
 	handler.NewS3Proxy(svc, verifier).Register(mux)
+	handler.NewREST(svc, verifier).Register(mux)
 	httpServer := &http.Server{
 		Addr:    httpAddr,
 		Handler: h2c.NewHandler(mux, &http2.Server{}),

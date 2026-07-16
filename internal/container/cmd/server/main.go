@@ -54,6 +54,7 @@ func main() {
 		connect.WithInterceptors(verifier.ConnectInterceptor()),
 	)
 	mux.Handle(connectPath, connectHandler)
+	handler.NewREST(svc, verifier).Register(mux)
 	httpServer := &http.Server{
 		Addr:    httpAddr,
 		Handler: h2c.NewHandler(mux, &http2.Server{}),
