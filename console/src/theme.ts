@@ -110,6 +110,10 @@ export const theme = createTheme({
   }
 });
 
+// Unified monospace stack. Use everywhere code/IDs/URLs need mono
+// alignment so the app never mixes system-mono with SFMono etc.
+export const monoFontFamily = '"Roboto Mono", "SFMono-Regular", Menlo, Consolas, monospace';
+
 export const shellBg = { background: "#f8f9fa" } as const;
 
 export const actionLinkColor = "#1a73e8";

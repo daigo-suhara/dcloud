@@ -7,6 +7,7 @@ import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
 import type { ComputeMachine } from "../types";
 import { formatComputeStatus, formatComputeTimestamp } from "../utils";
+import { monoFontFamily } from "../theme";
 import { PageHeader, StatusBadge } from "./primitives";
 import type { StatusVariant } from "./primitives";
 
@@ -62,7 +63,7 @@ export function ComputeDetailSection({
 
     const terminal = new Terminal({
       cursorBlink: true,
-      fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace',
+      fontFamily: monoFontFamily,
       fontSize: 13, scrollback: 1000, convertEol: true,
       theme: {
         background: "#202124", foreground: "#e8eaed",
@@ -193,7 +194,7 @@ export function ComputeDetailSection({
               height: { xs: 360, md: 520 }, width: "100%",
               display: "grid", placeItems: "center",
               color: "#e8eaed",
-              fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace'
+              fontFamily: monoFontFamily
             }}>
               <Typography variant="body2" sx={{ color: "rgba(232, 234, 237, 0.78)" }}>
                 [waiting for vm to start]

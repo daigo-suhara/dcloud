@@ -8,6 +8,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import type { DatabaseConnectionInfo, DatabaseInstance, DatabaseSchema } from "../types";
 import { formatComputeTimestamp } from "../utils";
+import { monoFontFamily } from "../theme";
 import { PageHeader, DataTable, StatusBadge, FormDialog } from "./primitives";
 import type { Column, StatusVariant } from "./primitives";
 
@@ -124,7 +125,7 @@ export function DatabaseDetailSection({
     {
       key: "name", header: "名前",
       render: (schema) => (
-        <Typography variant="body2" sx={{ fontFamily: "monospace", wordBreak: "break-all" }}>
+        <Typography variant="body2" sx={{ fontFamily: monoFontFamily, wordBreak: "break-all" }}>
           {schema.name}
         </Typography>
       )
@@ -243,7 +244,7 @@ export function DatabaseDetailSection({
                     ].map(({ label, value }) => (
                       <Box key={label} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <Typography variant="caption" color="text.secondary" sx={{ minWidth: 100 }}>{label}</Typography>
-                        <Typography variant="caption" sx={{ fontFamily: "monospace", wordBreak: "break-all", flex: 1 }}>{value}</Typography>
+                        <Typography variant="caption" sx={{ fontFamily: monoFontFamily, wordBreak: "break-all", flex: 1 }}>{value}</Typography>
                         <IconButton size="small" onClick={() => copyToClipboard(value)}>
                           <ContentCopyIcon sx={{ fontSize: 14 }} />
                         </IconButton>

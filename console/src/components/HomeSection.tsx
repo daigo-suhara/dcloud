@@ -1,3 +1,4 @@
+import { monoFontFamily } from "../theme";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import { Box, Button, CircularProgress, IconButton, Radio, Tooltip, Typography } from "@mui/material";
@@ -50,7 +51,7 @@ export function HomeSection({
     {
       key: "id", header: "ID",
       render: (p) => (
-        <Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace", wordBreak: "break-all" }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontFamily: monoFontFamily, wordBreak: "break-all" }}>
           {p.id}
         </Typography>
       )

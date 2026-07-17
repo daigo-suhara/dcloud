@@ -2,6 +2,7 @@ import { Box, Button, Chip, IconButton, Tooltip, Typography } from "@mui/materia
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DeleteSweepOutlinedIcon from "@mui/icons-material/DeleteSweepOutlined";
 import { useEffect, useRef, useState } from "react";
+import { monoFontFamily } from "../theme";
 
 type LogLine = { text: string; timestamp: string };
 
@@ -103,7 +104,6 @@ export function ContainerLogsViewer({ serviceName, projectId, enabled, tail = 20
     <Box sx={{ display: "grid", gap: 1 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>ログ</Typography>
           <Chip label={statusLabel[status]} color={statusColor[status]} size="small" variant="outlined" />
           {!autoscroll && status === "open" && (
             <Chip label="自動スクロール停止中" size="small" variant="outlined" onClick={() => setAutoscroll(true)} />
@@ -131,12 +131,13 @@ export function ContainerLogsViewer({ serviceName, projectId, enabled, tail = 20
         ref={containerRef}
         onScroll={handleScroll}
         sx={{
-          fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace',
+          fontFamily: monoFontFamily,
           fontSize: 12,
           lineHeight: 1.5,
-          bgcolor: "#0b1020",
-          color: "#dbe4ff",
-          borderRadius: 1.5,
+          bgcolor: "#202124",
+          color: "#e8eaed",
+          border: 1, borderColor: "divider",
+          borderRadius: 1,
           p: 1.5,
           maxHeight: 360,
           minHeight: 200,
@@ -146,16 +147,16 @@ export function ContainerLogsViewer({ serviceName, projectId, enabled, tail = 20
         }}
       >
         {!enabled ? (
-          <Typography variant="caption" sx={{ color: "rgba(219,228,255,0.6)" }}>サービスが準備できるとログが表示されます。</Typography>
+          <Typography variant="caption" sx={{ color: "rgba(232,234,237,0.6)" }}>サービスが準備できるとログが表示されます。</Typography>
         ) : lines.length === 0 ? (
-          <Typography variant="caption" sx={{ color: "rgba(219,228,255,0.6)" }}>
+          <Typography variant="caption" sx={{ color: "rgba(232,234,237,0.6)" }}>
             {status === "connecting" ? "接続しています…" : "新しいログを待っています…"}
           </Typography>
         ) : (
           lines.map((line, i) => (
             <Box key={i} sx={{ display: "block" }}>
               {line.timestamp && (
-                <Box component="span" sx={{ color: "rgba(124,147,246,0.85)", mr: 1 }}>
+                <Box component="span" sx={{ color: "rgba(138,180,248,0.85)", mr: 1 }}>
                   {line.timestamp}
                 </Box>
               )}

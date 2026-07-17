@@ -15,6 +15,7 @@ import {
 import { useRef, useState } from "react";
 import type { Bucket, BucketCreateForm } from "../types";
 import { formatComputeTimestamp } from "../utils";
+import { monoFontFamily } from "../theme";
 import { PageHeader, DataTable, StatusBadge, FormDialog } from "./primitives";
 import type { Column, StatusVariant } from "./primitives";
 
@@ -259,7 +260,7 @@ export function StorageSection({
                 ].map(({ label, value }) => (
                   <Box key={label} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Typography variant="caption" color="text.secondary" sx={{ minWidth: 140 }}>{label}</Typography>
-                    <Typography variant="caption" sx={{ fontFamily: "monospace", wordBreak: "break-all", flex: 1 }}>{value}</Typography>
+                    <Typography variant="caption" sx={{ fontFamily: monoFontFamily, wordBreak: "break-all", flex: 1 }}>{value}</Typography>
                     <IconButton size="small" onClick={() => copyToClipboard(value)}>
                       <ContentCopyIcon sx={{ fontSize: 14 }} />
                     </IconButton>

@@ -41,7 +41,7 @@ export function Dialogs({
         </DialogTitle>
         <DialogContent dividers>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+            <Typography variant="h6">
               {pendingDeleteName}
             </Typography>
             <Typography color="text.secondary">このサービスを削除しますか？</Typography>
@@ -64,7 +64,7 @@ export function Dialogs({
         </DialogTitle>
         <DialogContent dividers>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+            <Typography variant="h6">
               {pendingDeleteMachineName}
             </Typography>
             <Typography color="text.secondary">この仮想マシンを削除しますか？</Typography>
@@ -87,7 +87,7 @@ export function Dialogs({
         </DialogTitle>
         <DialogContent dividers>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+            <Typography variant="h6">
               {pendingProjectDeleteName}
             </Typography>
             <Typography color="text.secondary">このプロジェクトを削除しますか？</Typography>

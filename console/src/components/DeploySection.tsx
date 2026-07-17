@@ -2,7 +2,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Alert, Box, Button, Paper, TextField, Typography } from "@mui/material";
 import type { FormEvent } from "react";
 import type { DeployForm } from "../types";
-import { actionLinkButtonSx } from "../theme";
+import { actionLinkButtonSx, monoFontFamily } from "../theme";
 import { EnvVarEditor } from "./EnvVarEditor";
 import { PageHeader } from "./primitives";
 
@@ -75,7 +75,7 @@ export function DeploySection({ error, form, onBack, onChange, onSubmit, submitt
             onChange={(e) => onChange({ startupScript: e.target.value })}
             placeholder={"#!/bin/sh\nexec code-server --bind-addr 0.0.0.0:8080 --auth none ."}
             multiline minRows={3} fullWidth
-            slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false, style: { fontFamily: "monospace", fontSize: "0.85rem" } } }}
+            slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false, style: { fontFamily: monoFontFamily, fontSize: 13 } } }}
           />
           {error && <Alert severity="error">{error}</Alert>}
           <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, pt: 0.5 }}>

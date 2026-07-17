@@ -17,6 +17,7 @@ import { EnvVarEditor } from "./EnvVarEditor";
 import { ContainerLogsViewer } from "./ContainerLogsViewer";
 import { actionLinkButtonSx } from "../theme";
 import { formatServiceStatus, formatServiceTimestamp, getServiceStatus } from "../utils";
+import { monoFontFamily } from "../theme";
 import { PageHeader, DataTable, StatusBadge } from "./primitives";
 import type { Column, StatusVariant } from "./primitives";
 
@@ -88,7 +89,7 @@ function ServiceDetail({
     { label: "公開 URL", value: service.url
       ? <Button component="a" href={service.url} target="_blank" rel="noreferrer" variant="text" size="small" sx={{ ...actionLinkButtonSx, px: 0, minWidth: 0 }}>{service.url}</Button>
       : <Typography variant="body2" color="text.secondary">-</Typography> },
-    { label: "イメージ", value: <Typography variant="body2" sx={{ fontFamily: "monospace", wordBreak: "break-all" }}>{service.image}</Typography> },
+    { label: "イメージ", value: <Typography variant="body2" sx={{ fontFamily: monoFontFamily, wordBreak: "break-all" }}>{service.image}</Typography> },
     { label: "作成時刻", value: <Typography variant="body2">{formatServiceTimestamp(service.createdAt || "")}</Typography> },
   ];
 
@@ -173,7 +174,7 @@ function ServiceDetail({
               onChange={(e) => setForm(f => ({ ...f, startupScript: e.target.value }))} disabled={updating}
               placeholder={"#!/bin/sh\nexec code-server --bind-addr 0.0.0.0:8080 --auth none ."}
               multiline minRows={3} fullWidth
-              slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false, style: { fontFamily: "monospace", fontSize: "0.85rem" } } }}
+              slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false, style: { fontFamily: monoFontFamily, fontSize: 13 } } }}
             />
           </Box>
 

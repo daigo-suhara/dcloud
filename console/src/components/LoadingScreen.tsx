@@ -6,8 +6,8 @@ export function LoadingScreen() {
       <Container maxWidth="sm" sx={{ display: "grid", placeItems: "center", py: 4 }}>
         <Box sx={{ display: "grid", placeItems: "center", gap: 1.5, textAlign: "center" }}>
           <CircularProgress size={28} thickness={5} />
-          <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
-            DCloud
+          <Typography variant="h6" sx={{ letterSpacing: "-0.01em" }}>
+            dcloud
           </Typography>
         </Box>
       </Container>
