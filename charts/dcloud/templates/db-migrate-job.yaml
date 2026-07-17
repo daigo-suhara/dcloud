@@ -1,13 +1,18 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "dcloud.fullname" . }}-db-migrate
+  # ArgoCD only reruns a hook Job when its name changes; sha of the
+  # migrate image gives us that.
+  name: {{ include "dcloud.fullname" . }}-db-migrate-{{ .Values.image.tag | default .Chart.AppVersion | sha256sum | trunc 8 }}
   labels:
     {{- include "dcloud.labels" . | nindent 4 }}
     app.kubernetes.io/component: db-migrate
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    # Helm-style post-install hooks do not fire under ArgoCD. Use
+    # argocd-native PreSync so the migration runs on every sync
+    # (initial + upgrade), including the first-ever install.
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   backoffLimit: 1
   template:
