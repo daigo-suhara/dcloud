@@ -30,6 +30,8 @@ spec:
               value: {{ .Values.publicServiceDomain | quote }}
             - name: DCLD_IDENTITY_JWKS_URL
               value: {{ include "dcloud.jwksURL" . | quote }}
+            - name: DCLD_CONTAINER_RUNTIME_CLASS
+              value: {{ .Values.container.runtimeClassName | default "" | quote }}
           ports:
             - name: grpc
               containerPort: {{ .Values.container.service.port }}

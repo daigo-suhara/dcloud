@@ -430,6 +430,7 @@ func (m *Manager) Deploy(ctx context.Context, scope domain.ProjectScope, req dom
 	}
 	noTimeout := int64(0)
 	manifest.Spec.Template.Spec.TimeoutSeconds = &noTimeout
+	manifest.Spec.Template.Spec.RuntimeClassName = env("DCLD_CONTAINER_RUNTIME_CLASS", "")
 	manifest.Spec.Template.Spec.Containers = []knativeContainer{container}
 
 	body, err := json.Marshal(manifest)
@@ -628,8 +629,9 @@ type knativeServiceManifest struct {
 				Annotations map[string]string `json:"annotations,omitempty"`
 			} `json:"metadata"`
 			Spec struct {
-				TimeoutSeconds *int64             `json:"timeoutSeconds,omitempty"`
-				Containers     []knativeContainer `json:"containers"`
+				TimeoutSeconds   *int64             `json:"timeoutSeconds,omitempty"`
+				RuntimeClassName string             `json:"runtimeClassName,omitempty"`
+				Containers       []knativeContainer `json:"containers"`
 			} `json:"spec"`
 		} `json:"template"`
 	} `json:"spec"`
