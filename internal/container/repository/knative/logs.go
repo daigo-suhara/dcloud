@@ -122,7 +122,6 @@ func (m *Manager) StreamPodLogs(ctx context.Context, projectID, podName, contain
 		return nil, err
 	}
 	m.authorize(req)
-	req.Header.Set("Accept", "text/plain")
 	res, err := m.client.Do(req)
 	if err != nil {
 		return nil, err
