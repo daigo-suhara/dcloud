@@ -18,10 +18,13 @@ const DB_TYPES = [
   { value: "redis", label: "Redis" },
 ];
 
+// KubeBlocks 1.0 で入手可能な ComponentDefinition の major 版のみ。
+// バックエンドが "{type}-{version}" (例: "postgresql-16") で ComponentDefinition
+// を選択し、実際の serviceVersion (16.9.0 等) は KubeBlocks が自動選択。
 const VERSIONS_BY_TYPE: Record<string, string[]> = {
-  postgres: ["postgresql-16.4.0", "postgresql-15.7.0", "postgresql-14.8.0", "postgresql-12.15.0"],
-  mysql:    ["mysql-8.4.2", "mysql-8.0.30", "mysql-5.7.44"],
-  redis:    ["redis-7.2.4", "redis-7.0.6", "redis-6.2.14"],
+  postgres: ["16", "15", "14", "12", "17", "18"],
+  mysql:    ["8.4", "8.0", "5.7"],
+  redis:    ["7", "6", "5"],
 };
 
 // さくらのマネージドDB (PostgreSQL) 標準プランに合わせたリソースセット。
@@ -141,7 +144,7 @@ export function DatabaseSection({
       key: "version", header: "バージョン", width: 120,
       render: (db) => (
         <Typography variant="body2" color="text.secondary">
-          {db.version.replace(/^[^-]+-/, "")}
+          {db.version}
         </Typography>
       )
     },
@@ -264,7 +267,7 @@ export function DatabaseSection({
           fullWidth disabled={submitting}
         >
           {(VERSIONS_BY_TYPE[form.type] ?? []).map(v => (
-            <MenuItem key={v} value={v}>{v.replace(/^[^-]+-/, "")}</MenuItem>
+            <MenuItem key={v} value={v}>{v}</MenuItem>
           ))}
         </TextField>
         <TextField

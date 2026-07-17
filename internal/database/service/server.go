@@ -68,9 +68,9 @@ var (
 		"redis":    "redis",
 	}
 	defaultVersionRefs = map[string]string{
-		"postgres": "postgresql-16.4.0",
-		"mysql":    "mysql-8.4.2",
-		"redis":    "redis-7.2.4",
+		"postgres": "16",
+		"mysql":    "8.4",
+		"redis":    "7",
 	}
 	dbPorts = map[string]string{
 		"postgres": "5432",
@@ -670,14 +670,12 @@ func (c *kubeClient) createDatabase(ctx context.Context, namespace, userID, proj
 			},
 		},
 		"spec": map[string]any{
-			"clusterDefinitionRef": clusterDef,
-			"clusterVersionRef":    version,
-			"terminationPolicy":    "WipeOut",
+			"terminationPolicy": "WipeOut",
 			"componentSpecs": []map[string]any{
 				{
-					"name":             componentName,
-					"componentDefRef":  componentName,
-					"replicas":         1,
+					"name":         componentName,
+					"componentDef": fmt.Sprintf("%s-%s", clusterDef, version),
+					"replicas":     1,
 					"resources": map[string]any{
 						"requests": map[string]string{"cpu": cpu, "memory": memory},
 						"limits":   map[string]string{"cpu": cpu, "memory": memory},
