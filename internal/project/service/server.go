@@ -10,6 +10,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -31,6 +32,7 @@ type Server struct {
 	DB       *sql.DB
 	Queries  *dbsqlc.Queries
 	Resource ResourceClients
+	Kube     *kubeClient
 }
 
 func New(resource ResourceClients) (*Server, error) {
@@ -38,7 +40,11 @@ func New(resource ResourceClients) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Server{DB: database, Queries: dbsqlc.New(database), Resource: resource}, nil
+	// Namespace-per-project is a homelab-VPC building block; if the
+	// project service is running outside a cluster (local unit tests)
+	// the Kube client is nil and the namespace calls become no-ops.
+	kube, _ := newKubeClient()
+	return &Server{DB: database, Queries: dbsqlc.New(database), Resource: resource, Kube: kube}, nil
 }
 
 func (s *Server) Close() error {
@@ -98,9 +104,18 @@ func (s *Server) CreateProject(ctx context.Context, req *projectpb.CreateProject
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-		return nil, status.Error(codes.AlreadyExists, "project already exists")
-	}
+			return nil, status.Error(codes.AlreadyExists, "project already exists")
+		}
 		return nil, status.Error(codes.Internal, "failed to persist project")
+	}
+	// VPC step 1: back the project with a Kubernetes Namespace so future
+	// resource types can land inside a proper isolation boundary.
+	// Best-effort - failure here doesn't roll back the project row.
+	if s.Kube != nil {
+		if err := s.Kube.ensureProjectNamespace(ctx, project.Id, userID); err != nil {
+			// nolint: nothing better than logging; DB row already committed.
+			fmt.Fprintf(os.Stderr, "project: failed to create namespace for %s: %v\n", project.Id, err)
+		}
 	}
 	return &projectpb.CreateProjectResponse{Project: &project}, nil
 }
@@ -210,6 +225,13 @@ func (s *Server) CreateProjectDeleteOperation(ctx context.Context, req *projectp
 	// service's jwtverify interceptor accepts the calls.
 	if s.Resource != nil {
 		s.Resource.DeleteAllResources(ctx, userID, projectID)
+	}
+	// VPC step 1: dropping the Namespace cascades to every resource inside
+	// it, so this doubles as a safety net for the fan-out above.
+	if s.Kube != nil {
+		if err := s.Kube.deleteProjectNamespace(ctx, projectID); err != nil {
+			fmt.Fprintf(os.Stderr, "project: failed to delete namespace for %s: %v\n", projectID, err)
+		}
 	}
 	opID := fmt.Sprintf("project-op-%s", shortID())
 	ts := time.Now().UTC().Format(time.RFC3339Nano)

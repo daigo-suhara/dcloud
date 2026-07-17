@@ -17,6 +17,7 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: project
     spec:
+      serviceAccountName: {{ include "dcloud.fullname" . }}-internal
       containers:
         - name: project
           image: {{ include "dcloud.image" (dict "root" . "repository" .Values.project.image.repository) }}

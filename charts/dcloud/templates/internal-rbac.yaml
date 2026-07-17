@@ -54,3 +54,38 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: {{ include "dcloud.fullname" . }}-internal
+---
+# Cluster-scoped grants that back project = namespace isolation. The
+# project service creates/deletes the Namespace when a project is
+# created or deleted; NetworkPolicy verbs are pre-granted so Phase 5
+# can add default-deny rules without an RBAC change.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "dcloud.fullname" . }}-project-namespaces
+  labels:
+    {{- include "dcloud.labels" . | nindent 4 }}
+    app.kubernetes.io/component: internal
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "dcloud.fullname" . }}-project-namespaces
+  labels:
+    {{- include "dcloud.labels" . | nindent 4 }}
+    app.kubernetes.io/component: internal
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "dcloud.fullname" . }}-internal
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "dcloud.fullname" . }}-project-namespaces
