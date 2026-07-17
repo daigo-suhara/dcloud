@@ -17,19 +17,27 @@ const DB_TYPES = [
   { value: "redis", label: "Redis" },
 ];
 
-const DEFAULT_VERSIONS: Record<string, string> = {
-  postgres: "postgresql-16.4.0",
-  mysql: "mysql-8.4.2",
-  redis: "redis-7.2.4",
+const VERSIONS_BY_TYPE: Record<string, string[]> = {
+  postgres: ["postgresql-16.4.0", "postgresql-15.7.0", "postgresql-14.8.0", "postgresql-12.15.0"],
+  mysql: ["mysql-8.4.2", "mysql-8.0.30", "mysql-5.7.44"],
+  redis: ["redis-7.2.4", "redis-7.0.6", "redis-6.2.14"],
 };
 
-const initialForm: DatabaseCreateForm = {
+type ResourcePreset = { label: string; cpu: string; memory: string; storage: string };
+const RESOURCE_PRESETS: Record<string, ResourcePreset> = {
+  small:  { label: "Small (0.5 CPU / 1 GiB / 1 GiB storage)",  cpu: "500m",  memory: "1Gi", storage: "1Gi" },
+  medium: { label: "Medium (1 CPU / 2 GiB / 5 GiB storage)",   cpu: "1000m", memory: "2Gi", storage: "5Gi" },
+  large:  { label: "Large (2 CPU / 4 GiB / 20 GiB storage)",   cpu: "2000m", memory: "4Gi", storage: "20Gi" },
+};
+
+const initialForm: DatabaseCreateForm & { preset: string } = {
   name: "",
   type: "postgres",
-  version: "",
-  cpu: "500m",
-  memory: "1Gi",
-  storage: "1Gi",
+  version: VERSIONS_BY_TYPE.postgres[0],
+  preset: "small",
+  cpu: RESOURCE_PRESETS.small.cpu,
+  memory: RESOURCE_PRESETS.small.memory,
+  storage: RESOURCE_PRESETS.small.storage,
 };
 
 type ConnectionInfo = {
@@ -61,7 +69,7 @@ export function DatabaseSection({
   activeProjectId
 }: DatabaseSectionProps) {
   const [createOpen, setCreateOpen] = useState(false);
-  const [form, setForm] = useState<DatabaseCreateForm>(initialForm);
+  const [form, setForm] = useState(initialForm);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [connOpen, setConnOpen] = useState<string | null>(null);
@@ -73,7 +81,8 @@ export function DatabaseSection({
     setSubmitting(true);
     setError("");
     try {
-      await onCreateDatabase(form);
+      const { preset: _preset, ...payload } = form;
+      await onCreateDatabase(payload);
       setForm(initialForm);
       setCreateOpen(false);
     } catch (err) {
@@ -292,7 +301,7 @@ export function DatabaseSection({
             select
             label="種別"
             value={form.type}
-            onChange={(e) => setForm(f => ({ ...f, type: e.target.value, version: DEFAULT_VERSIONS[e.target.value] ?? "" }))}
+            onChange={(e) => setForm(f => ({ ...f, type: e.target.value, version: VERSIONS_BY_TYPE[e.target.value]?.[0] ?? "" }))}
             size="small"
             fullWidth
             disabled={submitting}
@@ -302,25 +311,34 @@ export function DatabaseSection({
             ))}
           </TextField>
           <TextField
+            select
             label="バージョン"
-            value={form.version || DEFAULT_VERSIONS[form.type] || ""}
+            value={form.version}
             onChange={(e) => setForm(f => ({ ...f, version: e.target.value }))}
             size="small"
             fullWidth
             disabled={submitting}
-          />
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
-            <TextField label="CPU" value={form.cpu} onChange={(e) => setForm(f => ({ ...f, cpu: e.target.value }))} size="small" disabled={submitting} />
-            <TextField label="メモリ" value={form.memory} onChange={(e) => setForm(f => ({ ...f, memory: e.target.value }))} size="small" disabled={submitting} />
-          </Box>
+          >
+            {(VERSIONS_BY_TYPE[form.type] ?? []).map(v => (
+              <MenuItem key={v} value={v}>{v.replace(/^[^-]+-/, "")}</MenuItem>
+            ))}
+          </TextField>
           <TextField
-            label="ストレージ"
-            value={form.storage}
-            onChange={(e) => setForm(f => ({ ...f, storage: e.target.value }))}
+            select
+            label="リソース"
+            value={form.preset}
+            onChange={(e) => {
+              const p = RESOURCE_PRESETS[e.target.value];
+              setForm(f => ({ ...f, preset: e.target.value, cpu: p.cpu, memory: p.memory, storage: p.storage }));
+            }}
             size="small"
             fullWidth
             disabled={submitting}
-          />
+          >
+            {Object.entries(RESOURCE_PRESETS).map(([k, p]) => (
+              <MenuItem key={k} value={k}>{p.label}</MenuItem>
+            ))}
+          </TextField>
           <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
             <Button onClick={() => setCreateOpen(false)} disabled={submitting}>キャンセル</Button>
             <Button variant="contained" onClick={() => void handleCreate()} disabled={submitting || !form.name.trim()}>
