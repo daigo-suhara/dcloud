@@ -64,7 +64,38 @@ func (c *kubeClient) ensureProjectNamespace(ctx context.Context, projectID, user
 			},
 		},
 	}
-	return c.doJSON(ctx, http.MethodPost, "/api/v1/namespaces", payload, nil)
+	if err := c.doJSON(ctx, http.MethodPost, "/api/v1/namespaces", payload, nil); err != nil {
+		return err
+	}
+	return c.ensureIsolationPolicy(ctx, projectID)
+}
+
+func (c *kubeClient) ensureIsolationPolicy(ctx context.Context, projectID string) error {
+	policy := map[string]any{
+		"apiVersion": "networking.k8s.io/v1",
+		"kind":       "NetworkPolicy",
+		"metadata": map[string]any{
+			"name":      "project-isolation",
+			"namespace": projectID,
+			"labels":    map[string]string{"app.kubernetes.io/managed-by": "dcloud"},
+		},
+		"spec": map[string]any{
+			"podSelector": map[string]any{},
+			"policyTypes": []string{"Ingress"},
+			"ingress": []map[string]any{
+				{"from": []map[string]any{{"podSelector": map[string]any{}}}},
+				{"from": []map[string]any{
+					{"namespaceSelector": map[string]any{"matchLabels": map[string]string{"kubernetes.io/metadata.name": "kube-system"}}},
+					{"namespaceSelector": map[string]any{"matchLabels": map[string]string{"kubernetes.io/metadata.name": "istio-system"}}},
+					{"namespaceSelector": map[string]any{"matchLabels": map[string]string{"kubernetes.io/metadata.name": "knative-serving"}}},
+					{"namespaceSelector": map[string]any{"matchLabels": map[string]string{"kubernetes.io/metadata.name": "dcloud-system"}}},
+				}},
+			},
+		},
+	}
+	return c.doJSON(ctx, http.MethodPost,
+		fmt.Sprintf("/apis/networking.k8s.io/v1/namespaces/%s/networkpolicies", projectID),
+		policy, nil)
 }
 
 func (c *kubeClient) deleteProjectNamespace(ctx context.Context, projectID string) error {

@@ -715,7 +715,7 @@ func (c *kubeClient) getConnectionString(ctx context.Context, namespace string, 
 	}
 	username := decodeBase64(secret.Data["username"])
 	password := decodeBase64(secret.Data["password"])
-	host := fmt.Sprintf("%s-%s.%s.svc.cluster.local", r.ResourceName, componentName, namespace)
+	host := fmt.Sprintf("%s-%s.%s.dcloud.internal", r.ResourceName, componentName, namespace)
 	port := dbPorts[r.Type]
 	dbName := strings.TrimSpace(schemaName)
 	if dbName == "" {

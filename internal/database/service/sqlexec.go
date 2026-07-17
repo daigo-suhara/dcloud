@@ -30,7 +30,7 @@ func (c *kubeClient) fetchRootCreds(ctx context.Context, namespace string, r *db
 	return &rootCreds{
 		Username: decodeBase64(secret.Data["username"]),
 		Password: decodeBase64(secret.Data["password"]),
-		Host:     fmt.Sprintf("%s-%s.%s.svc.cluster.local", r.ResourceName, componentName, namespace),
+		Host:     fmt.Sprintf("%s-%s.%s.dcloud.internal", r.ResourceName, componentName, namespace),
 		Port:     dbPorts[r.Type],
 	}, nil
 }
