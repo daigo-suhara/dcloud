@@ -1,15 +1,15 @@
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import LinkIcon from "@mui/icons-material/Link";
-import { alpha } from "@mui/material/styles";
+import AddIcon from "@mui/icons-material/Add";
 import {
-  Box, Button, Card, CardContent, CircularProgress, Collapse, Dialog, DialogContent,
-  DialogTitle, IconButton, MenuItem, Paper, TextField, Tooltip, Typography
+  Box, Button, Collapse, IconButton, MenuItem, TextField, Tooltip, Typography, Paper, CircularProgress
 } from "@mui/material";
 import { useState } from "react";
 import type { DatabaseCreateForm, DatabaseInstance } from "../types";
 import { formatComputeTimestamp } from "../utils";
+import { PageHeader, DataTable, StatusBadge, FormDialog } from "./primitives";
+import type { Column, StatusVariant } from "./primitives";
 
 const DB_TYPES = [
   { value: "postgres", label: "PostgreSQL" },
@@ -19,8 +19,8 @@ const DB_TYPES = [
 
 const VERSIONS_BY_TYPE: Record<string, string[]> = {
   postgres: ["postgresql-16.4.0", "postgresql-15.7.0", "postgresql-14.8.0", "postgresql-12.15.0"],
-  mysql: ["mysql-8.4.2", "mysql-8.0.30", "mysql-5.7.44"],
-  redis: ["redis-7.2.4", "redis-7.0.6", "redis-6.2.14"],
+  mysql:    ["mysql-8.4.2", "mysql-8.0.30", "mysql-5.7.44"],
+  redis:    ["redis-7.2.4", "redis-7.0.6", "redis-6.2.14"],
 };
 
 type ResourcePreset = { label: string; cpu: string; memory: string; storage: string };
@@ -59,14 +59,19 @@ type DatabaseSectionProps = {
   activeProjectId: string;
 };
 
+function statusVariant(db: DatabaseInstance, isDeleting: boolean): { v: StatusVariant; label: string; spin: boolean } {
+  if (isDeleting) return { v: "error", label: "Deleting", spin: true };
+  if (!db.ready) return { v: "progress", label: db.status || "Provisioning", spin: true };
+  return { v: "ready", label: db.status || "Running", spin: false };
+}
+
+function dbTypeLabel(type: string) {
+  return DB_TYPES.find(d => d.value === type)?.label ?? type;
+}
+
 export function DatabaseSection({
-  loading,
-  databases,
-  deletingDatabaseName,
-  onDeleteDatabase,
-  onCreateDatabase,
-  onOpenDatabase,
-  activeProjectId
+  loading, databases, deletingDatabaseName,
+  onDeleteDatabase, onCreateDatabase, onOpenDatabase, activeProjectId
 }: DatabaseSectionProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState(initialForm);
@@ -118,235 +123,154 @@ export function DatabaseSection({
     void navigator.clipboard.writeText(text);
   }
 
-  function dbTypeLabel(type: string) {
-    return DB_TYPES.find(d => d.value === type)?.label ?? type;
-  }
+  const columns: Column<DatabaseInstance>[] = [
+    {
+      key: "name",
+      header: "名前",
+      render: (db) => (
+        <Box>
+          <Typography variant="body2" sx={{ fontWeight: 500, color: "primary.main" }}>{db.name}</Typography>
+          <Typography variant="caption" color="text.secondary">{db.version}</Typography>
+        </Box>
+      )
+    },
+    { key: "type", header: "種別", width: 120, render: (db) => <Typography variant="body2">{dbTypeLabel(db.type)}</Typography> },
+    {
+      key: "status", header: "ステータス", width: 140,
+      render: (db) => {
+        const s = statusVariant(db, deletingDatabaseName === db.name);
+        return <StatusBadge variant={s.v} label={s.label} showSpinner={s.spin} />;
+      }
+    },
+    {
+      key: "createdAt", header: "作成日時", width: 180,
+      render: (db) => <Typography variant="caption" color="text.secondary">{formatComputeTimestamp(db.createdAt)}</Typography>
+    },
+    {
+      key: "actions", header: "", width: 96, align: "right",
+      render: (db) => {
+        const isDeleting = deletingDatabaseName === db.name;
+        return (
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
+            <Tooltip title="接続情報">
+              <span>
+                <IconButton size="small" disabled={!db.ready} onClick={() => void handleShowConnection(db.name)}>
+                  <LinkIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title="削除">
+              <span>
+                <IconButton size="small" color="error" disabled={isDeleting} onClick={() => onDeleteDatabase(db.name)}>
+                  <DeleteOutlinedIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Box>
+        );
+      }
+    }
+  ];
 
   return (
-    <Box sx={{ display: "grid", gap: 3 }}>
-      <Card variant="outlined" sx={{ borderRadius: 2 }}>
-        <CardContent sx={{ p: 3, display: "grid", gap: 2 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2, flexWrap: "wrap" }}>
-            <Box sx={{ display: "grid", gap: 0.75 }}>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                データベース
-              </Typography>
-            </Box>
-            <Button variant="contained" onClick={() => setCreateOpen(true)}>
-              データベースを作成
-            </Button>
-          </Box>
+    <Box>
+      <PageHeader
+        title="データベース"
+        subtitle="マネージド DB (PostgreSQL / MySQL / Redis) を作成・管理します"
+        actions={
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
+            作成
+          </Button>
+        }
+      />
 
-          <Box sx={{ display: "grid", gap: 0 }}>
-            <Box
-              sx={{
-                display: { xs: "none", sm: "grid" },
-                gridTemplateColumns: "42px minmax(0, 1fr) 100px 100px 160px 88px",
-                alignItems: "center",
-                minHeight: 36,
-                px: 1,
-                color: "text.secondary",
-                fontSize: 11,
-                fontWeight: 700,
-                borderBottom: "1px solid rgba(148, 163, 184, 0.18)"
-              }}
-            >
-              <Box />
-              <Box>名前</Box>
-              <Box>種別</Box>
-              <Box>ステータス</Box>
-              <Box>作成日時</Box>
-              <Box sx={{ textAlign: "right" }}>操作</Box>
-            </Box>
+      <DataTable
+        columns={columns}
+        rows={databases}
+        rowKey={(db) => db.name}
+        onRowClick={(db) => onOpenDatabase(db.name)}
+        loading={loading}
+        emptyMessage="まだデータベースはありません"
+      />
 
-            <Box sx={{ borderTop: "1px solid rgba(148, 163, 184, 0.18)" }}>
-              {databases.length > 0 ? (
-                databases.map((db) => {
-                  const isDeleting = deletingDatabaseName === db.name;
-                  const isReady = db.ready;
-                  const statusIcon = isDeleting || !isReady
-                    ? <CircularProgress size={14} thickness={5.5} sx={{ color: "inherit" }} />
-                    : <CheckCircleIcon fontSize="small" />;
-                  const statusBgColor = isDeleting ? alpha("#dc2626", 0.12) : isReady ? "transparent" : alpha("#2563eb", 0.12);
-                  const statusTextColor = isDeleting ? "error.main" : isReady ? "success.main" : "primary.main";
+      {databases.map(db => (
+        <Collapse in={connOpen === db.name} key={`conn-${db.name}`}>
+          <Paper variant="outlined" sx={{ mt: 1, p: 2, bgcolor: "#fafafa" }}>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1, fontWeight: 500 }}>
+              {db.name} の接続情報
+            </Typography>
+            {connLoading && !connInfo[db.name] ? (
+              <CircularProgress size={16} />
+            ) : connInfo[db.name] && (
+              <Box sx={{ display: "grid", gap: 0.75 }}>
+                {[
+                  { label: "接続文字列", value: connInfo[db.name].connectionString },
+                  { label: "Host", value: connInfo[db.name].host },
+                  { label: "Port", value: connInfo[db.name].port },
+                  ...(connInfo[db.name].username ? [{ label: "Username", value: connInfo[db.name].username }] : []),
+                  { label: "Password", value: connInfo[db.name].password },
+                ].map(({ label, value }) => (
+                  <Box key={label} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 88 }}>{label}</Typography>
+                    <Typography variant="caption" sx={{ fontFamily: "monospace", wordBreak: "break-all", flex: 1 }}>{value}</Typography>
+                    <IconButton size="small" onClick={() => copyToClipboard(value)}>
+                      <ContentCopyIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Paper>
+        </Collapse>
+      ))}
 
-                  return (
-                    <Box key={db.name}>
-                      <Paper
-                        variant="outlined"
-                        sx={{
-                          display: "grid",
-                          gridTemplateColumns: "42px minmax(0, 1fr) 100px 100px 160px 88px",
-                          gap: 0,
-                          alignItems: "center",
-                          minHeight: 44,
-                          borderRadius: 0,
-                          borderLeft: 0,
-                          borderRight: 0,
-                          borderTop: 0
-                        }}
-                      >
-                        <Box sx={{ display: "grid", placeItems: "center" }}>
-                          <Box sx={{ width: 22, height: 22, display: "grid", placeItems: "center", borderRadius: "999px", bgcolor: statusBgColor, color: statusTextColor }}>
-                            {statusIcon}
-                          </Box>
-                        </Box>
-                        <Box sx={{ minWidth: 0 }}>
-                          <Typography
-                            variant="body2"
-                            sx={{ fontWeight: 700, wordBreak: "break-all", cursor: "pointer", "&:hover": { textDecoration: "underline" } }}
-                            onClick={() => onOpenDatabase(db.name)}
-                          >
-                            {db.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">{db.version}</Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant="caption" sx={{ fontWeight: 600 }}>{dbTypeLabel(db.type)}</Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant="caption" color="text.secondary">{db.status || (isReady ? "Running" : "Creating")}</Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
-                            {formatComputeTimestamp(db.createdAt)}
-                          </Typography>
-                        </Box>
-                        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5, pr: 0.5 }}>
-                          <Tooltip title="接続情報">
-                            <IconButton
-                              size="small"
-                              disabled={!isReady}
-                              onClick={() => void handleShowConnection(db.name)}
-                              sx={{ border: "1px solid", borderColor: "divider" }}
-                            >
-                              <LinkIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="削除">
-                            <span>
-                              <IconButton
-                                color="error"
-                                disabled={isDeleting}
-                                onClick={() => onDeleteDatabase(db.name)}
-                                size="small"
-                                sx={{
-                                  border: "1px solid",
-                                  borderColor: "error.main",
-                                  bgcolor: "error.main",
-                                  color: "common.white",
-                                  "&:hover": { bgcolor: "error.dark", borderColor: "error.dark" },
-                                  "&.Mui-disabled": { bgcolor: alpha("#dc2626", 0.08), color: "error.main", borderColor: alpha("#dc2626", 0.2) }
-                                }}
-                              >
-                                <DeleteOutlinedIcon fontSize="small" />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                        </Box>
-                      </Paper>
-
-                      <Collapse in={connOpen === db.name}>
-                        <Box sx={{ px: 2, py: 1.5, bgcolor: alpha("#1e293b", 0.04), borderBottom: "1px solid rgba(148,163,184,0.18)" }}>
-                          {connLoading && !connInfo[db.name] ? (
-                            <CircularProgress size={16} />
-                          ) : connInfo[db.name] ? (
-                            <Box sx={{ display: "grid", gap: 1 }}>
-                              {[
-                                { label: "接続文字列", value: connInfo[db.name].connectionString },
-                                { label: "Host", value: connInfo[db.name].host },
-                                { label: "Port", value: connInfo[db.name].port },
-                                ...(connInfo[db.name].username ? [{ label: "Username", value: connInfo[db.name].username }] : []),
-                                { label: "Password", value: connInfo[db.name].password },
-                              ].map(({ label, value }) => (
-                                <Box key={label} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                  <Typography variant="caption" color="text.secondary" sx={{ minWidth: 100 }}>{label}</Typography>
-                                  <Typography variant="caption" sx={{ fontFamily: "monospace", wordBreak: "break-all", flex: 1 }}>{value}</Typography>
-                                  <IconButton size="small" onClick={() => copyToClipboard(value)}>
-                                    <ContentCopyIcon sx={{ fontSize: 14 }} />
-                                  </IconButton>
-                                </Box>
-                              ))}
-                            </Box>
-                          ) : null}
-                        </Box>
-                      </Collapse>
-                    </Box>
-                  );
-                })
-              ) : (
-                <Paper variant="outlined" sx={{ mt: 1.5, p: 2, borderRadius: 2, borderStyle: "dashed", bgcolor: alpha("#ffffff", 0.7) }}>
-                  <Typography color="text.secondary">{loading ? "読み込み中..." : "まだデータベースはありません。"}</Typography>
-                </Paper>
-              )}
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-
-      <Dialog open={createOpen} onClose={() => !submitting && setCreateOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle>データベースを作成</DialogTitle>
-        <DialogContent sx={{ display: "grid", gap: 2, pt: "8px !important" }}>
-          {error && <Typography color="error" variant="body2">{error}</Typography>}
-          <TextField
-            label="名前"
-            value={form.name}
-            onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
-            size="small"
-            fullWidth
-            helperText="小文字・数字・ハイフンのみ"
-            disabled={submitting}
-          />
-          <TextField
-            select
-            label="種別"
-            value={form.type}
-            onChange={(e) => setForm(f => ({ ...f, type: e.target.value, version: VERSIONS_BY_TYPE[e.target.value]?.[0] ?? "" }))}
-            size="small"
-            fullWidth
-            disabled={submitting}
-          >
-            {DB_TYPES.map(opt => (
-              <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            label="バージョン"
-            value={form.version}
-            onChange={(e) => setForm(f => ({ ...f, version: e.target.value }))}
-            size="small"
-            fullWidth
-            disabled={submitting}
-          >
-            {(VERSIONS_BY_TYPE[form.type] ?? []).map(v => (
-              <MenuItem key={v} value={v}>{v.replace(/^[^-]+-/, "")}</MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            label="リソース"
-            value={form.preset}
-            onChange={(e) => {
-              const p = RESOURCE_PRESETS[e.target.value];
-              setForm(f => ({ ...f, preset: e.target.value, cpu: p.cpu, memory: p.memory, storage: p.storage }));
-            }}
-            size="small"
-            fullWidth
-            disabled={submitting}
-          >
-            {Object.entries(RESOURCE_PRESETS).map(([k, p]) => (
-              <MenuItem key={k} value={k}>{p.label}</MenuItem>
-            ))}
-          </TextField>
-          <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
-            <Button onClick={() => setCreateOpen(false)} disabled={submitting}>キャンセル</Button>
-            <Button variant="contained" onClick={() => void handleCreate()} disabled={submitting || !form.name.trim()}>
-              {submitting ? <CircularProgress size={18} /> : "作成"}
-            </Button>
-          </Box>
-        </DialogContent>
-      </Dialog>
+      <FormDialog
+        open={createOpen}
+        title="データベースを作成"
+        onClose={() => setCreateOpen(false)}
+        onSubmit={handleCreate}
+        submitLabel="作成"
+        submitting={submitting}
+        submitDisabled={!form.name.trim()}
+        error={error}
+      >
+        <TextField
+          label="名前"
+          value={form.name}
+          onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
+          fullWidth
+          helperText="小文字・数字・ハイフンのみ"
+          disabled={submitting}
+        />
+        <TextField
+          select label="種別" value={form.type}
+          onChange={(e) => setForm(f => ({ ...f, type: e.target.value, version: VERSIONS_BY_TYPE[e.target.value]?.[0] ?? "" }))}
+          fullWidth disabled={submitting}
+        >
+          {DB_TYPES.map(opt => <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>)}
+        </TextField>
+        <TextField
+          select label="バージョン" value={form.version}
+          onChange={(e) => setForm(f => ({ ...f, version: e.target.value }))}
+          fullWidth disabled={submitting}
+        >
+          {(VERSIONS_BY_TYPE[form.type] ?? []).map(v => (
+            <MenuItem key={v} value={v}>{v.replace(/^[^-]+-/, "")}</MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          select label="リソース" value={form.preset}
+          onChange={(e) => {
+            const p = RESOURCE_PRESETS[e.target.value];
+            setForm(f => ({ ...f, preset: e.target.value, cpu: p.cpu, memory: p.memory, storage: p.storage }));
+          }}
+          fullWidth disabled={submitting}
+        >
+          {Object.entries(RESOURCE_PRESETS).map(([k, p]) => (
+            <MenuItem key={k} value={k}>{p.label}</MenuItem>
+          ))}
+        </TextField>
+      </FormDialog>
     </Box>
   );
 }
