@@ -52,10 +52,6 @@ type DeleteSchemaResponse = databasepb.DeleteSchemaResponse
 type Schema = databasepb.Schema
 type DatabaseServer = databasepb.DatabaseServiceServer
 
-// KubeBlocks uses a unified Cluster CRD for all DB types.
-// clusterDefinitions maps dcloud's DB type to KubeBlocks ClusterDefinition name.
-// componentNames maps dcloud's DB type to the component name inside the Cluster spec.
-// defaultVersionRefs maps dcloud's DB type to KubeBlocks ClusterVersion name.
 var (
 	clusterDefinitions = map[string]string{
 		"postgres": "postgresql",
@@ -79,8 +75,6 @@ var (
 	}
 )
 
-// vctSpec builds the PVC template spec, omitting storageClassName when empty
-// so the PVC binds to the cluster's default StorageClass.
 func vctSpec(storageClass, storageSize string) map[string]any {
 	spec := map[string]any{
 		"accessModes": []string{"ReadWriteOnce"},
@@ -423,7 +417,6 @@ func (s *Server) DeleteSchema(ctx context.Context, req *DeleteSchemaRequest) (*D
 	return &DeleteSchemaResponse{}, nil
 }
 
-// lookupInstance validates project ownership and finds the DB instance by user-facing name.
 func (s *Server) lookupInstance(ctx context.Context, userID, projectID, name string) (*dbRecord, error) {
 	userID = strings.TrimSpace(userID)
 	projectID = strings.TrimSpace(projectID)
@@ -520,9 +513,6 @@ func (s *Server) reconcileResourceType(ctx context.Context, resourceType string,
 	}
 }
 
-// ReconcileDeletions runs the background reconciler that marks
-// database-op operations as done once the KubeBlocks Cluster has been
-// removed. Exported so cmd/server can start it.
 func (s *Server) ReconcileDeletions(ctx context.Context) {
 	s.reconcileDeletions(ctx)
 }
@@ -605,7 +595,6 @@ func newKubeClient() (*kubeClient, error) {
 	}, nil
 }
 
-// kubeCluster represents a KubeBlocks Cluster CRD (apps.kubeblocks.io/v1alpha1).
 type kubeClusterList struct {
 	Items []kubeCluster `json:"items"`
 }
@@ -621,7 +610,6 @@ type kubeCluster struct {
 		CreationTimestamp string            `json:"creationTimestamp,omitempty"`
 	} `json:"metadata"`
 	Status struct {
-		// Phase: Creating, Running, Updating, Stopping, Stopped, Deleting, Failed
 		Phase string `json:"phase"`
 	} `json:"status"`
 }
@@ -636,8 +624,6 @@ type kubeStatus struct {
 	Code    int    `json:"code"`
 }
 
-// listDatabases queries KubeBlocks Cluster CRDs with dcloud labels.
-// All DB types share the same clusters resource, so a single API call suffices.
 func (c *kubeClient) listDatabases(ctx context.Context, namespace, userID, projectID string) ([]dbRecord, error) {
 	selector := url.QueryEscape(fmt.Sprintf("dcloud-component=database,dcloud-user-id=%s,dcloud-project-id=%s", userID, projectID))
 	var payload kubeClusterList
@@ -720,9 +706,6 @@ func (c *kubeClient) deleteDatabase(ctx context.Context, namespace, resourceName
 	return c.doJSON(ctx, http.MethodDelete, fmt.Sprintf("/apis/apps.kubeblocks.io/v1alpha1/namespaces/%s/clusters/%s", namespace, resourceName), nil, nil)
 }
 
-// getConnectionString reads the KubeBlocks 1.x per-account root Secret.
-// KubeBlocks creates "{cluster}-{component}-account-root" with keys username/password;
-// host and port are constructed from the cluster's headless Service.
 func (c *kubeClient) getConnectionString(ctx context.Context, namespace string, r *dbRecord, schemaName string) (*GetConnectionStringResponse, error) {
 	componentName := componentNames[r.Type]
 	secretName := fmt.Sprintf("%s-%s-account-root", r.ResourceName, componentName)

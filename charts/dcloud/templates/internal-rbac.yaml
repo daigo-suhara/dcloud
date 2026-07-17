@@ -55,10 +55,6 @@ roleRef:
   kind: Role
   name: {{ include "dcloud.fullname" . }}-internal
 ---
-# Cluster-scoped grants that back project = namespace isolation. The
-# project service creates/deletes the Namespace when a project is
-# created or deleted; NetworkPolicy verbs are pre-granted so Phase 5
-# can add default-deny rules without an RBAC change.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:

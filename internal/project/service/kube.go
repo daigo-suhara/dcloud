@@ -14,9 +14,6 @@ import (
 	"time"
 )
 
-// projectNamespace returns the deterministic Kubernetes Namespace name a
-// project's resources live in. Kept short (max 63 chars); projectID is
-// already sanitized (name-8hex).
 func projectNamespace(projectID string) string {
 	return "proj-" + projectID
 }
@@ -58,15 +55,12 @@ func envOr(key, fallback string) string {
 	return fallback
 }
 
-// ensureProjectNamespace creates the project's Namespace with dcloud labels.
-// Idempotent: returns nil if it already exists.
 func (c *kubeClient) ensureProjectNamespace(ctx context.Context, projectID, userID string) error {
-	ns := projectNamespace(projectID)
 	payload := map[string]any{
 		"apiVersion": "v1",
 		"kind":       "Namespace",
 		"metadata": map[string]any{
-			"name": ns,
+			"name": projectNamespace(projectID),
 			"labels": map[string]string{
 				"app.kubernetes.io/managed-by": "dcloud",
 				"dcloud/project-id":            projectID,
@@ -77,11 +71,8 @@ func (c *kubeClient) ensureProjectNamespace(ctx context.Context, projectID, user
 	return c.doJSON(ctx, http.MethodPost, "/api/v1/namespaces", payload, nil)
 }
 
-// deleteProjectNamespace removes the project's Namespace. Kubernetes cascades
-// the delete to every resource inside (containers, VMs, DBs, buckets).
 func (c *kubeClient) deleteProjectNamespace(ctx context.Context, projectID string) error {
-	ns := projectNamespace(projectID)
-	return c.doJSON(ctx, http.MethodDelete, "/api/v1/namespaces/"+ns, nil, nil)
+	return c.doJSON(ctx, http.MethodDelete, "/api/v1/namespaces/"+projectNamespace(projectID), nil, nil)
 }
 
 func (c *kubeClient) doJSON(ctx context.Context, method, path string, body any, out any) error {
@@ -108,16 +99,12 @@ func (c *kubeClient) doJSON(ctx context.Context, method, path string, body any, 
 	}
 	defer resp.Body.Close()
 	buf, _ := io.ReadAll(resp.Body)
-	// AlreadyExists on create is idempotent success.
 	if resp.StatusCode == http.StatusConflict {
 		return nil
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		if resp.StatusCode == http.StatusNotFound {
-			// Delete of a non-existent resource is fine.
-			if method == http.MethodDelete {
-				return nil
-			}
+		if resp.StatusCode == http.StatusNotFound && method == http.MethodDelete {
+			return nil
 		}
 		return fmt.Errorf("kube api %s %s: %d %s", method, path, resp.StatusCode, string(buf))
 	}
