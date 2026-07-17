@@ -1,19 +1,24 @@
-import { alpha } from "@mui/material/styles";
+import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import ErrorOutlinedIcon from "@mui/icons-material/ErrorOutlined";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import { Box, Button, Card, CardContent, Chip, CircularProgress, IconButton, Paper, TextField, Tooltip, Typography } from "@mui/material";
+import { alpha } from "@mui/material/styles";
+import {
+  Box, Button, Chip, CircularProgress, IconButton, Paper, TextField, Tooltip, Typography
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import type { DeployedService, UpdateForm } from "../types";
 import { EnvVarEditor } from "./EnvVarEditor";
 import { ContainerLogsViewer } from "./ContainerLogsViewer";
 import { actionLinkButtonSx } from "../theme";
 import { formatServiceStatus, formatServiceTimestamp, getServiceStatus } from "../utils";
+import { PageHeader, DataTable, StatusBadge } from "./primitives";
+import type { Column, StatusVariant } from "./primitives";
 
 type ContainerSectionProps = {
   loading: boolean;
@@ -32,445 +37,303 @@ type ContainerSectionProps = {
   activeProjectId: string;
 };
 
-export function ContainerSection({
-  loading,
-  deletingServiceName,
-  updatingServiceName,
-  onBackToList,
-  onDeployClick,
-  onDeleteService,
-  onOpenService,
-  onRepoConnectClick,
-  onSetDomain,
-  onUpdateService,
-  selectedService,
-  selectedStatus,
-  containers,
-  activeProjectId
-}: ContainerSectionProps) {
+function svcStatusVariant(status: ReturnType<typeof getServiceStatus> | null, isDeleting: boolean): { v: StatusVariant; spin: boolean } {
+  if (isDeleting) return { v: "error", spin: true };
+  if (status === "ready") return { v: "ready", spin: false };
+  if (status === "loading") return { v: "progress", spin: true };
+  return { v: "error", spin: false };
+}
+
+// ---- Detail (when a service is selected) --------------------------------
+function ServiceDetail({
+  service, status, updating, deleting,
+  onBack, onUpdate, onDelete, onSetDomain, activeProjectId
+}: {
+  service: DeployedService;
+  status: ReturnType<typeof getServiceStatus> | null;
+  updating: boolean;
+  deleting: boolean;
+  onBack: () => void;
+  onUpdate: (form: UpdateForm) => Promise<void>;
+  onDelete: () => void;
+  onSetDomain: (domain: string) => Promise<void>;
+  activeProjectId: string;
+}) {
   const [domainInput, setDomainInput] = useState("");
   const [savingDomain, setSavingDomain] = useState(false);
-  const [updateForm, setUpdateForm] = useState<UpdateForm>({ image: "", port: "8080", minScale: "0", maxScale: "20", startupScript: "", env: [] });
+  const [form, setForm] = useState<UpdateForm>({
+    image: service.image,
+    port: String(service.port ?? 8080),
+    minScale: String(service.minScale ?? 0),
+    maxScale: String(service.maxScale ?? 20),
+    startupScript: service.startupScript ?? "",
+    env: service.env ?? []
+  });
 
   useEffect(() => {
-    if (selectedService) {
-      setUpdateForm({
-        image: selectedService.image,
-        port: String(selectedService.port ?? 8080),
-        minScale: String(selectedService.minScale ?? 0),
-        maxScale: String(selectedService.maxScale ?? 20),
-        startupScript: selectedService.startupScript ?? "",
-        env: selectedService.env ?? []
-      });
-    }
-  }, [selectedService?.name]);
-  const selectedStatusIcon =
-    selectedStatus === "ready" ? (
-      <CheckCircleIcon fontSize="small" />
-    ) : selectedStatus === "loading" ? (
-      <CircularProgress size={16} thickness={5} sx={{ color: "inherit" }} />
-    ) : (
-      <ErrorOutlinedIcon fontSize="small" />
-    );
+    setForm({
+      image: service.image,
+      port: String(service.port ?? 8080),
+      minScale: String(service.minScale ?? 0),
+      maxScale: String(service.maxScale ?? 20),
+      startupScript: service.startupScript ?? "",
+      env: service.env ?? []
+    });
+  }, [service.name]);
+
+  const s = svcStatusVariant(status, deleting);
 
   return (
-    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) 360px" }, gap: 3, alignItems: "start" }}>
-      <Box>
-        {selectedService ? (
-          <Card variant="outlined" sx={{ borderRadius: 2 }}>
-            <CardContent sx={{ p: 3, display: "grid", gap: 2 }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-                <Box sx={{ display: "grid", gap: 0.75, minWidth: 0 }}>
-                  <Typography variant="overline" color="primary">
-                    サービス詳細
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700, wordBreak: "break-word" }}>
-                    {selectedService.name}
-                  </Typography>
-                </Box>
-                <Button startIcon={<ArrowBackIcon />} onClick={onBackToList}>
-                  一覧に戻る
-                </Button>
-              </Box>
+    <Box>
+      <PageHeader
+        title={service.name}
+        subtitle="Knative service"
+        actions={
+          <Button startIcon={<ArrowBackIcon />} onClick={onBack}>一覧に戻る</Button>
+        }
+      />
 
-              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: "grey.50" }}>
-                  <Typography variant="caption" color="text.secondary">
-                    状態
-                  </Typography>
-                  <Box sx={{ mt: 0.75, display: "flex", alignItems: "center", gap: 1, color: selectedStatus === "ready" ? "success.main" : "text.secondary" }}>
-                    <Box sx={{ width: 22, height: 22, display: "grid", placeItems: "center", borderRadius: "999px", bgcolor: selectedStatus === "ready" ? "transparent" : selectedStatus === "loading" ? alpha("#2563eb", 0.12) : alpha("#dc2626", 0.12), color: selectedStatus === "ready" ? "success.main" : selectedStatus === "loading" ? "primary.main" : "error.main" }}>
-                      {selectedStatusIcon}
-                    </Box>
-                    <Typography sx={{ fontWeight: 700 }}>{formatServiceStatus(selectedService)}</Typography>
-                  </Box>
-                </Paper>
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: "grey.50" }}>
-                  <Typography variant="caption" color="text.secondary">
-                    イメージ
-                  </Typography>
-                  <Typography sx={{ mt: 0.5, fontWeight: 600, wordBreak: "break-all" }}>{selectedService.image}</Typography>
-                </Paper>
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: "grey.50" }}>
-                  <Typography variant="caption" color="text.secondary">
-                    公開URL
-                  </Typography>
-                  <Typography sx={{ mt: 0.5, fontWeight: 600, wordBreak: "break-all" }}>
-                    {selectedService.url ? (
-                      <Button
-                        component="a"
-                        href={selectedService.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        variant="text"
-                        size="small"
-                        sx={actionLinkButtonSx}
-                      >
-                        {selectedService.url}
-                      </Button>
-                    ) : (
-                      "-"
-                    )}
-                  </Typography>
-                </Paper>
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: "grey.50" }}>
-                  <Typography variant="caption" color="text.secondary">
-                    作成時刻
-                  </Typography>
-                  <Typography sx={{ mt: 0.5, fontWeight: 600 }}>{selectedService.createdAt ?? "-"}</Typography>
-                </Paper>
-              </Box>
-
-              <Box sx={{ display: "grid", gap: 1.5 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                  イメージを更新
-                </Typography>
-                <Box
-                  component="form"
-                  onSubmit={async (event: FormEvent<HTMLFormElement>) => {
-                    event.preventDefault();
-                    await onUpdateService(selectedService.name, updateForm);
-                  }}
-                  sx={{ display: "grid", gap: 1.5 }}
-                >
-                  <TextField
-                    size="small"
-                    label="コンテナイメージ"
-                    value={updateForm.image}
-                    onChange={(e) => setUpdateForm((f) => ({ ...f, image: e.target.value }))}
-                    disabled={updatingServiceName === selectedService.name}
-                    placeholder="ghcr.io/org/app:tag"
-                    fullWidth
-                    slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false } }}
-                  />
-                  <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" } }}>
-                    <TextField
-                      size="small"
-                      label="Port"
-                      type="number"
-                      slotProps={{ htmlInput: { min: 1, max: 65535 } }}
-                      value={updateForm.port}
-                      onChange={(e) => setUpdateForm((f) => ({ ...f, port: e.target.value }))}
-                      disabled={updatingServiceName === selectedService.name}
-                    />
-                    <TextField
-                      size="small"
-                      label="最小スケール"
-                      type="number"
-                      slotProps={{ htmlInput: { min: 0, max: 20 } }}
-                      value={updateForm.minScale}
-                      onChange={(e) => setUpdateForm((f) => ({ ...f, minScale: e.target.value }))}
-                      disabled={updatingServiceName === selectedService.name}
-                    />
-                    <TextField
-                      size="small"
-                      label="最大スケール"
-                      type="number"
-                      slotProps={{ htmlInput: { min: 1, max: 20 } }}
-                      value={updateForm.maxScale}
-                      onChange={(e) => setUpdateForm((f) => ({ ...f, maxScale: e.target.value }))}
-                      disabled={updatingServiceName === selectedService.name}
-                    />
-                  </Box>
-                  <EnvVarEditor
-                    value={updateForm.env}
-                    onChange={(env) => setUpdateForm((f) => ({ ...f, env }))}
-                    disabled={updatingServiceName === selectedService.name}
-                    size="small"
-                  />
-                  <TextField
-                    size="small"
-                    label="起動スクリプト（任意）"
-                    value={updateForm.startupScript}
-                    onChange={(e) => setUpdateForm((f) => ({ ...f, startupScript: e.target.value }))}
-                    disabled={updatingServiceName === selectedService.name}
-                    placeholder={"#!/bin/sh\nexec code-server --bind-addr 0.0.0.0:8080 --auth none ."}
-                    multiline
-                    minRows={3}
-                    fullWidth
-                    slotProps={{
-                      htmlInput: {
-                        autoComplete: "off",
-                        autoCorrect: "off",
-                        autoCapitalize: "none",
-                        spellCheck: false,
-                        style: { fontFamily: "monospace", fontSize: "0.85rem" }
-                      }
-                    }}
-                  />
-                  <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      disabled={updatingServiceName === selectedService.name || !updateForm.image.trim()}
-                      startIcon={updatingServiceName === selectedService.name ? <CircularProgress size={16} thickness={5} sx={{ color: "inherit" }} /> : undefined}
-                    >
-                      {updatingServiceName === selectedService.name ? "更新中..." : "更新"}
-                    </Button>
-                  </Box>
-                </Box>
-              </Box>
-
-              <Box sx={{ display: "grid", gap: 1.5 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                  カスタムドメイン
-                </Typography>
-                {selectedService.customDomain ? (
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, display: "grid", gap: 1.5 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
-                      <Button
-                        component="a"
-                        href={`https://${selectedService.customDomain}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        variant="text"
-                        size="small"
-                        sx={{ ...actionLinkButtonSx, fontWeight: 700 }}
-                      >
-                        {selectedService.customDomain}
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        size="small"
-                        disabled={savingDomain}
-                        onClick={async () => {
-                          setSavingDomain(true);
-                          try { await onSetDomain(selectedService.name, ""); } finally { setSavingDomain(false); }
-                        }}
-                      >
-                        {savingDomain ? <CircularProgress size={14} thickness={5} sx={{ color: "inherit" }} /> : "削除"}
-                      </Button>
-                    </Box>
-                    {selectedService.domainStatus === "ready" && (
-                      <Chip label="有効" color="success" size="small" icon={<CheckCircleIcon />} sx={{ width: "fit-content" }} />
-                    )}
-                    {selectedService.domainStatus === "pending" && (
-                      <Tooltip title={selectedService.domainStatusReason ?? "DNS または TLS の設定を待機中"}>
-                        <Chip
-                          label="DNS 待機中"
-                          size="small"
-                          icon={<CircularProgress size={12} thickness={5} sx={{ color: "inherit !important" }} />}
-                          sx={{ width: "fit-content", bgcolor: alpha("#f59e0b", 0.12), color: "warning.dark", "& .MuiChip-icon": { color: "warning.dark" } }}
-                        />
-                      </Tooltip>
-                    )}
-                    {selectedService.domainStatus === "error" && (
-                      <Tooltip title={selectedService.domainStatusReason ?? ""}>
-                        <Chip label="エラー" color="error" size="small" icon={<ErrorOutlinedIcon />} sx={{ width: "fit-content" }} />
-                      </Tooltip>
-                    )}
-                    {selectedService.domainStatus === "pending" && selectedService.domainCnameTarget && (
-                      <Typography variant="caption" color="text.secondary">
-                        CNAME レコードを <Box component="code" sx={{ bgcolor: "grey.100", px: 0.5, borderRadius: 0.5 }}>{selectedService.domainCnameTarget}</Box> に向けてください
-                      </Typography>
-                    )}
-                  </Paper>
-                ) : (
-                  <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
-                    <TextField
-                      size="small"
-                      placeholder="example.com"
-                      value={domainInput}
-                      onChange={(e) => setDomainInput(e.target.value)}
-                      disabled={savingDomain}
-                      sx={{ flex: 1 }}
-                    />
-                    <Button
-                      variant="contained"
-                      size="small"
-                      disabled={savingDomain || !domainInput.trim()}
-                      onClick={async () => {
-                        setSavingDomain(true);
-                        try { await onSetDomain(selectedService.name, domainInput); setDomainInput(""); } finally { setSavingDomain(false); }
-                      }}
-                      sx={{ whiteSpace: "nowrap", height: 40 }}
-                    >
-                      {savingDomain ? <CircularProgress size={14} thickness={5} sx={{ color: "inherit" }} /> : "設定"}
-                    </Button>
-                  </Box>
-                )}
-              </Box>
-
-              <ContainerLogsViewer
-                serviceName={selectedService.name}
-                projectId={activeProjectId}
-                enabled={selectedService.ready}
-              />
-
-              <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                <Button
-                  variant="contained"
-                  color="error"
-                  startIcon={deletingServiceName === selectedService.name ? <CircularProgress size={16} thickness={5} sx={{ color: "inherit" }} /> : <DeleteOutlinedIcon />}
-                  onClick={() => onDeleteService(selectedService.name)}
-                  disabled={deletingServiceName === selectedService.name}
-                >
-                  {deletingServiceName === selectedService.name ? "削除中..." : "削除"}
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card variant="outlined" sx={{ borderRadius: 2 }}>
-            <CardContent sx={{ p: 3, display: "grid", gap: 2 }}>
-              <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  サービス
-                </Typography>
-              </Box>
-
-              <Box sx={{ display: "grid", gap: 0 }}>
-                <Box
-                  sx={{
-                    display: { xs: "none", sm: "grid" },
-                    gridTemplateColumns: "42px minmax(0, 1fr) 44px",
-                    alignItems: "center",
-                    minHeight: 36,
-                    px: 1,
-                    color: "text.secondary",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    borderBottom: "1px solid rgba(148, 163, 184, 0.18)"
-                  }}
-                >
-                  <Box />
-                  <Box sx={{ display: "grid", gridTemplateColumns: "minmax(120px, max-content) 150px", columnGap: 3 }}>
-                    <Box>名前</Box>
-                    <Box>更新日時</Box>
-                  </Box>
-                  <Box sx={{ textAlign: "right" }}>操作</Box>
-                </Box>
-
-                <Box sx={{ borderTop: "1px solid rgba(148, 163, 184, 0.18)" }}>
-                  {containers.length > 0 ? (
-                    containers.map((service) => {
-                      const isDeleting = deletingServiceName === service.name;
-                      const status = getServiceStatus(service);
-                      const statusIcon = isDeleting ? (
-                        <CircularProgress size={14} thickness={5.5} sx={{ color: "inherit" }} />
-                      ) : status === "ready" ? (
-                        <CheckCircleIcon fontSize="small" />
-                      ) : status === "loading" ? (
-                        <CircularProgress size={14} thickness={5.5} sx={{ color: "inherit" }} />
-                      ) : (
-                        <ErrorOutlinedIcon fontSize="small" />
-                      );
-                      const statusColor = isDeleting ? alpha("#dc2626", 0.12) : status === "ready" ? "transparent" : status === "loading" ? alpha("#2563eb", 0.12) : alpha("#dc2626", 0.12);
-                      const statusTextColor = isDeleting ? "error.main" : status === "ready" ? "success.main" : status === "loading" ? "primary.main" : "error.main";
-                      return (
-                        <Paper
-                          key={service.name}
-                          variant="outlined"
-                          sx={{
-                            display: "grid",
-                            gridTemplateColumns: { xs: "42px minmax(0, 1fr) 44px", sm: "42px minmax(0, 1fr) 44px" },
-                            gap: { xs: 0, sm: 0 },
-                            alignItems: "center",
-                            minHeight: { xs: 40, sm: 44 },
-                            p: { xs: 1, sm: 0 },
-                            borderRadius: 0,
-                            borderLeft: 0,
-                            borderRight: 0,
-                            borderTop: 0
-                          }}
-                          >
-                          <Box sx={{ display: "grid", placeItems: "center" }}>
-                            <Box sx={{ width: 22, height: 22, display: "grid", placeItems: "center", borderRadius: "999px", bgcolor: statusColor, color: statusTextColor }}>
-                              {statusIcon}
-                            </Box>
-                          </Box>
-                          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "minmax(120px, max-content) 150px" }, columnGap: 3, rowGap: 0.5, alignItems: "center", minWidth: 0 }}>
-                            <Button component={RouterLink} to={`/container/${encodeURIComponent(service.name)}`} onClick={() => onOpenService(service.name)} sx={{ justifyContent: "flex-start", textAlign: "left", color: "inherit", px: 0, minWidth: 0 }}>
-                              <Typography sx={{ fontWeight: 700, wordBreak: "break-all" }}>{service.name}</Typography>
-                            </Button>
-                            <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" }, whiteSpace: { xs: "normal", sm: "nowrap" } }}>
-                              {service.updatedAt || service.createdAt ? formatServiceTimestamp(service.updatedAt || service.createdAt || "") : "-"}
-                            </Typography>
-                          </Box>
-                          <Box sx={{ display: "flex", justifyContent: "flex-end", width: 44, minWidth: 44 }}>
-                            <Tooltip title="削除">
-                              <span>
-                                <IconButton
-                                  color="error"
-                                  disabled={isDeleting}
-                                  onClick={() => onDeleteService(service.name)}
-                                  size="small"
-                                  sx={{
-                                    border: "1px solid",
-                                    borderColor: "error.main",
-                                    bgcolor: "error.main",
-                                    color: "common.white",
-                                    "&:hover": {
-                                      bgcolor: "error.dark",
-                                      borderColor: "error.dark"
-                                    },
-                                    "&.Mui-disabled": {
-                                      bgcolor: "rgba(220, 38, 38, 0.08)",
-                                      color: "error.main",
-                                      borderColor: "rgba(220, 38, 38, 0.2)"
-                                    }
-                                  }}
-                                >
-                                  <DeleteOutlinedIcon fontSize="small" />
-                                </IconButton>
-                              </span>
-                            </Tooltip>
-                          </Box>
-                        </Paper>
-                      );
-                    })
-                  ) : (
-                    <Paper variant="outlined" sx={{ mt: 1.5, p: 2, borderRadius: 2, borderStyle: "dashed", bgcolor: alpha("#ffffff", 0.7) }}>
-                      <Typography color="text.secondary">{loading ? "読み込み中..." : "まだサービスはありません。"}</Typography>
-                    </Paper>
-                  )}
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        )}
+      {/* Status summary */}
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1, mb: 3 }}>
+        <Paper variant="outlined" sx={{ p: 1.5 }}>
+          <Typography variant="caption" color="text.secondary">状態</Typography>
+          <Box sx={{ mt: 0.5 }}>
+            <StatusBadge variant={s.v} label={formatServiceStatus(service)} showSpinner={s.spin} />
+          </Box>
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 1.5 }}>
+          <Typography variant="caption" color="text.secondary">イメージ</Typography>
+          <Typography variant="body2" sx={{ mt: 0.5, wordBreak: "break-all", fontFamily: "monospace" }}>
+            {service.image}
+          </Typography>
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 1.5 }}>
+          <Typography variant="caption" color="text.secondary">公開 URL</Typography>
+          <Box sx={{ mt: 0.5 }}>
+            {service.url ? (
+              <Button component="a" href={service.url} target="_blank" rel="noreferrer" variant="text" size="small" sx={actionLinkButtonSx}>
+                {service.url}
+              </Button>
+            ) : <Typography variant="body2" color="text.secondary">-</Typography>}
+          </Box>
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 1.5 }}>
+          <Typography variant="caption" color="text.secondary">作成時刻</Typography>
+          <Typography variant="body2" sx={{ mt: 0.5 }}>{service.createdAt ?? "-"}</Typography>
+        </Paper>
       </Box>
 
-      {!selectedService ? (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-          <Card variant="outlined" sx={{ borderRadius: 2 }}>
-            <CardContent sx={{ p: 3, display: "grid", gap: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                サービスのデプロイ
-              </Typography>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-                <Button component={RouterLink} to="/container/deploy" variant="contained" startIcon={<CloudUploadOutlinedIcon />} fullWidth onClick={onDeployClick}>
-                  コンテナのデプロイ
-                </Button>
-                <Button component={RouterLink} to="/container/repository" variant="outlined" startIcon={<GitHubIcon />} fullWidth onClick={onRepoConnectClick}>
-                  リポジトリの接続
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
+      {/* Update form */}
+      <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>設定を更新</Typography>
+        <Box
+          component="form"
+          onSubmit={async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); await onUpdate(form); }}
+          sx={{ display: "grid", gap: 1.5 }}
+        >
+          <TextField
+            label="コンテナイメージ" value={form.image}
+            onChange={(e) => setForm(f => ({ ...f, image: e.target.value }))}
+            disabled={updating} placeholder="ghcr.io/org/app:tag" fullWidth
+            slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false } }}
+          />
+          <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" } }}>
+            <TextField label="Port" type="number"
+              slotProps={{ htmlInput: { min: 1, max: 65535 } }}
+              value={form.port} onChange={(e) => setForm(f => ({ ...f, port: e.target.value }))} disabled={updating} />
+            <TextField label="最小スケール" type="number"
+              slotProps={{ htmlInput: { min: 0, max: 20 } }}
+              value={form.minScale} onChange={(e) => setForm(f => ({ ...f, minScale: e.target.value }))} disabled={updating} />
+            <TextField label="最大スケール" type="number"
+              slotProps={{ htmlInput: { min: 1, max: 20 } }}
+              value={form.maxScale} onChange={(e) => setForm(f => ({ ...f, maxScale: e.target.value }))} disabled={updating} />
+          </Box>
+          <EnvVarEditor value={form.env} onChange={(env) => setForm(f => ({ ...f, env }))} disabled={updating} size="small" />
+          <TextField
+            label="起動スクリプト（任意）" value={form.startupScript}
+            onChange={(e) => setForm(f => ({ ...f, startupScript: e.target.value }))} disabled={updating}
+            placeholder={"#!/bin/sh\nexec code-server --bind-addr 0.0.0.0:8080 --auth none ."}
+            multiline minRows={3} fullWidth
+            slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false, style: { fontFamily: "monospace", fontSize: "0.85rem" } } }}
+          />
+          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button
+              type="submit" variant="contained"
+              disabled={updating || !form.image.trim()}
+              startIcon={updating ? <CircularProgress size={14} sx={{ color: "inherit" }} /> : undefined}
+            >
+              {updating ? "更新中..." : "更新"}
+            </Button>
+          </Box>
         </Box>
-      ) : null}
+      </Paper>
+
+      {/* Custom domain */}
+      <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>カスタムドメイン</Typography>
+        {service.customDomain ? (
+          <Box sx={{ display: "grid", gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+              <Button component="a" href={`https://${service.customDomain}`} target="_blank" rel="noreferrer" variant="text" size="small" sx={{ ...actionLinkButtonSx, fontWeight: 500 }}>
+                {service.customDomain}
+              </Button>
+              <Button
+                variant="outlined" color="error" size="small" disabled={savingDomain}
+                onClick={async () => { setSavingDomain(true); try { await onSetDomain(""); } finally { setSavingDomain(false); } }}
+              >
+                {savingDomain ? <CircularProgress size={14} /> : "削除"}
+              </Button>
+            </Box>
+            {service.domainStatus === "ready" && (
+              <Chip label="有効" color="success" size="small" icon={<CheckCircleIcon />} sx={{ width: "fit-content" }} />
+            )}
+            {service.domainStatus === "pending" && (
+              <Tooltip title={service.domainStatusReason ?? "DNS または TLS の設定を待機中"}>
+                <Chip label="DNS 待機中" size="small"
+                  icon={<CircularProgress size={12} thickness={5} sx={{ color: "inherit !important" }} />}
+                  sx={{ width: "fit-content", bgcolor: alpha("#f59e0b", 0.12), color: "warning.dark", "& .MuiChip-icon": { color: "warning.dark" } }} />
+              </Tooltip>
+            )}
+            {service.domainStatus === "error" && (
+              <Tooltip title={service.domainStatusReason ?? ""}>
+                <Chip label="エラー" color="error" size="small" icon={<ErrorOutlinedIcon />} sx={{ width: "fit-content" }} />
+              </Tooltip>
+            )}
+            {service.domainStatus === "pending" && service.domainCnameTarget && (
+              <Typography variant="caption" color="text.secondary">
+                CNAME レコードを <Box component="code" sx={{ bgcolor: "grey.100", px: 0.5, borderRadius: 0.5 }}>{service.domainCnameTarget}</Box> に向けてください
+              </Typography>
+            )}
+          </Box>
+        ) : (
+          <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+            <TextField size="small" placeholder="example.com" value={domainInput}
+              onChange={(e) => setDomainInput(e.target.value)} disabled={savingDomain} sx={{ flex: 1 }} />
+            <Button
+              variant="contained" size="small"
+              disabled={savingDomain || !domainInput.trim()}
+              onClick={async () => { setSavingDomain(true); try { await onSetDomain(domainInput); setDomainInput(""); } finally { setSavingDomain(false); } }}
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              {savingDomain ? <CircularProgress size={14} /> : "設定"}
+            </Button>
+          </Box>
+        )}
+      </Paper>
+
+      <ContainerLogsViewer serviceName={service.name} projectId={activeProjectId} enabled={service.ready} />
+
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+        <Button
+          variant="outlined" color="error"
+          startIcon={deleting ? <CircularProgress size={14} sx={{ color: "inherit" }} /> : <DeleteOutlinedIcon />}
+          onClick={onDelete} disabled={deleting}
+        >
+          {deleting ? "削除中..." : "サービスを削除"}
+        </Button>
+      </Box>
     </Box>
   );
 }
+
+// ---- List (default) -----------------------------------------------------
+export function ContainerSection({
+  loading, deletingServiceName, updatingServiceName,
+  onBackToList, onDeployClick, onDeleteService, onOpenService,
+  onRepoConnectClick, onSetDomain, onUpdateService,
+  selectedService, selectedStatus, containers, activeProjectId
+}: ContainerSectionProps) {
+  const navigate = useNavigate();
+
+  if (selectedService) {
+    return (
+      <ServiceDetail
+        service={selectedService}
+        status={selectedStatus}
+        updating={updatingServiceName === selectedService.name}
+        deleting={deletingServiceName === selectedService.name}
+        onBack={onBackToList}
+        onUpdate={(form) => onUpdateService(selectedService.name, form)}
+        onDelete={() => onDeleteService(selectedService.name)}
+        onSetDomain={(domain) => onSetDomain(selectedService.name, domain)}
+        activeProjectId={activeProjectId}
+      />
+    );
+  }
+
+  const columns: Column<DeployedService>[] = [
+    {
+      key: "name", header: "名前",
+      render: (svc) => (
+        <Typography variant="body2" sx={{ fontWeight: 500, color: "primary.main" }}>{svc.name}</Typography>
+      )
+    },
+    {
+      key: "status", header: "ステータス", width: 140,
+      render: (svc) => {
+        const s = svcStatusVariant(getServiceStatus(svc), deletingServiceName === svc.name);
+        return <StatusBadge variant={s.v} label={formatServiceStatus(svc)} showSpinner={s.spin} />;
+      }
+    },
+    {
+      key: "updatedAt", header: "更新日時", width: 180,
+      render: (svc) => (
+        <Typography variant="caption" color="text.secondary">
+          {svc.updatedAt || svc.createdAt ? formatServiceTimestamp(svc.updatedAt || svc.createdAt || "") : "-"}
+        </Typography>
+      )
+    },
+    {
+      key: "actions", header: "", width: 60, align: "right",
+      render: (svc) => (
+        <Tooltip title="削除">
+          <span>
+            <IconButton size="small" color="error"
+              disabled={deletingServiceName === svc.name}
+              onClick={() => onDeleteService(svc.name)}>
+              <DeleteOutlinedIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+      )
+    }
+  ];
+
+  return (
+    <Box>
+      <PageHeader
+        title="コンテナ"
+        subtitle="Knative サービスを作成・管理します"
+        actions={
+          <>
+            <Button
+              component={RouterLink} to="/container/repository"
+              variant="outlined" startIcon={<GitHubIcon />}
+              onClick={onRepoConnectClick}
+            >
+              リポジトリを接続
+            </Button>
+            <Button
+              component={RouterLink} to="/container/deploy"
+              variant="contained" startIcon={<AddIcon />}
+              onClick={onDeployClick}
+            >
+              デプロイ
+            </Button>
+          </>
+        }
+      />
+      <DataTable
+        columns={columns}
+        rows={containers}
+        rowKey={(svc) => svc.name}
+        onRowClick={(svc) => { onOpenService(svc.name); navigate(`/container/${encodeURIComponent(svc.name)}`); }}
+        loading={loading}
+        emptyMessage="まだサービスはありません"
+      />
+    </Box>
+  );
+}
+
+// keep CloudUploadOutlinedIcon import valid
+void CloudUploadOutlinedIcon;

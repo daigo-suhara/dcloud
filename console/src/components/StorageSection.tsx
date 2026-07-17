@@ -1,4 +1,4 @@
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import AddIcon from "@mui/icons-material/Add";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
@@ -8,20 +8,18 @@ import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import KeyIcon from "@mui/icons-material/Key";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import { alpha } from "@mui/material/styles";
 import {
-  Box, Breadcrumbs, Button, Card, CardContent, CircularProgress, Collapse, Dialog,
-  DialogContent, DialogTitle, Divider, IconButton, Link, Paper, TextField, Tooltip, Typography
+  Box, Breadcrumbs, Button, CircularProgress, Collapse, Dialog, DialogContent, DialogTitle,
+  Divider, IconButton, Link, Paper, TextField, Tooltip, Typography
 } from "@mui/material";
 import { useRef, useState } from "react";
 import type { Bucket, BucketCreateForm } from "../types";
 import { formatComputeTimestamp } from "../utils";
+import { PageHeader, DataTable, StatusBadge, FormDialog } from "./primitives";
+import type { Column, StatusVariant } from "./primitives";
 
-type S3Object = {
-  key: string;
-  size: number;
-  lastModified: string;
-};
+type S3Object = { key: string; size: number; lastModified: string };
+type Creds = { endpoint: string; bucketName: string; accessKeyId: string; secretAccessKey: string };
 
 type StorageSectionProps = {
   loading: boolean;
@@ -39,23 +37,23 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
+function statusOf(b: Bucket, isDeleting: boolean): { v: StatusVariant; label: string; spin: boolean } {
+  if (isDeleting) return { v: "error", label: "Deleting", spin: true };
+  if (!b.ready) return { v: "progress", label: b.status || "Pending", spin: true };
+  return { v: "ready", label: b.status || "Bound", spin: false };
+}
+
 export function StorageSection({
-  loading,
-  buckets,
-  deletingBucketName,
-  onDeleteBucket,
-  onCreateBucket,
-  activeProjectId
+  loading, buckets, deletingBucketName, onDeleteBucket, onCreateBucket, activeProjectId
 }: StorageSectionProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState<BucketCreateForm>({ name: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [credsOpen, setCredsOpen] = useState<string | null>(null);
-  const [creds, setCreds] = useState<Record<string, { endpoint: string; bucketName: string; accessKeyId: string; secretAccessKey: string }>>({});
+  const [creds, setCreds] = useState<Record<string, Creds>>({});
   const [credsLoading, setCredsLoading] = useState(false);
 
-  // file browser state
   const [browseOpen, setBrowseOpen] = useState<string | null>(null);
   const [browsePrefix, setBrowsePrefix] = useState("");
   const [objects, setObjects] = useState<S3Object[]>([]);
@@ -82,10 +80,7 @@ export function StorageSection({
   }
 
   async function handleShowCreds(name: string) {
-    if (creds[name]) {
-      setCredsOpen(name);
-      return;
-    }
+    if (creds[name]) { setCredsOpen(credsOpen === name ? null : name); return; }
     setCredsLoading(true);
     setCredsOpen(name);
     try {
@@ -93,33 +88,25 @@ export function StorageSection({
         credentials: "include",
         headers: { "X-DCP-Project": activeProjectId }
       });
-      if (!response.ok) throw new Error("認証情報の取得に失敗しました");
-      const data = (await response.json()) as { endpoint: string; bucketName: string; accessKeyId: string; secretAccessKey: string };
+      if (!response.ok) throw new Error();
+      const data = (await response.json()) as Creds;
       setCreds(prev => ({ ...prev, [name]: data }));
-    } catch {
-      setCredsOpen(null);
-    } finally {
-      setCredsLoading(false);
-    }
+    } catch { setCredsOpen(null); }
+    finally { setCredsLoading(false); }
   }
 
   async function loadObjects(bucketName: string, prefix: string) {
     setObjectsLoading(true);
     try {
       const res = await fetch(`/api/v1/storage/${encodeURIComponent(bucketName)}/objects?prefix=${encodeURIComponent(prefix)}`, {
-        credentials: "include",
-        headers: { "X-DCP-Project": activeProjectId }
+        credentials: "include", headers: { "X-DCP-Project": activeProjectId }
       });
       if (!res.ok) throw new Error();
       const data = (await res.json()) as { objects: S3Object[]; prefixes: string[] };
       setObjects(data.objects ?? []);
       setPrefixes(data.prefixes ?? []);
-    } catch {
-      setObjects([]);
-      setPrefixes([]);
-    } finally {
-      setObjectsLoading(false);
-    }
+    } catch { setObjects([]); setPrefixes([]); }
+    finally { setObjectsLoading(false); }
   }
 
   function handleOpenBrowse(bucketName: string) {
@@ -128,33 +115,24 @@ export function StorageSection({
     setUploadError("");
     void loadObjects(bucketName, "");
   }
-
   function handleNavigate(prefix: string) {
     setBrowsePrefix(prefix);
     if (browseOpen) void loadObjects(browseOpen, prefix);
   }
-
   function handleCloseBrowse() {
-    setBrowseOpen(null);
-    setBrowsePrefix("");
-    setObjects([]);
-    setPrefixes([]);
-    setUploadError("");
+    setBrowseOpen(null); setBrowsePrefix(""); setObjects([]); setPrefixes([]); setUploadError("");
   }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !browseOpen) return;
-    setUploading(true);
-    setUploadError("");
+    setUploading(true); setUploadError("");
     const formData = new FormData();
     formData.append("file", file);
     try {
       const res = await fetch(`/api/v1/storage/${encodeURIComponent(browseOpen)}/objects?prefix=${encodeURIComponent(browsePrefix)}`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "X-DCP-Project": activeProjectId },
-        body: formData,
+        method: "POST", credentials: "include",
+        headers: { "X-DCP-Project": activeProjectId }, body: formData,
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { detail?: string };
@@ -163,10 +141,7 @@ export function StorageSection({
       void loadObjects(browseOpen, browsePrefix);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "アップロードに失敗しました");
-    } finally {
-      setUploading(false);
-      e.target.value = "";
-    }
+    } finally { setUploading(false); e.target.value = ""; }
   }
 
   async function handleDeleteObject(key: string) {
@@ -174,14 +149,11 @@ export function StorageSection({
     setDeletingKey(key);
     try {
       await fetch(`/api/v1/storage/${encodeURIComponent(browseOpen)}/objects?key=${encodeURIComponent(key)}`, {
-        method: "DELETE",
-        credentials: "include",
+        method: "DELETE", credentials: "include",
         headers: { "X-DCP-Project": activeProjectId }
       });
       void loadObjects(browseOpen, browsePrefix);
-    } finally {
-      setDeletingKey("");
-    }
+    } finally { setDeletingKey(""); }
   }
 
   function handleDownload(key: string) {
@@ -189,263 +161,173 @@ export function StorageSection({
     const filename = key.split("/").pop() ?? "download";
     const url = `/api/v1/storage/${encodeURIComponent(browseOpen)}/download?key=${encodeURIComponent(key)}&project=${encodeURIComponent(activeProjectId)}`;
     const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
   }
 
-  function copyToClipboard(text: string) {
-    void navigator.clipboard.writeText(text);
-  }
+  function copyToClipboard(text: string) { void navigator.clipboard.writeText(text); }
 
   const breadcrumbParts = browsePrefix ? browsePrefix.split("/").filter(Boolean) : [];
 
+  const columns: Column<Bucket>[] = [
+    {
+      key: "name", header: "名前",
+      render: (b) => (
+        <Typography variant="body2" sx={{ fontWeight: 500, color: "primary.main" }}>{b.name}</Typography>
+      )
+    },
+    {
+      key: "status", header: "ステータス", width: 140,
+      render: (b) => {
+        const s = statusOf(b, deletingBucketName === b.name);
+        return <StatusBadge variant={s.v} label={s.label} showSpinner={s.spin} />;
+      }
+    },
+    {
+      key: "createdAt", header: "作成日時", width: 180,
+      render: (b) => (
+        <Typography variant="caption" color="text.secondary">{formatComputeTimestamp(b.createdAt)}</Typography>
+      )
+    },
+    {
+      key: "actions", header: "", width: 140, align: "right",
+      render: (b) => {
+        const isDeleting = deletingBucketName === b.name;
+        return (
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
+            <Tooltip title="ファイル">
+              <span>
+                <IconButton size="small" disabled={!b.ready} onClick={() => handleOpenBrowse(b.name)}>
+                  <FolderOpenIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title="認証情報">
+              <span>
+                <IconButton size="small" disabled={!b.ready} onClick={() => void handleShowCreds(b.name)}>
+                  <KeyIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title="削除">
+              <span>
+                <IconButton size="small" color="error" disabled={isDeleting} onClick={() => onDeleteBucket(b.name)}>
+                  <DeleteOutlinedIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Box>
+        );
+      }
+    }
+  ];
+
   return (
-    <Box sx={{ display: "grid", gap: 3 }}>
-      <Card variant="outlined" sx={{ borderRadius: 2 }}>
-        <CardContent sx={{ p: 3, display: "grid", gap: 2 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2, flexWrap: "wrap" }}>
-            <Box sx={{ display: "grid", gap: 0.75 }}>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                オブジェクトストレージ
-              </Typography>
-            </Box>
-            <Button variant="contained" onClick={() => setCreateOpen(true)}>
-              バケットを作成
-            </Button>
-          </Box>
+    <Box>
+      <PageHeader
+        title="オブジェクトストレージ"
+        subtitle="S3 互換バケットを作成・管理します"
+        actions={
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
+            作成
+          </Button>
+        }
+      />
 
-          <Box sx={{ display: "grid", gap: 0 }}>
-            <Box
-              sx={{
-                display: { xs: "none", sm: "grid" },
-                gridTemplateColumns: "42px minmax(0, 1fr) 100px 160px 120px",
-                alignItems: "center",
-                minHeight: 36,
-                px: 1,
-                color: "text.secondary",
-                fontSize: 11,
-                fontWeight: 700,
-                borderBottom: "1px solid rgba(148, 163, 184, 0.18)"
-              }}
-            >
-              <Box />
-              <Box>名前</Box>
-              <Box>ステータス</Box>
-              <Box>作成日時</Box>
-              <Box sx={{ textAlign: "right" }}>操作</Box>
-            </Box>
+      <DataTable
+        columns={columns}
+        rows={buckets}
+        rowKey={(b) => b.name}
+        loading={loading}
+        emptyMessage="まだバケットはありません"
+      />
 
-            <Box sx={{ borderTop: "1px solid rgba(148, 163, 184, 0.18)" }}>
-              {buckets.length > 0 ? (
-                buckets.map((bucket) => {
-                  const isDeleting = deletingBucketName === bucket.name;
-                  const isReady = bucket.ready;
-                  const statusIcon = isDeleting || !isReady
-                    ? <CircularProgress size={14} thickness={5.5} sx={{ color: "inherit" }} />
-                    : <CheckCircleIcon fontSize="small" />;
-                  const statusBgColor = isDeleting ? alpha("#dc2626", 0.12) : isReady ? "transparent" : alpha("#2563eb", 0.12);
-                  const statusTextColor = isDeleting ? "error.main" : isReady ? "success.main" : "primary.main";
+      {buckets.map(b => (
+        <Collapse in={credsOpen === b.name} key={`creds-${b.name}`}>
+          <Paper variant="outlined" sx={{ mt: 1, p: 2, bgcolor: "#fafafa" }}>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1, fontWeight: 500 }}>
+              {b.name} の認証情報
+            </Typography>
+            {credsLoading && !creds[b.name] ? (
+              <CircularProgress size={16} />
+            ) : creds[b.name] && (
+              <Box sx={{ display: "grid", gap: 0.75 }}>
+                {[
+                  { label: "Endpoint", value: creds[b.name].endpoint },
+                  { label: "Bucket Name", value: creds[b.name].bucketName },
+                  { label: "Access Key ID", value: creds[b.name].accessKeyId },
+                  { label: "Secret Access Key", value: creds[b.name].secretAccessKey },
+                ].map(({ label, value }) => (
+                  <Box key={label} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 140 }}>{label}</Typography>
+                    <Typography variant="caption" sx={{ fontFamily: "monospace", wordBreak: "break-all", flex: 1 }}>{value}</Typography>
+                    <IconButton size="small" onClick={() => copyToClipboard(value)}>
+                      <ContentCopyIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Paper>
+        </Collapse>
+      ))}
 
-                  return (
-                    <Box key={bucket.name}>
-                      <Paper
-                        variant="outlined"
-                        sx={{
-                          display: "grid",
-                          gridTemplateColumns: "42px minmax(0, 1fr) 100px 160px 120px",
-                          gap: 0,
-                          alignItems: "center",
-                          minHeight: 44,
-                          borderRadius: 0,
-                          borderLeft: 0,
-                          borderRight: 0,
-                          borderTop: 0
-                        }}
-                      >
-                        <Box sx={{ display: "grid", placeItems: "center" }}>
-                          <Box sx={{ width: 22, height: 22, display: "grid", placeItems: "center", borderRadius: "999px", bgcolor: statusBgColor, color: statusTextColor }}>
-                            {statusIcon}
-                          </Box>
-                        </Box>
-                        <Box sx={{ minWidth: 0 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 700, wordBreak: "break-all" }}>
-                            {bucket.name}
-                          </Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant="caption" color="text.secondary">
-                            {bucket.status || (isReady ? "Bound" : "Pending")}
-                          </Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
-                            {formatComputeTimestamp(bucket.createdAt)}
-                          </Typography>
-                        </Box>
-                        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5, pr: 0.5 }}>
-                          <Tooltip title="ファイル">
-                            <span>
-                              <IconButton
-                                size="small"
-                                disabled={!isReady}
-                                onClick={() => handleOpenBrowse(bucket.name)}
-                                sx={{ border: "1px solid", borderColor: "divider" }}
-                              >
-                                <FolderOpenIcon fontSize="small" />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                          <Tooltip title="認証情報">
-                            <span>
-                              <IconButton
-                                size="small"
-                                disabled={!isReady}
-                                onClick={() => void handleShowCreds(bucket.name)}
-                                sx={{ border: "1px solid", borderColor: "divider" }}
-                              >
-                                <KeyIcon fontSize="small" />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                          <Tooltip title="削除">
-                            <span>
-                              <IconButton
-                                color="error"
-                                disabled={isDeleting}
-                                onClick={() => onDeleteBucket(bucket.name)}
-                                size="small"
-                                sx={{
-                                  border: "1px solid",
-                                  borderColor: "error.main",
-                                  bgcolor: "error.main",
-                                  color: "common.white",
-                                  "&:hover": { bgcolor: "error.dark", borderColor: "error.dark" },
-                                  "&.Mui-disabled": { bgcolor: alpha("#dc2626", 0.08), color: "error.main", borderColor: alpha("#dc2626", 0.2) }
-                                }}
-                              >
-                                <DeleteOutlinedIcon fontSize="small" />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                        </Box>
-                      </Paper>
+      <FormDialog
+        open={createOpen}
+        title="バケットを作成"
+        onClose={() => setCreateOpen(false)}
+        onSubmit={handleCreate}
+        submitting={submitting}
+        submitDisabled={!form.name.trim()}
+        error={error}
+      >
+        <TextField
+          label="バケット名"
+          value={form.name}
+          onChange={(e) => setForm({ name: e.target.value })}
+          fullWidth
+          helperText="小文字・数字・ハイフンのみ (最大63文字)"
+          disabled={submitting}
+        />
+      </FormDialog>
 
-                      <Collapse in={credsOpen === bucket.name}>
-                        <Box sx={{ px: 2, py: 1.5, bgcolor: alpha("#1e293b", 0.04), borderBottom: "1px solid rgba(148,163,184,0.18)" }}>
-                          {credsLoading && !creds[bucket.name] ? (
-                            <CircularProgress size={16} />
-                          ) : creds[bucket.name] ? (
-                            <Box sx={{ display: "grid", gap: 1 }}>
-                              {[
-                                { label: "Endpoint", value: creds[bucket.name].endpoint },
-                                { label: "Bucket Name", value: creds[bucket.name].bucketName },
-                                { label: "Access Key ID", value: creds[bucket.name].accessKeyId },
-                                { label: "Secret Access Key", value: creds[bucket.name].secretAccessKey },
-                              ].map(({ label, value }) => (
-                                <Box key={label} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                  <Typography variant="caption" color="text.secondary" sx={{ minWidth: 140 }}>{label}</Typography>
-                                  <Typography variant="caption" sx={{ fontFamily: "monospace", wordBreak: "break-all", flex: 1 }}>{value}</Typography>
-                                  <IconButton size="small" onClick={() => copyToClipboard(value)}>
-                                    <ContentCopyIcon sx={{ fontSize: 14 }} />
-                                  </IconButton>
-                                </Box>
-                              ))}
-                            </Box>
-                          ) : null}
-                        </Box>
-                      </Collapse>
-                    </Box>
-                  );
-                })
-              ) : (
-                <Paper variant="outlined" sx={{ mt: 1.5, p: 2, borderRadius: 2, borderStyle: "dashed", bgcolor: alpha("#ffffff", 0.7) }}>
-                  <Typography color="text.secondary">{loading ? "読み込み中..." : "まだバケットはありません。"}</Typography>
-                </Paper>
-              )}
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Create Dialog */}
-      <Dialog open={createOpen} onClose={() => !submitting && setCreateOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle>バケットを作成</DialogTitle>
-        <DialogContent sx={{ display: "grid", gap: 2, pt: "8px !important" }}>
-          {error && <Typography color="error" variant="body2">{error}</Typography>}
-          <TextField
-            label="バケット名"
-            value={form.name}
-            onChange={(e) => setForm({ name: e.target.value })}
-            size="small"
-            fullWidth
-            helperText="小文字・数字・ハイフンのみ (最大63文字)"
-            disabled={submitting}
-          />
-          <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
-            <Button onClick={() => setCreateOpen(false)} disabled={submitting}>キャンセル</Button>
-            <Button variant="contained" onClick={() => void handleCreate()} disabled={submitting || !form.name.trim()}>
-              {submitting ? <CircularProgress size={18} /> : "作成"}
-            </Button>
-          </Box>
-        </DialogContent>
-      </Dialog>
-
-      {/* File Browser Dialog */}
+      {/* File Browser */}
       <Dialog open={browseOpen !== null} onClose={handleCloseBrowse} fullWidth maxWidth="md" slotProps={{ paper: { sx: { height: "80vh" } } }}>
-        <DialogTitle sx={{ pb: 1 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <FolderOpenIcon color="primary" />
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>{browseOpen}</Typography>
-          </Box>
+        <DialogTitle sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1 }}>
+          <FolderOpenIcon color="primary" fontSize="small" />
+          <Typography variant="h6">{browseOpen}</Typography>
         </DialogTitle>
         <Divider />
         <Box sx={{ px: 2, py: 1, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
           <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} sx={{ flex: 1 }}>
             <Link
-              component="button"
-              underline="hover"
+              component="button" underline="hover"
               color={browsePrefix === "" ? "text.primary" : "inherit"}
               sx={{ cursor: "pointer", fontSize: 13 }}
               onClick={() => handleNavigate("")}
-            >
-              /
-            </Link>
+            >/</Link>
             {breadcrumbParts.map((part, i) => {
               const fullPrefix = breadcrumbParts.slice(0, i + 1).join("/") + "/";
               const isLast = i === breadcrumbParts.length - 1;
               return (
                 <Link
-                  key={fullPrefix}
-                  component="button"
-                  underline="hover"
+                  key={fullPrefix} component="button" underline="hover"
                   color={isLast ? "text.primary" : "inherit"}
                   sx={{ cursor: "pointer", fontSize: 13 }}
                   onClick={() => handleNavigate(fullPrefix)}
-                >
-                  {part}
-                </Link>
+                >{part}</Link>
               );
             })}
           </Breadcrumbs>
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <input ref={fileInputRef} type="file" style={{ display: "none" }} onChange={(e) => void handleUpload(e)} />
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={uploading ? <CircularProgress size={14} sx={{ color: "inherit" }} /> : <CloudUploadIcon />}
-              disabled={uploading}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              アップロード
-            </Button>
-          </Box>
+          <input ref={fileInputRef} type="file" style={{ display: "none" }} onChange={(e) => void handleUpload(e)} />
+          <Button
+            variant="contained" size="small"
+            startIcon={uploading ? <CircularProgress size={14} sx={{ color: "inherit" }} /> : <CloudUploadIcon />}
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
+          >アップロード</Button>
         </Box>
-        {uploadError && (
-          <Typography color="error" variant="caption" sx={{ px: 2 }}>{uploadError}</Typography>
-        )}
+        {uploadError && <Typography color="error" variant="caption" sx={{ px: 2 }}>{uploadError}</Typography>}
         <Divider />
         <DialogContent sx={{ p: 0, overflow: "auto" }}>
           {objectsLoading ? (
@@ -458,15 +340,13 @@ export function StorageSection({
             </Box>
           ) : (
             <Box>
-              {/* Header */}
-              <Box sx={{ display: "grid", gridTemplateColumns: "36px minmax(0,1fr) 80px 140px 76px", alignItems: "center", minHeight: 36, px: 1, bgcolor: alpha("#0f172a", 0.03), borderBottom: "1px solid rgba(148,163,184,0.18)", color: "text.secondary", fontSize: 11, fontWeight: 700 }}>
+              <Box sx={{ display: "grid", gridTemplateColumns: "36px minmax(0,1fr) 80px 140px 76px", alignItems: "center", minHeight: 32, px: 2, bgcolor: "#fafafa", borderBottom: "1px solid", borderColor: "divider", color: "text.secondary", fontSize: 12, fontWeight: 500 }}>
                 <Box />
                 <Box>名前</Box>
                 <Box>サイズ</Box>
                 <Box>更新日時</Box>
                 <Box sx={{ textAlign: "right" }}>操作</Box>
               </Box>
-              {/* Folders */}
               {prefixes.map((p) => {
                 const folderName = p.slice(browsePrefix.length);
                 return (
@@ -476,25 +356,18 @@ export function StorageSection({
                     sx={{
                       display: "grid",
                       gridTemplateColumns: "36px minmax(0,1fr) 80px 140px 76px",
-                      alignItems: "center",
-                      minHeight: 40,
-                      px: 1,
+                      alignItems: "center", minHeight: 36, px: 2,
                       cursor: "pointer",
-                      borderBottom: "1px solid rgba(148,163,184,0.1)",
-                      "&:hover": { bgcolor: alpha("#2563eb", 0.04) }
+                      borderBottom: "1px solid", borderColor: "divider",
+                      "&:hover": { bgcolor: "rgba(60,64,67,0.04)" }
                     }}
                   >
-                    <Box sx={{ display: "grid", placeItems: "center" }}>
-                      <FolderIcon sx={{ fontSize: 18, color: "primary.main" }} />
-                    </Box>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{folderName}</Typography>
-                    <Box />
-                    <Box />
-                    <Box />
+                    <FolderIcon sx={{ fontSize: 18, color: "primary.main" }} />
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>{folderName}</Typography>
+                    <Box /><Box /><Box />
                   </Box>
                 );
               })}
-              {/* Files */}
               {objects.map((obj) => {
                 const filename = obj.key.slice(browsePrefix.length);
                 const isDeleting = deletingKey === obj.key;
@@ -504,16 +377,12 @@ export function StorageSection({
                     sx={{
                       display: "grid",
                       gridTemplateColumns: "36px minmax(0,1fr) 80px 140px 76px",
-                      alignItems: "center",
-                      minHeight: 40,
-                      px: 1,
-                      borderBottom: "1px solid rgba(148,163,184,0.1)",
-                      "&:hover": { bgcolor: alpha("#0f172a", 0.02) }
+                      alignItems: "center", minHeight: 36, px: 2,
+                      borderBottom: "1px solid", borderColor: "divider",
+                      "&:hover": { bgcolor: "rgba(60,64,67,0.04)" }
                     }}
                   >
-                    <Box sx={{ display: "grid", placeItems: "center" }}>
-                      <InsertDriveFileIcon sx={{ fontSize: 18, color: "text.disabled" }} />
-                    </Box>
+                    <InsertDriveFileIcon sx={{ fontSize: 18, color: "text.disabled" }} />
                     <Typography variant="body2" sx={{ wordBreak: "break-all" }}>{filename}</Typography>
                     <Typography variant="caption" color="text.secondary">{formatFileSize(obj.size)}</Typography>
                     <Typography variant="caption" color="text.secondary">{formatComputeTimestamp(obj.lastModified)}</Typography>

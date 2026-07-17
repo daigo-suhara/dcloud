@@ -1,10 +1,11 @@
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import { alpha } from "@mui/material/styles";
-import { Box, Button, Card, CardContent, CircularProgress, IconButton, Paper, Tooltip, Typography } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
+import { Box, Button, IconButton, Tooltip, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import type { ComputeMachine } from "../types";
 import { formatComputeTimestamp } from "../utils";
+import { PageHeader, DataTable, StatusBadge } from "./primitives";
+import type { Column, StatusVariant } from "./primitives";
 
 type ComputeSectionProps = {
   loading: boolean;
@@ -14,151 +15,79 @@ type ComputeSectionProps = {
   onOpenCreate: () => void;
 };
 
-export function ComputeSection({ loading, deletingMachineName, machines, onDeleteMachine, onOpenCreate }: ComputeSectionProps) {
-  return (
-    <Box sx={{ display: "grid", gap: 3 }}>
-      <Card variant="outlined" sx={{ borderRadius: 2 }}>
-        <CardContent sx={{ p: 3, display: "grid", gap: 2 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2, flexWrap: "wrap" }}>
-            <Box sx={{ display: "grid", gap: 0.75 }}>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                仮想マシン
-              </Typography>
-            </Box>
-            <Button variant="contained" onClick={onOpenCreate}>
-              仮想マシンを作成
-            </Button>
-          </Box>
+function statusOf(m: ComputeMachine, isDeleting: boolean): { v: StatusVariant; label: string; spin: boolean } {
+  if (isDeleting) return { v: "error", label: "Deleting", spin: true };
+  if (!m.ready) return { v: "progress", label: m.status || "Provisioning", spin: true };
+  return { v: "ready", label: m.status || "Running", spin: false };
+}
 
-          <Box sx={{ display: "grid", gap: 0 }}>
-            <Box
-              sx={{
-                display: { xs: "none", sm: "grid" },
-                gridTemplateColumns: "42px minmax(0, 1fr) 160px 44px",
-                alignItems: "center",
-                minHeight: 36,
-                px: 1,
-                color: "text.secondary",
-                fontSize: 11,
-                fontWeight: 700,
-                borderBottom: "1px solid rgba(148, 163, 184, 0.18)"
-              }}
+export function ComputeSection({
+  loading, deletingMachineName, machines, onDeleteMachine, onOpenCreate
+}: ComputeSectionProps) {
+  const navigate = useNavigate();
+
+  const columns: Column<ComputeMachine>[] = [
+    {
+      key: "name", header: "名前",
+      render: (m) => (
+        <Typography variant="body2" sx={{ fontWeight: 500, color: "primary.main" }}>
+          {m.name}
+        </Typography>
+      )
+    },
+    {
+      key: "status", header: "ステータス", width: 140,
+      render: (m) => {
+        const s = statusOf(m, deletingMachineName === m.name);
+        return <StatusBadge variant={s.v} label={s.label} showSpinner={s.spin} />;
+      }
+    },
+    {
+      key: "updatedAt", header: "更新日時", width: 180,
+      render: (m) => (
+        <Typography variant="caption" color="text.secondary">
+          {formatComputeTimestamp(m.updatedAt || m.createdAt)}
+        </Typography>
+      )
+    },
+    {
+      key: "actions", header: "", width: 60, align: "right",
+      render: (m) => (
+        <Tooltip title="削除">
+          <span>
+            <IconButton
+              size="small"
+              color="error"
+              disabled={deletingMachineName === m.name}
+              onClick={() => onDeleteMachine(m.name)}
             >
-              <Box />
-              <Box>名前</Box>
-              <Box>更新日時</Box>
-              <Box sx={{ textAlign: "right" }}>操作</Box>
-            </Box>
+              <DeleteOutlinedIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+      )
+    }
+  ];
 
-            <Box sx={{ borderTop: "1px solid rgba(148, 163, 184, 0.18)" }}>
-              {machines.length > 0 ? (
-                machines.map((machine) => {
-                  const isDeleting = deletingMachineName === machine.name;
-                  const isReady = machine.ready;
-                  const statusIcon = isDeleting || !isReady ? <CircularProgress size={14} thickness={5.5} sx={{ color: "inherit" }} /> : <CheckCircleIcon fontSize="small" />;
-                  const statusBgColor = isDeleting ? alpha("#dc2626", 0.12) : isReady ? "transparent" : alpha("#2563eb", 0.12);
-                  const statusTextColor = isDeleting ? "error.main" : isReady ? "success.main" : "primary.main";
-
-                  return (
-                    <Paper
-                      key={machine.name}
-                      variant="outlined"
-                      sx={{
-                        display: "grid",
-                        gridTemplateColumns: "42px minmax(0, 1fr) 160px 44px",
-                        gap: 0,
-                        alignItems: "center",
-                        minHeight: { xs: 40, sm: 44 },
-                        p: { xs: 1, sm: 0 },
-                        borderRadius: 0,
-                        borderLeft: 0,
-                        borderRight: 0,
-                        borderTop: 0
-                      }}
-                    >
-                      <Box sx={{ display: "grid", placeItems: "center" }}>
-                        <Box
-                          sx={{
-                            width: 22,
-                            height: 22,
-                            display: "grid",
-                            placeItems: "center",
-                            borderRadius: "999px",
-                            bgcolor: statusBgColor,
-                            color: statusTextColor
-                          }}
-                        >
-                          {statusIcon}
-                        </Box>
-                      </Box>
-                      <Box sx={{ minWidth: 0 }}>
-                        <Button
-                          component={RouterLink}
-                          to={`/compute/${encodeURIComponent(machine.name)}`}
-                          variant="text"
-                          size="small"
-                          sx={{
-                            justifyContent: "flex-start",
-                            minWidth: 0,
-                            px: 0,
-                            py: 0,
-                            fontSize: "0.95rem",
-                            fontWeight: 700,
-                            textTransform: "none",
-                            color: "text.primary",
-                            wordBreak: "break-all",
-                            "&:hover": { backgroundColor: "transparent", textDecoration: "underline" }
-                          }}
-                        >
-                          {machine.name}
-                        </Button>
-                      </Box>
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
-                          {formatComputeTimestamp(machine.updatedAt || machine.createdAt)}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ display: "flex", justifyContent: "flex-end", width: 44, minWidth: 44 }}>
-                        <Tooltip title="削除">
-                          <span>
-                            <IconButton
-                              color="error"
-                              disabled={deletingMachineName === machine.name}
-                              onClick={() => onDeleteMachine(machine.name)}
-                              size="small"
-                              sx={{
-                                border: "1px solid",
-                                borderColor: "error.main",
-                                bgcolor: "error.main",
-                                color: "common.white",
-                                "&:hover": {
-                                  bgcolor: "error.dark",
-                                  borderColor: "error.dark"
-                                },
-                                "&.Mui-disabled": {
-                                  bgcolor: "rgba(220, 38, 38, 0.08)",
-                                  color: "error.main",
-                                  borderColor: "rgba(220, 38, 38, 0.2)"
-                                }
-                              }}
-                            >
-                              <DeleteOutlinedIcon fontSize="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                      </Box>
-                    </Paper>
-                  );
-                })
-              ) : (
-                <Paper variant="outlined" sx={{ mt: 1.5, p: 2, borderRadius: 2, borderStyle: "dashed", bgcolor: alpha("#ffffff", 0.7) }}>
-                  <Typography color="text.secondary">{loading ? "読み込み中..." : "まだ仮想マシンはありません。"}</Typography>
-                </Paper>
-              )}
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
+  return (
+    <Box>
+      <PageHeader
+        title="仮想マシン"
+        subtitle="KubeVirt 上で動く VM を作成・管理します"
+        actions={
+          <Button variant="contained" startIcon={<AddIcon />} onClick={onOpenCreate}>
+            作成
+          </Button>
+        }
+      />
+      <DataTable
+        columns={columns}
+        rows={machines}
+        rowKey={(m) => m.name}
+        onRowClick={(m) => navigate(`/compute/${encodeURIComponent(m.name)}`)}
+        loading={loading}
+        emptyMessage="まだ仮想マシンはありません"
+      />
     </Box>
   );
 }
