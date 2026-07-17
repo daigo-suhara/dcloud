@@ -129,13 +129,18 @@ export function DatabaseSection({
       key: "name",
       header: "名前",
       render: (db) => (
-        <Box>
-          <Typography variant="body2" sx={{ fontWeight: 500, color: "primary.main" }}>{db.name}</Typography>
-          <Typography variant="caption" color="text.secondary">{db.version}</Typography>
-        </Box>
+        <Typography variant="body2" sx={{ fontWeight: 500, color: "primary.main" }}>{db.name}</Typography>
       )
     },
     { key: "type", header: "種別", width: 120, render: (db) => <Typography variant="body2">{dbTypeLabel(db.type)}</Typography> },
+    {
+      key: "version", header: "バージョン", width: 120,
+      render: (db) => (
+        <Typography variant="body2" color="text.secondary">
+          {db.version.replace(/^[^-]+-/, "")}
+        </Typography>
+      )
+    },
     {
       key: "status", header: "ステータス", width: 140,
       render: (db) => {
