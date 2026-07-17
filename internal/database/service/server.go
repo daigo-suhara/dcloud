@@ -79,6 +79,21 @@ var (
 	}
 )
 
+// vctSpec builds the PVC template spec, omitting storageClassName when empty
+// so the PVC binds to the cluster's default StorageClass.
+func vctSpec(storageClass, storageSize string) map[string]any {
+	spec := map[string]any{
+		"accessModes": []string{"ReadWriteOnce"},
+		"resources": map[string]any{
+			"requests": map[string]string{"storage": storageSize},
+		},
+	}
+	if storageClass != "" {
+		spec["storageClassName"] = storageClass
+	}
+	return spec
+}
+
 func newOperationID() (string, error) {
 	buf := make([]byte, 8)
 	if _, err := rand.Read(buf); err != nil {
@@ -124,7 +139,7 @@ func New(namespace string) (*Server, error) {
 		DB:           database,
 		Queries:      dbsqlc.New(database),
 		Kube:         kube,
-		StorageClass: envOr("DCLD_DATABASE_STORAGE_CLASS", "ceph-rbd"),
+		StorageClass: envOr("DCLD_DATABASE_STORAGE_CLASS", ""),
 	}, nil
 }
 
@@ -683,13 +698,7 @@ func (c *kubeClient) createDatabase(ctx context.Context, namespace, userID, proj
 					"volumeClaimTemplates": []map[string]any{
 						{
 							"name": "data",
-							"spec": map[string]any{
-								"storageClassName": storageClass,
-								"accessModes":      []string{"ReadWriteOnce"},
-								"resources": map[string]any{
-									"requests": map[string]string{"storage": storageSize},
-								},
-							},
+							"spec": vctSpec(storageClass, storageSize),
 						},
 					},
 				},
