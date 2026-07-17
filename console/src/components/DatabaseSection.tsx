@@ -24,21 +24,25 @@ const VERSIONS_BY_TYPE: Record<string, string[]> = {
   redis:    ["redis-7.2.4", "redis-7.0.6", "redis-6.2.14"],
 };
 
+// さくらのマネージドDB (PostgreSQL) 標準プランに合わせたリソースセット。
 type ResourcePreset = { label: string; cpu: string; memory: string; storage: string };
 const RESOURCE_PRESETS: Record<string, ResourcePreset> = {
-  small:  { label: "Small (0.5 CPU / 1 GiB / 1 GiB storage)",  cpu: "500m",  memory: "1Gi", storage: "1Gi" },
-  medium: { label: "Medium (1 CPU / 2 GiB / 5 GiB storage)",   cpu: "1000m", memory: "2Gi", storage: "5Gi" },
-  large:  { label: "Large (2 CPU / 4 GiB / 20 GiB storage)",   cpu: "2000m", memory: "4Gi", storage: "20Gi" },
+  plan10gb:   { label: "10GB プラン  (1 core / 2 GiB / 10 GiB)",   cpu: "1000m", memory: "2Gi",  storage: "10Gi"   },
+  plan30gb:   { label: "30GB プラン  (2 core / 4 GiB / 30 GiB)",   cpu: "2000m", memory: "4Gi",  storage: "30Gi"   },
+  plan90gb:   { label: "90GB プラン  (4 core / 8 GiB / 90 GiB)",   cpu: "4000m", memory: "8Gi",  storage: "90Gi"   },
+  plan240gb:  { label: "240GB プラン (8 core / 16 GiB / 240 GiB)", cpu: "8000m", memory: "16Gi", storage: "240Gi"  },
+  plan500gb:  { label: "500GB プラン (8 core / 16 GiB / 500 GiB)", cpu: "8000m", memory: "16Gi", storage: "500Gi"  },
+  plan1tb:    { label: "1TB プラン   (8 core / 16 GiB / 1 TiB)",   cpu: "8000m", memory: "16Gi", storage: "1024Gi" },
 };
 
 const initialForm: DatabaseCreateForm & { preset: string } = {
   name: "",
   type: "postgres",
   version: VERSIONS_BY_TYPE.postgres[0],
-  preset: "small",
-  cpu: RESOURCE_PRESETS.small.cpu,
-  memory: RESOURCE_PRESETS.small.memory,
-  storage: RESOURCE_PRESETS.small.storage,
+  preset: "plan10gb",
+  cpu: RESOURCE_PRESETS.plan10gb.cpu,
+  memory: RESOURCE_PRESETS.plan10gb.memory,
+  storage: RESOURCE_PRESETS.plan10gb.storage,
 };
 
 type ConnectionInfo = {
