@@ -79,10 +79,10 @@ func (c *kubeClient) listSchemas(ctx context.Context, namespace string, r *dbRec
 	switch r.Type {
 	case "mysql":
 		query = "SHOW DATABASES"
-		excluded = map[string]bool{"information_schema": true, "mysql": true, "performance_schema": true, "sys": true}
+		excluded = map[string]bool{"information_schema": true, "mysql": true, "performance_schema": true, "sys": true, "kubeblocks": true, "kb_health_check": true}
 	case "postgres":
 		query = "SELECT datname FROM pg_database WHERE datistemplate = false"
-		excluded = map[string]bool{"postgres": true}
+		excluded = map[string]bool{"postgres": true, "kubeblocks": true, "kb_health_check": true}
 	default:
 		return nil, fmt.Errorf("unsupported db type %q", r.Type)
 	}
