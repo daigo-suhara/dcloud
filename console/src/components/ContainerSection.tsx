@@ -18,7 +18,7 @@ import { ContainerLogsViewer } from "./ContainerLogsViewer";
 import { actionLinkButtonSx } from "../theme";
 import { formatServiceStatus, formatServiceTimestamp, getServiceStatus } from "../utils";
 import { monoFontFamily } from "../theme";
-import { PageHeader, DataTable, StatusBadge } from "./primitives";
+import { PageHeader, DataTable, StatusBadge, FormRow } from "./primitives";
 import type { Column, StatusVariant } from "./primitives";
 
 type ContainerSectionProps = {
@@ -43,31 +43,6 @@ function svcStatusVariant(status: ReturnType<typeof getServiceStatus> | null, is
   if (status === "ready") return { v: "ready", spin: false };
   if (status === "loading") return { v: "progress", spin: true };
   return { v: "error", spin: false };
-}
-
-// Left-label form row: label + optional hint on the left column,
-// input on the right. Matches the overview definition-list layout so
-// the whole detail page reads as one connected form.
-function FormRow({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: { xs: "1fr", sm: "200px 1fr" },
-        gap: { xs: 1, sm: 3 },
-        px: { xs: 2, sm: 3 }, py: 2.5,
-        borderTop: "1px solid",
-        borderColor: "divider",
-        "&:first-of-type": { borderTop: "none" }
-      }}
-    >
-      <Box sx={{ pt: 1 }}>
-        <Typography variant="body2" sx={{ fontWeight: 500 }}>{label}</Typography>
-        {hint && <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>{hint}</Typography>}
-      </Box>
-      <Box sx={{ minWidth: 0 }}>{children}</Box>
-    </Box>
-  );
 }
 
 // ---- Detail (when a service is selected) --------------------------------
@@ -154,7 +129,7 @@ function ServiceDetail({
         onSubmit={async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); await onUpdate(form); }}
         sx={{ mb: 4 }}
       >
-        <FormRow label="コンテナイメージ" hint="デプロイするイメージ (registry/name:tag)">
+        <FormRow label="コンテナイメージ">
           <TextField
             value={form.image}
             onChange={(e) => setForm(f => ({ ...f, image: e.target.value }))}
@@ -163,14 +138,14 @@ function ServiceDetail({
           />
         </FormRow>
 
-        <FormRow label="ポート" hint="コンテナがリッスンする TCP ポート">
+        <FormRow label="ポート">
           <TextField type="number"
             slotProps={{ htmlInput: { min: 1, max: 65535 } }}
             value={form.port} onChange={(e) => setForm(f => ({ ...f, port: e.target.value }))}
             disabled={updating} sx={{ maxWidth: 160 }} />
         </FormRow>
 
-        <FormRow label="スケール" hint="オートスケールの下限と上限">
+        <FormRow label="スケール">
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             <TextField label="最小" type="number"
               slotProps={{ htmlInput: { min: 0, max: 20 } }}
@@ -184,11 +159,11 @@ function ServiceDetail({
           </Box>
         </FormRow>
 
-        <FormRow label="環境変数" hint="コンテナに渡す KEY=value ペア">
+        <FormRow label="環境変数">
           <EnvVarEditor value={form.env} onChange={(env) => setForm(f => ({ ...f, env }))} disabled={updating} size="small" />
         </FormRow>
 
-        <FormRow label="起動スクリプト" hint="任意。指定するとイメージの ENTRYPOINT を上書き">
+        <FormRow label="起動スクリプト">
           <TextField
             value={form.startupScript}
             onChange={(e) => setForm(f => ({ ...f, startupScript: e.target.value }))} disabled={updating}
