@@ -126,7 +126,7 @@ func (s *Server) ListServices(ctx context.Context, req *containerpb.ListServices
 		defaultMapping := knative.ServiceResourceName(projectID, record.Name) + "." + s.Knative.PublicDomain
 		if cd != "" {
 			url = s.Knative.CustomURL(cd)
-			domainStatus, domainStatusReason = s.Knative.GetDomainMappingStatus(ctx, cd, defaultMapping)
+			domainStatus, domainStatusReason = s.Knative.GetDomainMappingStatus(ctx, projectID, cd, defaultMapping)
 		}
 		items = append(items, &containerpb.Service{
 			Name:               record.Name,
@@ -333,7 +333,7 @@ func (s *Server) SetServiceDomain(ctx context.Context, req *containerpb.SetServi
 			return nil, status.Errorf(codes.Internal, "failed to apply domain mapping: %v", err)
 		}
 	} else if prevCustomDomain != "" {
-		if err := s.Knative.DeleteDomainMapping(ctx, prevCustomDomain); err != nil {
+		if err := s.Knative.DeleteDomainMapping(ctx, projectID, prevCustomDomain); err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to delete domain mapping: %v", err)
 		}
 	}
@@ -352,7 +352,7 @@ func (s *Server) SetServiceDomain(ctx context.Context, req *containerpb.SetServi
 	defaultMapping := knative.ServiceResourceName(projectID, name) + "." + s.Knative.PublicDomain
 	if customDomain != "" {
 		url = s.Knative.CustomURL(customDomain)
-		domainStatus, domainStatusReason = s.Knative.GetDomainMappingStatus(ctx, customDomain, defaultMapping)
+		domainStatus, domainStatusReason = s.Knative.GetDomainMappingStatus(ctx, projectID, customDomain, defaultMapping)
 	}
 	svc := &containerpb.Service{
 		Name:               name,
@@ -401,7 +401,7 @@ func (s *Server) StreamServiceLogs(ctx context.Context, req *containerpb.GetServ
 	}
 
 	resourceName := knative.ServiceResourceName(projectID, name)
-	pods, err := s.Knative.ListServingPods(ctx, resourceName)
+	pods, err := s.Knative.ListServingPods(ctx, projectID, resourceName)
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to list pods: %v", err)
 	}
@@ -414,7 +414,7 @@ func (s *Server) StreamServiceLogs(ctx context.Context, req *containerpb.GetServ
 		return status.Error(codes.Internal, "could not identify user container")
 	}
 
-	body, err := s.Knative.StreamPodLogs(ctx, pod.Name, containerName, req.TailLines, req.Follow)
+	body, err := s.Knative.StreamPodLogs(ctx, projectID, pod.Name, containerName, req.TailLines, req.Follow)
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to open log stream: %v", err)
 	}

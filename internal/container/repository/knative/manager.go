@@ -79,6 +79,13 @@ func NewManager(namespace, publicDomain string) (*Manager, error) {
 	}, nil
 }
 
+func (m *Manager) nsFor(projectID string) string {
+	if projectID == "" {
+		return m.namespace
+	}
+	return "proj-" + projectID
+}
+
 func (m *Manager) PublicURL(resourceName string) string {
 	return fmt.Sprintf("https://%s.%s", resourceName, m.PublicDomain)
 }
@@ -87,11 +94,10 @@ func (m *Manager) CustomURL(domain string) string {
 	return fmt.Sprintf("https://%s", domain)
 }
 
-func (m *Manager) applyDomainMapping(ctx context.Context, domainName, resourceName string, labels map[string]string) error {
-	// Remove any legacy h1gw resources left from a previous implementation.
+func (m *Manager) applyDomainMapping(ctx context.Context, ns, domainName, resourceName string, labels map[string]string) error {
 	for _, path := range []string{
-		fmt.Sprintf("/apis/networking.internal.knative.dev/v1alpha1/namespaces/%s/ingresses/%s", m.namespace, domainName),
-		fmt.Sprintf("/api/v1/namespaces/%s/services/%s", m.namespace, resourceName+"-h1gw"),
+		fmt.Sprintf("/apis/networking.internal.knative.dev/v1alpha1/namespaces/%s/ingresses/%s", ns, domainName),
+		fmt.Sprintf("/api/v1/namespaces/%s/services/%s", ns, resourceName+"-h1gw"),
 	} {
 		delReq, _ := http.NewRequestWithContext(ctx, http.MethodDelete, m.baseURL+path, nil)
 		if delReq != nil {
@@ -107,7 +113,7 @@ func (m *Manager) applyDomainMapping(ctx context.Context, domainName, resourceNa
 		"kind":       "DomainMapping",
 		"metadata": map[string]any{
 			"name":      domainName,
-			"namespace": m.namespace,
+			"namespace": ns,
 			"labels":    labels,
 		},
 		"spec": map[string]any{
@@ -122,7 +128,7 @@ func (m *Manager) applyDomainMapping(ctx context.Context, domainName, resourceNa
 		return err
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPatch,
-		fmt.Sprintf("%s/apis/serving.knative.dev/v1beta1/namespaces/%s/domainmappings/%s?fieldManager=dcloud-container&force=true", m.baseURL, m.namespace, domainName),
+		fmt.Sprintf("%s/apis/serving.knative.dev/v1beta1/namespaces/%s/domainmappings/%s?fieldManager=dcloud-container&force=true", m.baseURL, ns, domainName),
 		bytes.NewReader(body))
 	if err != nil {
 		return err
@@ -141,9 +147,9 @@ func (m *Manager) applyDomainMapping(ctx context.Context, domainName, resourceNa
 	return nil
 }
 
-func (m *Manager) DeleteDomainMapping(ctx context.Context, domainName string) error {
+func (m *Manager) DeleteDomainMapping(ctx context.Context, projectID, domainName string) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete,
-		fmt.Sprintf("%s/apis/serving.knative.dev/v1beta1/namespaces/%s/domainmappings/%s", m.baseURL, m.namespace, domainName),
+		fmt.Sprintf("%s/apis/serving.knative.dev/v1beta1/namespaces/%s/domainmappings/%s", m.baseURL, m.nsFor(projectID), domainName),
 		nil)
 	if err != nil {
 		return err
@@ -160,12 +166,10 @@ func (m *Manager) DeleteDomainMapping(ctx context.Context, domainName string) er
 	return nil
 }
 
-// fetchDomainMappingReady fetches the Knative DomainMapping from the k8s API
-// and returns the Ready condition status ("True", "False", "Unknown") and reason.
-func (m *Manager) fetchDomainMappingReady(ctx context.Context, domainName string) (status, reason string, err error) {
+func (m *Manager) fetchDomainMappingReady(ctx context.Context, projectID, domainName string) (status, reason string, err error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
 		fmt.Sprintf("%s/apis/serving.knative.dev/v1beta1/namespaces/%s/domainmappings/%s",
-			m.baseURL, m.namespace, domainName),
+			m.baseURL, m.nsFor(projectID), domainName),
 		nil)
 	if err != nil {
 		return "", "", err
@@ -210,11 +214,11 @@ func (m *Manager) fetchDomainMappingReady(ctx context.Context, domainName string
 // getDomainMappingStatus checks the Knative DomainMapping's Ready condition for
 // a custom domain and, when not yet conclusive, falls back to a DNS CNAME lookup.
 // Returns ("ready"|"pending"|"error", reason).
-func (m *Manager) GetDomainMappingStatus(ctx context.Context, customDomain, defaultMapping string) (string, string) {
+func (m *Manager) GetDomainMappingStatus(ctx context.Context, projectID, customDomain, defaultMapping string) (string, string) {
 	dmCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	readyStatus, reason, err := m.fetchDomainMappingReady(dmCtx, customDomain)
+	readyStatus, reason, err := m.fetchDomainMappingReady(dmCtx, projectID, customDomain)
 	if err == nil {
 		switch readyStatus {
 		case "True":
@@ -275,11 +279,11 @@ func (m *Manager) SetCustomDomain(ctx context.Context, scope domain.ProjectScope
 		projectLabelKey:                scope.ProjectID,
 		serviceNameLabel:               name,
 	}
-	return m.applyDomainMapping(ctx, customDomain, resourceName, labels)
+	return m.applyDomainMapping(ctx, m.nsFor(scope.ProjectID), customDomain, resourceName, labels)
 }
 
 func (m *Manager) List(ctx context.Context, scope domain.ProjectScope) ([]domain.DeployedService, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/apis/serving.knative.dev/v1/namespaces/%s/services?labelSelector=%s", m.baseURL, m.namespace, strings.Join([]string{
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/apis/serving.knative.dev/v1/namespaces/%s/services?labelSelector=%s", m.baseURL, m.nsFor(scope.ProjectID), strings.Join([]string{
 		projectLabelKey + "=" + strings.TrimSpace(scope.ProjectID),
 	}, ",")), nil)
 	if err != nil {
@@ -384,7 +388,7 @@ func (m *Manager) Deploy(ctx context.Context, scope domain.ProjectScope, req dom
 		Kind:       "Service",
 	}
 	manifest.Metadata.Name = resourceName
-	manifest.Metadata.Namespace = m.namespace
+	manifest.Metadata.Namespace = m.nsFor(scope.ProjectID)
 	manifest.Metadata.Labels = map[string]string{
 		"app.kubernetes.io/instance":   "dcloud",
 		"app.kubernetes.io/component":  "container",
@@ -432,7 +436,7 @@ func (m *Manager) Deploy(ctx context.Context, scope domain.ProjectScope, req dom
 	if err != nil {
 		return domain.DeployedService{}, err
 	}
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPatch, fmt.Sprintf("%s/apis/serving.knative.dev/v1/namespaces/%s/services/%s?fieldManager=dcloud-container&force=true", m.baseURL, m.namespace, resourceName), bytes.NewReader(body))
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPatch, fmt.Sprintf("%s/apis/serving.knative.dev/v1/namespaces/%s/services/%s?fieldManager=dcloud-container&force=true", m.baseURL, m.nsFor(scope.ProjectID), resourceName), bytes.NewReader(body))
 	if err != nil {
 		return domain.DeployedService{}, err
 	}
@@ -486,7 +490,7 @@ func (m *Manager) Deploy(ctx context.Context, scope domain.ProjectScope, req dom
 		projectLabelKey:                scope.ProjectID,
 		serviceNameLabel:               req.Name,
 	}
-	if err := m.applyDomainMapping(ctx, fmt.Sprintf("%s.%s", resourceName, m.PublicDomain), resourceName, defaultDomainLabels); err != nil {
+	if err := m.applyDomainMapping(ctx, m.nsFor(scope.ProjectID), fmt.Sprintf("%s.%s", resourceName, m.PublicDomain), resourceName, defaultDomainLabels); err != nil {
 		return domain.DeployedService{}, err
 	}
 
@@ -526,19 +530,19 @@ func (m *Manager) Delete(ctx context.Context, scope domain.ProjectScope, name, c
 	resourceName := ServiceResourceName(scope.ProjectID, name)
 	defaultDomain := fmt.Sprintf("%s.%s", resourceName, m.PublicDomain)
 
+	ns := m.nsFor(scope.ProjectID)
 	if customDomain != "" {
-		_ = m.DeleteDomainMapping(ctx, customDomain)
+		_ = m.DeleteDomainMapping(ctx, scope.ProjectID, customDomain)
 	}
-	_ = m.DeleteDomainMapping(ctx, defaultDomain)
+	_ = m.DeleteDomainMapping(ctx, scope.ProjectID, defaultDomain)
 
-	// Clean up legacy h1gw resources.
 	legacyPaths := []string{
-		fmt.Sprintf("/apis/networking.internal.knative.dev/v1alpha1/namespaces/%s/ingresses/%s", m.namespace, defaultDomain),
-		fmt.Sprintf("/api/v1/namespaces/%s/services/%s", m.namespace, resourceName+"-h1gw"),
+		fmt.Sprintf("/apis/networking.internal.knative.dev/v1alpha1/namespaces/%s/ingresses/%s", ns, defaultDomain),
+		fmt.Sprintf("/api/v1/namespaces/%s/services/%s", ns, resourceName+"-h1gw"),
 	}
 	if customDomain != "" {
 		legacyPaths = append(legacyPaths,
-			fmt.Sprintf("/apis/networking.internal.knative.dev/v1alpha1/namespaces/%s/ingresses/%s", m.namespace, customDomain))
+			fmt.Sprintf("/apis/networking.internal.knative.dev/v1alpha1/namespaces/%s/ingresses/%s", ns, customDomain))
 	}
 	for _, path := range legacyPaths {
 		delReq, _ := http.NewRequestWithContext(ctx, http.MethodDelete, m.baseURL+path, nil)
@@ -550,7 +554,7 @@ func (m *Manager) Delete(ctx context.Context, scope domain.ProjectScope, name, c
 		}
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, fmt.Sprintf("%s/apis/serving.knative.dev/v1/namespaces/%s/services/%s", m.baseURL, m.namespace, resourceName), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, fmt.Sprintf("%s/apis/serving.knative.dev/v1/namespaces/%s/services/%s", m.baseURL, ns, resourceName), nil)
 	if err != nil {
 		return err
 	}

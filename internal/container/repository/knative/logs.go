@@ -20,11 +20,10 @@ type PodSummary struct {
 	ContainerNames []string
 }
 
-// listServingPods returns pods for the Knative service ordered newest-first.
-func (m *Manager) ListServingPods(ctx context.Context, resourceName string) ([]PodSummary, error) {
+func (m *Manager) ListServingPods(ctx context.Context, projectID, resourceName string) ([]PodSummary, error) {
 	selector := url.QueryEscape("serving.knative.dev/service=" + resourceName)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
-		fmt.Sprintf("%s/api/v1/namespaces/%s/pods?labelSelector=%s", m.baseURL, m.namespace, selector), nil)
+		fmt.Sprintf("%s/api/v1/namespaces/%s/pods?labelSelector=%s", m.baseURL, m.nsFor(projectID), selector), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +106,7 @@ func PickUserContainerName(p PodSummary) string {
 
 // streamPodLogs opens a streaming log connection. The caller must call resp.Body.Close().
 // tailLines <= 0 means: stream all (k8s default).
-func (m *Manager) StreamPodLogs(ctx context.Context, podName, containerName string, tailLines int32, follow bool) (io.ReadCloser, error) {
+func (m *Manager) StreamPodLogs(ctx context.Context, projectID, podName, containerName string, tailLines int32, follow bool) (io.ReadCloser, error) {
 	q := url.Values{}
 	q.Set("container", containerName)
 	q.Set("timestamps", "true")
@@ -117,7 +116,7 @@ func (m *Manager) StreamPodLogs(ctx context.Context, podName, containerName stri
 	if tailLines > 0 {
 		q.Set("tailLines", fmt.Sprintf("%d", tailLines))
 	}
-	endpoint := fmt.Sprintf("%s/api/v1/namespaces/%s/pods/%s/log?%s", m.baseURL, m.namespace, podName, q.Encode())
+	endpoint := fmt.Sprintf("%s/api/v1/namespaces/%s/pods/%s/log?%s", m.baseURL, m.nsFor(projectID), podName, q.Encode())
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
