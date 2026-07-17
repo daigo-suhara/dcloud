@@ -17,6 +17,7 @@ identity:
     repository: identity
   service:
     port: 8083
+    httpPort: 8093
 
 compute:
   replicaCount: 2
@@ -24,6 +25,7 @@ compute:
     repository: compute
   service:
     port: 8084
+    httpPort: 8094
 
 storageClass:
   # Set createClass: true only when your cluster does not already have a
@@ -57,6 +59,7 @@ project:
     repository: project
   service:
     port: 8081
+    httpPort: 8091
 
 container:
   replicaCount: 2
@@ -64,6 +67,7 @@ container:
     repository: container
   service:
     port: 8082
+    httpPort: 8092
 
 storage:
   replicaCount: 2
@@ -71,6 +75,7 @@ storage:
     repository: storage
   service:
     port: 8085
+    httpPort: 8095
   bucketStorageClass: rook-ceph-delete-bucket
   rgwEndpoint: ""
 
@@ -80,6 +85,7 @@ database:
     repository: database
   service:
     port: 8086
+    httpPort: 8096
   # Storage class for KubeBlocks Clusters the database service creates.
   # Empty (default) means "use the cluster's default StorageClass".
   storageClass: ""

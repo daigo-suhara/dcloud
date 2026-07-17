@@ -35,6 +35,8 @@ spec:
           ports:
             - name: grpc
               containerPort: {{ .Values.storage.service.port }}
+            - name: http
+              containerPort: {{ .Values.storage.service.httpPort }}
           readinessProbe:
             tcpSocket:
               port: grpc
@@ -51,6 +53,9 @@ spec:
     - name: grpc
       port: {{ .Values.storage.service.port }}
       targetPort: grpc
+    - name: http
+      port: {{ .Values.storage.service.httpPort }}
+      targetPort: http
   selector:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: storage

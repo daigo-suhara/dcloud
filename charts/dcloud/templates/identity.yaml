@@ -30,6 +30,8 @@ spec:
           ports:
             - name: grpc
               containerPort: {{ .Values.identity.service.port }}
+            - name: http
+              containerPort: {{ .Values.identity.service.httpPort }}
           readinessProbe:
             tcpSocket:
               port: grpc
@@ -46,6 +48,9 @@ spec:
     - name: grpc
       port: {{ .Values.identity.service.port }}
       targetPort: grpc
+    - name: http
+      port: {{ .Values.identity.service.httpPort }}
+      targetPort: http
   selector:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: identity
