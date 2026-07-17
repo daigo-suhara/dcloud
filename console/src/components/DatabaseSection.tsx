@@ -22,7 +22,7 @@ const DB_TYPES = [
 // バックエンドが "{type}-{version}" (例: "postgresql-16") で ComponentDefinition
 // を選択し、実際の serviceVersion (16.9.0 等) は KubeBlocks が自動選択。
 const VERSIONS_BY_TYPE: Record<string, string[]> = {
-  postgres: ["16", "15", "14", "12", "17", "18"],
+  postgres: ["18", "17", "16", "15", "14", "12"],
   mysql:    ["8.4", "8.0", "5.7"],
   redis:    ["7", "6", "5"],
 };
@@ -41,7 +41,7 @@ const RESOURCE_PRESETS: Record<string, ResourcePreset> = {
 const initialForm: DatabaseCreateForm & { preset: string } = {
   name: "",
   type: "postgres",
-  version: VERSIONS_BY_TYPE.postgres[0],
+  version: "16",
   preset: "plan10gb",
   cpu: RESOURCE_PRESETS.plan10gb.cpu,
   memory: RESOURCE_PRESETS.plan10gb.memory,
