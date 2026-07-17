@@ -18,16 +18,12 @@ const DB_TYPES = [
   { value: "redis", label: "Redis" },
 ];
 
-// KubeBlocks 1.0 で入手可能な ComponentDefinition の major 版のみ。
-// バックエンドが "{type}-{version}" (例: "postgresql-16") で ComponentDefinition
-// を選択し、実際の serviceVersion (16.9.0 等) は KubeBlocks が自動選択。
 const VERSIONS_BY_TYPE: Record<string, string[]> = {
   postgres: ["18", "17", "16", "15", "14", "12"],
   mysql:    ["8.4", "8.0", "5.7"],
   redis:    ["7", "6", "5"],
 };
 
-// さくらのマネージドDB (PostgreSQL) 標準プランに合わせたリソースセット。
 type ResourcePreset = { label: string; cpu: string; memory: string; storage: string };
 const RESOURCE_PRESETS: Record<string, ResourcePreset> = {
   plan10gb:   { label: "10GB プラン  (1 core / 2 GiB / 10 GiB)",   cpu: "1000m", memory: "2Gi",  storage: "10Gi"   },
@@ -41,7 +37,7 @@ const RESOURCE_PRESETS: Record<string, ResourcePreset> = {
 const initialForm: DatabaseCreateForm & { preset: string } = {
   name: "",
   type: "postgres",
-  version: "16",
+  version: VERSIONS_BY_TYPE.postgres[0],
   preset: "plan10gb",
   cpu: RESOURCE_PRESETS.plan10gb.cpu,
   memory: RESOURCE_PRESETS.plan10gb.memory,
