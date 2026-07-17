@@ -65,7 +65,7 @@ export function AppShell({
 }: AppShellProps) {
   return (
     <Box sx={{ minHeight: "100vh", ...shellBg }}>
-      <Snackbar open={Boolean(message)} autoHideDuration={3500} onClose={onClearMessage} anchorOrigin={{ vertical: "top", horizontal: "right" }}>
+      <Snackbar open={Boolean(message)} autoHideDuration={3500} onClose={onClearMessage} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
         <Alert severity="success" variant="filled" sx={{ width: "100%" }}>
           {message}
         </Alert>
@@ -81,7 +81,7 @@ export function AppShell({
 
       <DrawerNav onCloseSidebar={onCloseSidebar} onNavigate={onNavigate} route={route} sidebarOpen={sidebarOpen} />
 
-      <Container maxWidth={false} sx={{ py: { xs: 2, md: 3 }, px: { xs: 1.5, sm: 2, md: 3 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
         {children}
       </Container>
       <Dialogs

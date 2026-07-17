@@ -1,10 +1,8 @@
 import CloseIcon from "@mui/icons-material/Close";
 import { Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-import { alpha } from "@mui/material/styles";
-import { BiHomeAlt2, BiServer } from "react-icons/bi";
+import { BiHomeAlt2 } from "react-icons/bi";
 import { BsDatabase, BsHdd } from "react-icons/bs";
-import { PiCpuBold } from "react-icons/pi";
-import { PiShippingContainer } from "react-icons/pi";
+import { PiCpuBold, PiShippingContainer } from "react-icons/pi";
 import { navItems, type RouteState } from "../../types";
 import { Brand } from "./Brand";
 
@@ -15,6 +13,22 @@ type DrawerNavProps = {
   sidebarOpen: boolean;
 };
 
+const ICONS: Record<string, React.ElementType> = {
+  home: BiHomeAlt2,
+  container: PiShippingContainer,
+  compute: PiCpuBold,
+  storage: BsHdd,
+  database: BsDatabase,
+};
+
+function isSelected(route: RouteState, id: string) {
+  if (route.section === id) return true;
+  if (id === "database" && route.section === "database-detail") return true;
+  if (id === "compute" && route.section === "compute-create") return true;
+  if (id === "container" && (route.section === "deploy" || route.section === "repository")) return true;
+  return false;
+}
+
 export function DrawerNav({ onCloseSidebar, onNavigate, route, sidebarOpen }: DrawerNavProps) {
   return (
     <Drawer
@@ -24,68 +38,50 @@ export function DrawerNav({ onCloseSidebar, onNavigate, route, sidebarOpen }: Dr
       ModalProps={{ keepMounted: true }}
       slotProps={{
         paper: {
-          sx: {
-            width: { xs: "88vw", sm: 300 },
-            maxWidth: 300,
-            borderRadius: "0 16px 16px 0",
-            m: 0,
-            border: "1px solid rgba(148, 163, 184, 0.24)",
-            boxShadow: "0 24px 48px rgba(15, 23, 42, 0.12)"
-          }
+          sx: { width: 280, borderRight: 1, borderColor: "divider" }
         }
       }}
     >
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 0, pt: 0, pb: 2 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minHeight: 64, px: 2 }}>
-          <IconButton onClick={onCloseSidebar} aria-label="close navigation" sx={{ width: 40, height: 40, p: 0, flex: "0 0 auto" }}>
-            <CloseIcon />
-          </IconButton>
-          <Box sx={{ flex: "1 1 auto", minWidth: 0, display: "flex", alignItems: "center" }}>
-            <Brand />
-          </Box>
-        </Box>
-        <Divider sx={{ mt: 0, mb: 1.5 }} />
-        <List disablePadding>
-          {navItems.map((item) => (
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, minHeight: 56, px: 2, borderBottom: 1, borderColor: "divider" }}>
+        <IconButton onClick={onCloseSidebar} size="small" aria-label="close navigation">
+          <CloseIcon />
+        </IconButton>
+        <Brand />
+      </Box>
+
+      <List sx={{ py: 1 }}>
+        {navItems.map((item) => {
+          const selected = isSelected(route, item.id);
+          const Icon = ICONS[item.id] ?? BiHomeAlt2;
+          return (
             <ListItemButton
               key={item.id}
-              selected={(route.section === item.id || (item.id === "database" && route.section === "database-detail"))}
+              selected={selected}
               onClick={() => {
                 onNavigate(item.id);
-                if (window.matchMedia("(max-width: 760px)").matches) {
-                  onCloseSidebar();
-                }
+                if (window.matchMedia("(max-width: 760px)").matches) onCloseSidebar();
               }}
               sx={{
-                borderRadius: 1.5,
-                minHeight: 48,
+                mx: 1, borderRadius: 24, minHeight: 40, pl: 2,
                 "&.Mui-selected": {
-                  bgcolor: alpha("#2563eb", 0.08)
+                  bgcolor: "rgba(26,115,232,0.08)",
+                  color: "primary.main",
+                  "&:hover": { bgcolor: "rgba(26,115,232,0.12)" }
                 }
               }}
             >
-              <ListItemIcon sx={{ minWidth: 40 }}>
-                <Box sx={{ width: 28, height: 28, borderRadius: "999px", display: "grid", placeItems: "center", bgcolor: (route.section === item.id || (item.id === "database" && route.section === "database-detail")) ? alpha("#2563eb", 0.12) : alpha("#0f172a", 0.04), color: (route.section === item.id || (item.id === "database" && route.section === "database-detail")) ? "primary.main" : "text.secondary" }}>
-                  {item.id === "home" ? (
-                    <Box component={BiHomeAlt2} sx={{ fontSize: 18 }} />
-                  ) : item.id === "container" ? (
-                    <Box component={PiShippingContainer} sx={{ fontSize: 18 }} />
-                  ) : item.id === "compute" ? (
-                    <Box component={PiCpuBold} sx={{ fontSize: 18 }} />
-                  ) : item.id === "storage" ? (
-                    <Box component={BsHdd} sx={{ fontSize: 18 }} />
-                  ) : item.id === "database" ? (
-                    <Box component={BsDatabase} sx={{ fontSize: 18 }} />
-                  ) : (
-                    <Box component={BiServer} sx={{ fontSize: 18 }} />
-                  )}
-                </Box>
+              <ListItemIcon sx={{ minWidth: 32, color: selected ? "primary.main" : "text.secondary" }}>
+                <Box component={Icon} sx={{ fontSize: 20 }} />
               </ListItemIcon>
-              <ListItemText primary={<Box component="span" sx={{ fontWeight: 600 }}>{item.label}</Box>} sx={{ my: 0 }} />
+              <ListItemText
+                primary={item.label}
+                slotProps={{ primary: { sx: { fontSize: 14, fontWeight: selected ? 500 : 400 } } }}
+              />
             </ListItemButton>
-          ))}
-        </List>
-      </Box>
+          );
+        })}
+      </List>
+      <Divider sx={{ mt: "auto" }} />
     </Drawer>
   );
 }

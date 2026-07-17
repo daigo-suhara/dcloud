@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Card, CardContent, Container, Tab, Tabs, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Container, Paper, Tab, Tabs, TextField, Typography } from "@mui/material";
 import CloudQueueOutlinedIcon from "@mui/icons-material/CloudQueueOutlined";
 import { useState, type FormEvent } from "react";
 import type { AuthForm } from "../types";
@@ -21,66 +21,47 @@ export function AuthScreen({ error, loading, form, onChange, onLogin, onRegister
   }
 
   return (
-    <Box className="auth-page" sx={{ minHeight: "100vh" }}>
-      <Container maxWidth="sm" className="auth-shell">
-        <Box sx={{ width: "100%", maxWidth: 460, display: "grid", gap: 1.75 }}>
-          <Card variant="outlined" className="auth-card" sx={{ width: "100%", overflow: "hidden" }}>
-            <CardContent sx={{ p: { xs: 2.5, sm: 3.25 } }}>
-              <Box sx={{ display: "grid", gap: 2.25 }}>
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}>
-                  <CloudQueueOutlinedIcon sx={{ fontSize: 30, color: "primary.main", flex: "0 0 auto" }} />
-                  <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.02em", textAlign: "center" }}>
-                    DCloud
-                  </Typography>
-                </Box>
-
-                <Box sx={{ borderBottom: 1, borderColor: "divider", mx: -0.75 }}>
-                  <Tabs value={mode} onChange={(_, value: "login" | "register") => setMode(value)} variant="fullWidth">
-                    <Tab value="login" label="ログイン" />
-                    <Tab value="register" label="アカウント作成" />
-                  </Tabs>
-                </Box>
-
-                <Box
-                  component="form"
-                  onSubmit={mode === "login" ? onLogin : handleRegisterSubmit}
-                  sx={{ display: "grid", gap: 1.5 }}
-                >
-                  <TextField
-                    label="メールアドレス"
-                    type="email"
-                    value={form.email}
-                    onChange={(event) => onChange({ email: event.target.value })}
-                    autoComplete="email"
-                    fullWidth
-                  />
-                  <TextField
-                    label="パスワード"
-                    type="password"
-                    value={form.password}
-                    onChange={(event) => onChange({ password: event.target.value })}
-                    autoComplete="current-password"
-                    fullWidth
-                  />
-
-                  <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 1.5, pt: 0.5 }}>
-                    {mode === "login" ? (
-                      <Button type="submit" variant="contained" size="large" disabled={loading} fullWidth>
-                        ログイン
-                      </Button>
-                    ) : (
-                      <Button type="submit" variant="contained" size="large" disabled={loading} fullWidth>
-                        アカウント作成
-                      </Button>
-                    )}
-                  </Box>
-                </Box>
-
-                {error ? <Alert severity="error">{error}</Alert> : null}
-              </Box>
-            </CardContent>
-          </Card>
+    <Box sx={{ minHeight: "100vh", display: "grid", placeItems: "center", bgcolor: "background.default" }}>
+      <Container maxWidth="xs">
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 3 }}>
+          <CloudQueueOutlinedIcon sx={{ fontSize: 28, color: "primary.main" }} />
+          <Typography variant="h4" sx={{ letterSpacing: "-0.02em" }}>
+            dcloud
+          </Typography>
         </Box>
+
+        <Paper variant="outlined" sx={{ p: 3 }}>
+          <Tabs
+            value={mode}
+            onChange={(_, value: "login" | "register") => setMode(value)}
+            variant="fullWidth"
+            sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}
+          >
+            <Tab value="login" label="ログイン" />
+            <Tab value="register" label="アカウント作成" />
+          </Tabs>
+
+          <Box
+            component="form"
+            onSubmit={mode === "login" ? onLogin : handleRegisterSubmit}
+            sx={{ display: "grid", gap: 2 }}
+          >
+            <TextField
+              label="メールアドレス" type="email" value={form.email}
+              onChange={(e) => onChange({ email: e.target.value })}
+              autoComplete="email" fullWidth autoFocus
+            />
+            <TextField
+              label="パスワード" type="password" value={form.password}
+              onChange={(e) => onChange({ password: e.target.value })}
+              autoComplete={mode === "login" ? "current-password" : "new-password"} fullWidth
+            />
+            {error && <Alert severity="error">{error}</Alert>}
+            <Button type="submit" variant="contained" size="large" disabled={loading}>
+              {mode === "login" ? (loading ? "ログイン中..." : "ログイン") : (loading ? "作成中..." : "アカウント作成")}
+            </Button>
+          </Box>
+        </Paper>
       </Container>
     </Box>
   );
