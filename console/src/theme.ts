@@ -89,6 +89,16 @@ export const theme = createTheme({
     MuiTextField: {
       defaultProps: { size: "small" }
     },
+    // Force a consistent Toolbar min-height across breakpoints so the
+    // AppBar bottom border lines up with the DrawerNav header divider.
+    MuiToolbar: {
+      styleOverrides: {
+        root: {
+          minHeight: 56,
+          "@media (min-width: 600px)": { minHeight: 56 }
+        }
+      }
+    },
     MuiDialog: {
       styleOverrides: {
         paper: {
