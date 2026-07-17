@@ -52,10 +52,6 @@ type DeleteSchemaResponse = databasepb.DeleteSchemaResponse
 type Schema = databasepb.Schema
 type DatabaseServer = databasepb.DatabaseServiceServer
 
-func projectNamespace(projectID string) string {
-	return "proj-" + projectID
-}
-
 var (
 	clusterDefinitions = map[string]string{
 		"postgres": "postgresql",
@@ -176,7 +172,7 @@ func (s *Server) ListDatabases(ctx context.Context, req *ListDatabasesRequest) (
 	if !exists {
 		return nil, status.Error(codes.NotFound, "project not found")
 	}
-	records, err := s.Kube.listDatabases(ctx, projectNamespace(projectID), userID, projectID)
+	records, err := s.Kube.listDatabases(ctx, projectID, userID, projectID)
 	if err != nil {
 		if errors.Is(err, errUnavailable) {
 			return nil, status.Error(codes.FailedPrecondition, err.Error())
@@ -228,7 +224,7 @@ func (s *Server) CreateDatabase(ctx context.Context, req *CreateDatabaseRequest)
 	if !exists {
 		return nil, status.Error(codes.NotFound, "project not found")
 	}
-	record, err := s.Kube.createDatabase(ctx, projectNamespace(projectID), userID, projectID, name, dbType, version, cpu, memory, storageSize, s.StorageClass)
+	record, err := s.Kube.createDatabase(ctx, projectID, userID, projectID, name, dbType, version, cpu, memory, storageSize, s.StorageClass)
 	if err != nil {
 		if errors.Is(err, errUnavailable) {
 			return nil, status.Error(codes.FailedPrecondition, err.Error())
@@ -258,7 +254,7 @@ func (s *Server) DeleteDatabase(ctx context.Context, req *DeleteDatabaseRequest)
 	if !exists {
 		return nil, status.Error(codes.NotFound, "project not found")
 	}
-	records, err := s.Kube.listDatabases(ctx, projectNamespace(projectID), userID, projectID)
+	records, err := s.Kube.listDatabases(ctx, projectID, userID, projectID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to find database")
 	}
@@ -290,7 +286,7 @@ func (s *Server) DeleteDatabase(ctx context.Context, req *DeleteDatabaseRequest)
 	resourceName := found.ResourceName
 	go func() {
 		bgCtx := context.Background()
-		if err := s.Kube.deleteDatabase(bgCtx, projectNamespace(projectID), resourceName); err != nil {
+		if err := s.Kube.deleteDatabase(bgCtx, projectID, resourceName); err != nil {
 			_ = s.Queries.UpdateOperation(bgCtx, dbsqlc.UpdateOperationParams{
 				ID:        opID,
 				Status:    "error",
@@ -316,7 +312,7 @@ func (s *Server) GetDatabase(ctx context.Context, req *GetDatabaseRequest) (*Get
 	if !exists {
 		return nil, status.Error(codes.NotFound, "project not found")
 	}
-	records, err := s.Kube.listDatabases(ctx, projectNamespace(projectID), userID, projectID)
+	records, err := s.Kube.listDatabases(ctx, projectID, userID, projectID)
 	if err != nil {
 		if errors.Is(err, errUnavailable) {
 			return nil, status.Error(codes.FailedPrecondition, err.Error())
@@ -345,7 +341,7 @@ func (s *Server) GetConnectionString(ctx context.Context, req *GetConnectionStri
 	if !exists {
 		return nil, status.Error(codes.NotFound, "project not found")
 	}
-	records, err := s.Kube.listDatabases(ctx, projectNamespace(projectID), userID, projectID)
+	records, err := s.Kube.listDatabases(ctx, projectID, userID, projectID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to find database")
 	}
@@ -359,7 +355,7 @@ func (s *Server) GetConnectionString(ctx context.Context, req *GetConnectionStri
 	if found == nil {
 		return nil, status.Error(codes.NotFound, "database not found")
 	}
-	connInfo, err := s.Kube.getConnectionString(ctx, projectNamespace(found.ProjectID), found, strings.TrimSpace(req.SchemaName))
+	connInfo, err := s.Kube.getConnectionString(ctx, found.ProjectID, found, strings.TrimSpace(req.SchemaName))
 	if err != nil {
 		if errors.Is(err, errNotFound) {
 			return nil, status.Error(codes.FailedPrecondition, "database is not ready yet")
@@ -374,7 +370,7 @@ func (s *Server) ListSchemas(ctx context.Context, req *ListSchemasRequest) (*Lis
 	if err != nil {
 		return nil, err
 	}
-	names, err := s.Kube.listSchemas(ctx, projectNamespace(rec.ProjectID), rec)
+	names, err := s.Kube.listSchemas(ctx, rec.ProjectID, rec)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to list schemas")
 	}
@@ -394,7 +390,7 @@ func (s *Server) CreateSchema(ctx context.Context, req *CreateSchemaRequest) (*C
 	if schemaName == "" {
 		return nil, status.Error(codes.InvalidArgument, "schemaName is required")
 	}
-	if err := s.Kube.createSchema(ctx, projectNamespace(rec.ProjectID), rec, schemaName, strings.TrimSpace(req.Charset)); err != nil {
+	if err := s.Kube.createSchema(ctx, rec.ProjectID, rec, schemaName, strings.TrimSpace(req.Charset)); err != nil {
 		if errors.Is(err, errInvalidArgument) {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
@@ -412,7 +408,7 @@ func (s *Server) DeleteSchema(ctx context.Context, req *DeleteSchemaRequest) (*D
 	if schemaName == "" {
 		return nil, status.Error(codes.InvalidArgument, "schemaName is required")
 	}
-	if err := s.Kube.deleteSchema(ctx, projectNamespace(rec.ProjectID), rec, schemaName); err != nil {
+	if err := s.Kube.deleteSchema(ctx, rec.ProjectID, rec, schemaName); err != nil {
 		if errors.Is(err, errInvalidArgument) {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
@@ -435,7 +431,7 @@ func (s *Server) lookupInstance(ctx context.Context, userID, projectID, name str
 	if !exists {
 		return nil, status.Error(codes.NotFound, "project not found")
 	}
-	records, err := s.Kube.listDatabases(ctx, projectNamespace(projectID), userID, projectID)
+	records, err := s.Kube.listDatabases(ctx, projectID, userID, projectID)
 	if err != nil {
 		if errors.Is(err, errUnavailable) {
 			return nil, status.Error(codes.FailedPrecondition, err.Error())
@@ -481,7 +477,7 @@ func (s *Server) reconcileDeletions(ctx context.Context) {
 				if !op.UserID.Valid || !op.ProjectID.Valid || !op.ResourceName.Valid {
 					return false
 				}
-				records, err := s.Kube.listDatabases(ctx, projectNamespace(op.ProjectID.String), op.UserID.String, op.ProjectID.String)
+				records, err := s.Kube.listDatabases(ctx, op.ProjectID.String, op.UserID.String, op.ProjectID.String)
 				if err != nil {
 					return false
 				}

@@ -14,10 +14,6 @@ import (
 	"time"
 )
 
-func projectNamespace(projectID string) string {
-	return "proj-" + projectID
-}
-
 type kubeClient struct {
 	baseURL string
 	client  *http.Client
@@ -60,7 +56,7 @@ func (c *kubeClient) ensureProjectNamespace(ctx context.Context, projectID, user
 		"apiVersion": "v1",
 		"kind":       "Namespace",
 		"metadata": map[string]any{
-			"name": projectNamespace(projectID),
+			"name": projectID,
 			"labels": map[string]string{
 				"app.kubernetes.io/managed-by": "dcloud",
 				"dcloud/project-id":            projectID,
@@ -72,7 +68,7 @@ func (c *kubeClient) ensureProjectNamespace(ctx context.Context, projectID, user
 }
 
 func (c *kubeClient) deleteProjectNamespace(ctx context.Context, projectID string) error {
-	return c.doJSON(ctx, http.MethodDelete, "/api/v1/namespaces/"+projectNamespace(projectID), nil, nil)
+	return c.doJSON(ctx, http.MethodDelete, "/api/v1/namespaces/"+projectID, nil, nil)
 }
 
 func (c *kubeClient) doJSON(ctx context.Context, method, path string, body any, out any) error {

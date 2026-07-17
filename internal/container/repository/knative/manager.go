@@ -83,7 +83,7 @@ func (m *Manager) nsFor(projectID string) string {
 	if projectID == "" {
 		return m.namespace
 	}
-	return "proj-" + projectID
+	return projectID
 }
 
 func (m *Manager) PublicURL(resourceName string) string {

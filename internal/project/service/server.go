@@ -82,7 +82,7 @@ func (s *Server) CreateProject(ctx context.Context, req *projectpb.CreateProject
 		return nil, status.Error(codes.InvalidArgument, "userId and name are required")
 	}
 	project := projectpb.Project{
-		Id:        fmt.Sprintf("%s-%s", sanitizeDNSLabel(name), shortID()),
+		Id:        fmt.Sprintf("proj-%s-%s", sanitizeDNSLabel(name), shortID()),
 		Name:      name,
 		Owner:     userID,
 		CreatedAt: time.Now().UTC().Format(time.RFC3339Nano),

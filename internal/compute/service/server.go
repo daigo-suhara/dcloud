@@ -81,7 +81,7 @@ func (s *Server) LookupMachine(ctx context.Context, userID, projectID, name stri
 	if !exists {
 		return domain.MachineRecord{}, status.Error(codes.NotFound, "project not found")
 	}
-	records, err := s.KubeVirt.List(ctx, s.Namespace, userID, projectID)
+	records, err := s.KubeVirt.List(ctx, projectID, userID, projectID)
 	if err != nil {
 		return domain.MachineRecord{}, status.Error(codes.Internal, "failed to query virtual machines")
 	}
@@ -106,7 +106,7 @@ func (s *Server) ListMachines(ctx context.Context, req *computepb.ListMachinesRe
 	if !exists {
 		return nil, status.Error(codes.NotFound, "project not found")
 	}
-	records, err := s.KubeVirt.List(ctx, s.Namespace, userID, projectID)
+	records, err := s.KubeVirt.List(ctx, projectID, userID, projectID)
 	if err != nil {
 		if errors.Is(err, kubevirt.ErrUnavailable) {
 			return nil, status.Error(codes.FailedPrecondition, err.Error())
@@ -136,7 +136,7 @@ func (s *Server) ListMachines(ctx context.Context, req *computepb.ListMachinesRe
 			Generation: record.Generation,
 		})
 	}
-	return &computepb.ListMachinesResponse{UserId: userID, ProjectId: projectID, Namespace: s.Namespace, Machines: items}, nil
+	return &computepb.ListMachinesResponse{UserId: userID, ProjectId: projectID, Namespace: projectID, Machines: items}, nil
 }
 
 func (s *Server) CreateMachine(ctx context.Context, req *computepb.CreateMachineRequest) (*computepb.CreateMachineResponse, error) {
@@ -165,7 +165,7 @@ func (s *Server) CreateMachine(ctx context.Context, req *computepb.CreateMachine
 	if !exists {
 		return nil, status.Error(codes.NotFound, "project not found")
 	}
-	created, err := s.KubeVirt.Create(ctx, s.Namespace, domain.ProjectScope{UserID: userID, ProjectID: projectID}, domain.CreateRequest{
+	created, err := s.KubeVirt.Create(ctx, projectID, domain.ProjectScope{UserID: userID, ProjectID: projectID}, domain.CreateRequest{
 		Name:   name,
 		Image:  image,
 		CPU:    cpu,
@@ -231,7 +231,7 @@ func (s *Server) DeleteMachine(ctx context.Context, req *computepb.DeleteMachine
 	}
 	go func() {
 		bgCtx := context.Background()
-		if err := s.KubeVirt.Delete(bgCtx, s.Namespace, domain.ProjectScope{UserID: userID, ProjectID: projectID}, name); err != nil {
+		if err := s.KubeVirt.Delete(bgCtx, projectID, domain.ProjectScope{UserID: userID, ProjectID: projectID}, name); err != nil {
 			_ = s.Queries.UpdateOperation(bgCtx, dbsqlc.UpdateOperationParams{
 				ID:        opID,
 				Status:    "error",
@@ -274,7 +274,7 @@ func (s *Server) reconcileDeletions(ctx context.Context) {
 				if !op.UserID.Valid || !op.ProjectID.Valid || !op.ResourceName.Valid {
 					return false
 				}
-				records, err := s.KubeVirt.List(ctx, s.Namespace, op.UserID.String, op.ProjectID.String)
+				records, err := s.KubeVirt.List(ctx, op.ProjectID.String, op.UserID.String, op.ProjectID.String)
 				if err != nil {
 					return false
 				}
@@ -289,7 +289,7 @@ func (s *Server) reconcileDeletions(ctx context.Context) {
 				if !op.UserID.Valid || !op.ProjectID.Valid {
 					return false
 				}
-				records, err := s.KubeVirt.List(ctx, s.Namespace, op.UserID.String, op.ProjectID.String)
+				records, err := s.KubeVirt.List(ctx, op.ProjectID.String, op.UserID.String, op.ProjectID.String)
 				if err != nil {
 					return false
 				}
