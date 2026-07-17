@@ -83,121 +83,145 @@ function ServiceDetail({
 
   const s = svcStatusVariant(status, deleting);
 
+  const summaryItems: { label: string; value: React.ReactNode }[] = [
+    { label: "ステータス", value: <StatusBadge variant={s.v} label={formatServiceStatus(service)} showSpinner={s.spin} /> },
+    { label: "公開 URL", value: service.url
+      ? <Button component="a" href={service.url} target="_blank" rel="noreferrer" variant="text" size="small" sx={{ ...actionLinkButtonSx, px: 0, minWidth: 0 }}>{service.url}</Button>
+      : <Typography variant="body2" color="text.secondary">-</Typography> },
+    { label: "イメージ", value: <Typography variant="body2" sx={{ fontFamily: "monospace", wordBreak: "break-all" }}>{service.image}</Typography> },
+    { label: "作成時刻", value: <Typography variant="body2">{formatServiceTimestamp(service.createdAt || "")}</Typography> },
+  ];
+
   return (
     <Box>
       <PageHeader
         title={service.name}
-        actions={
-          <Button startIcon={<ArrowBackIcon />} onClick={onBack}>一覧に戻る</Button>
-        }
+        actions={<Button startIcon={<ArrowBackIcon />} onClick={onBack}>一覧に戻る</Button>}
       />
 
-      {/* Status summary */}
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1, mb: 3 }}>
-        <Paper variant="outlined" sx={{ p: 1.5 }}>
-          <Typography variant="caption" color="text.secondary">状態</Typography>
-          <Box sx={{ mt: 0.5 }}>
-            <StatusBadge variant={s.v} label={formatServiceStatus(service)} showSpinner={s.spin} />
+      {/* 概要 - 定義リスト形式で縦に並べる */}
+      <Paper variant="outlined" sx={{ mb: 4 }}>
+        {summaryItems.map((item, i) => (
+          <Box
+            key={item.label}
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "160px 1fr" },
+              gap: { xs: 0.25, sm: 2 },
+              px: 2, py: 1.25,
+              borderTop: i === 0 ? undefined : "1px solid",
+              borderColor: "divider",
+              alignItems: "center"
+            }}
+          >
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>{item.label}</Typography>
+            <Box sx={{ minWidth: 0 }}>{item.value}</Box>
           </Box>
-        </Paper>
-        <Paper variant="outlined" sx={{ p: 1.5 }}>
-          <Typography variant="caption" color="text.secondary">イメージ</Typography>
-          <Typography variant="body2" sx={{ mt: 0.5, wordBreak: "break-all", fontFamily: "monospace" }}>
-            {service.image}
-          </Typography>
-        </Paper>
-        <Paper variant="outlined" sx={{ p: 1.5 }}>
-          <Typography variant="caption" color="text.secondary">公開 URL</Typography>
-          <Box sx={{ mt: 0.5 }}>
-            {service.url ? (
-              <Button component="a" href={service.url} target="_blank" rel="noreferrer" variant="text" size="small" sx={actionLinkButtonSx}>
-                {service.url}
-              </Button>
-            ) : <Typography variant="body2" color="text.secondary">-</Typography>}
-          </Box>
-        </Paper>
-        <Paper variant="outlined" sx={{ p: 1.5 }}>
-          <Typography variant="caption" color="text.secondary">作成時刻</Typography>
-          <Typography variant="body2" sx={{ mt: 0.5 }}>{service.createdAt ?? "-"}</Typography>
-        </Paper>
-      </Box>
+        ))}
+      </Paper>
 
-      {/* Update form */}
-      <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>設定を更新</Typography>
+      {/* 設定を更新 */}
+      <Typography variant="h5" sx={{ mb: 1.5 }}>設定</Typography>
+      <Paper variant="outlined" sx={{ p: 3, mb: 4 }}>
         <Box
           component="form"
           onSubmit={async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); await onUpdate(form); }}
-          sx={{ display: "grid", gap: 1.5 }}
+          sx={{ display: "grid", gap: 2.5 }}
         >
-          <TextField
-            label="コンテナイメージ" value={form.image}
-            onChange={(e) => setForm(f => ({ ...f, image: e.target.value }))}
-            disabled={updating} placeholder="ghcr.io/org/app:tag" fullWidth
-            slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false } }}
-          />
-          <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" } }}>
-            <TextField label="Port" type="number"
-              slotProps={{ htmlInput: { min: 1, max: 65535 } }}
-              value={form.port} onChange={(e) => setForm(f => ({ ...f, port: e.target.value }))} disabled={updating} />
-            <TextField label="最小スケール" type="number"
-              slotProps={{ htmlInput: { min: 0, max: 20 } }}
-              value={form.minScale} onChange={(e) => setForm(f => ({ ...f, minScale: e.target.value }))} disabled={updating} />
-            <TextField label="最大スケール" type="number"
-              slotProps={{ htmlInput: { min: 1, max: 20 } }}
-              value={form.maxScale} onChange={(e) => setForm(f => ({ ...f, maxScale: e.target.value }))} disabled={updating} />
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.75, fontWeight: 500 }}>
+              コンテナイメージ
+            </Typography>
+            <TextField
+              value={form.image}
+              onChange={(e) => setForm(f => ({ ...f, image: e.target.value }))}
+              disabled={updating} placeholder="ghcr.io/org/app:tag" fullWidth
+              slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false } }}
+            />
           </Box>
-          <EnvVarEditor value={form.env} onChange={(env) => setForm(f => ({ ...f, env }))} disabled={updating} size="small" />
-          <TextField
-            label="起動スクリプト（任意）" value={form.startupScript}
-            onChange={(e) => setForm(f => ({ ...f, startupScript: e.target.value }))} disabled={updating}
-            placeholder={"#!/bin/sh\nexec code-server --bind-addr 0.0.0.0:8080 --auth none ."}
-            multiline minRows={3} fullWidth
-            slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false, style: { fontFamily: "monospace", fontSize: "0.85rem" } } }}
-          />
-          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.75, fontWeight: 500 }}>
+              ポート・スケール
+            </Typography>
+            <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" } }}>
+              <TextField label="Port" type="number"
+                slotProps={{ htmlInput: { min: 1, max: 65535 } }}
+                value={form.port} onChange={(e) => setForm(f => ({ ...f, port: e.target.value }))} disabled={updating} />
+              <TextField label="最小スケール" type="number"
+                slotProps={{ htmlInput: { min: 0, max: 20 } }}
+                value={form.minScale} onChange={(e) => setForm(f => ({ ...f, minScale: e.target.value }))} disabled={updating} />
+              <TextField label="最大スケール" type="number"
+                slotProps={{ htmlInput: { min: 1, max: 20 } }}
+                value={form.maxScale} onChange={(e) => setForm(f => ({ ...f, maxScale: e.target.value }))} disabled={updating} />
+            </Box>
+          </Box>
+
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.75, fontWeight: 500 }}>
+              環境変数
+            </Typography>
+            <EnvVarEditor value={form.env} onChange={(env) => setForm(f => ({ ...f, env }))} disabled={updating} size="small" />
+          </Box>
+
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.75, fontWeight: 500 }}>
+              起動スクリプト（任意）
+            </Typography>
+            <TextField
+              value={form.startupScript}
+              onChange={(e) => setForm(f => ({ ...f, startupScript: e.target.value }))} disabled={updating}
+              placeholder={"#!/bin/sh\nexec code-server --bind-addr 0.0.0.0:8080 --auth none ."}
+              multiline minRows={3} fullWidth
+              slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false, style: { fontFamily: "monospace", fontSize: "0.85rem" } } }}
+            />
+          </Box>
+
+          <Box sx={{ display: "flex", justifyContent: "flex-end", borderTop: 1, borderColor: "divider", pt: 2 }}>
             <Button
               type="submit" variant="contained"
               disabled={updating || !form.image.trim()}
               startIcon={updating ? <CircularProgress size={14} sx={{ color: "inherit" }} /> : undefined}
             >
-              {updating ? "更新中..." : "更新"}
+              {updating ? "更新中..." : "更新を適用"}
             </Button>
           </Box>
         </Box>
       </Paper>
 
-      {/* Custom domain */}
-      <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>カスタムドメイン</Typography>
+      {/* カスタムドメイン */}
+      <Typography variant="h5" sx={{ mb: 1.5 }}>カスタムドメイン</Typography>
+      <Paper variant="outlined" sx={{ p: 3, mb: 4 }}>
         {service.customDomain ? (
-          <Box sx={{ display: "grid", gap: 1 }}>
+          <Box sx={{ display: "grid", gap: 1.5 }}>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
-              <Button component="a" href={`https://${service.customDomain}`} target="_blank" rel="noreferrer" variant="text" size="small" sx={{ ...actionLinkButtonSx, fontWeight: 500 }}>
-                {service.customDomain}
-              </Button>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Button component="a" href={`https://${service.customDomain}`} target="_blank" rel="noreferrer" variant="text" size="small" sx={{ ...actionLinkButtonSx, fontWeight: 500 }}>
+                  {service.customDomain}
+                </Button>
+                {service.domainStatus === "ready" && (
+                  <Chip label="有効" color="success" size="small" icon={<CheckCircleIcon />} />
+                )}
+                {service.domainStatus === "pending" && (
+                  <Tooltip title={service.domainStatusReason ?? "DNS または TLS の設定を待機中"}>
+                    <Chip label="DNS 待機中" size="small"
+                      icon={<CircularProgress size={10} thickness={5} sx={{ color: "inherit !important" }} />}
+                      sx={{ bgcolor: alpha("#f59e0b", 0.12), color: "warning.dark", "& .MuiChip-icon": { color: "warning.dark" } }} />
+                  </Tooltip>
+                )}
+                {service.domainStatus === "error" && (
+                  <Tooltip title={service.domainStatusReason ?? ""}>
+                    <Chip label="エラー" color="error" size="small" icon={<ErrorOutlinedIcon />} />
+                  </Tooltip>
+                )}
+              </Box>
               <Button
                 variant="outlined" color="error" size="small" disabled={savingDomain}
                 onClick={async () => { setSavingDomain(true); try { await onSetDomain(""); } finally { setSavingDomain(false); } }}
               >
-                {savingDomain ? <CircularProgress size={14} /> : "削除"}
+                {savingDomain ? <CircularProgress size={14} /> : "解除"}
               </Button>
             </Box>
-            {service.domainStatus === "ready" && (
-              <Chip label="有効" color="success" size="small" icon={<CheckCircleIcon />} sx={{ width: "fit-content" }} />
-            )}
-            {service.domainStatus === "pending" && (
-              <Tooltip title={service.domainStatusReason ?? "DNS または TLS の設定を待機中"}>
-                <Chip label="DNS 待機中" size="small"
-                  icon={<CircularProgress size={12} thickness={5} sx={{ color: "inherit !important" }} />}
-                  sx={{ width: "fit-content", bgcolor: alpha("#f59e0b", 0.12), color: "warning.dark", "& .MuiChip-icon": { color: "warning.dark" } }} />
-              </Tooltip>
-            )}
-            {service.domainStatus === "error" && (
-              <Tooltip title={service.domainStatusReason ?? ""}>
-                <Chip label="エラー" color="error" size="small" icon={<ErrorOutlinedIcon />} sx={{ width: "fit-content" }} />
-              </Tooltip>
-            )}
             {service.domainStatus === "pending" && service.domainCnameTarget && (
               <Typography variant="caption" color="text.secondary">
                 CNAME レコードを <Box component="code" sx={{ bgcolor: "grey.100", px: 0.5, borderRadius: 0.5 }}>{service.domainCnameTarget}</Box> に向けてください
@@ -206,10 +230,10 @@ function ServiceDetail({
           </Box>
         ) : (
           <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
-            <TextField size="small" placeholder="example.com" value={domainInput}
+            <TextField placeholder="example.com" value={domainInput}
               onChange={(e) => setDomainInput(e.target.value)} disabled={savingDomain} sx={{ flex: 1 }} />
             <Button
-              variant="contained" size="small"
+              variant="contained"
               disabled={savingDomain || !domainInput.trim()}
               onClick={async () => { setSavingDomain(true); try { await onSetDomain(domainInput); setDomainInput(""); } finally { setSavingDomain(false); } }}
               sx={{ whiteSpace: "nowrap" }}
@@ -220,17 +244,27 @@ function ServiceDetail({
         )}
       </Paper>
 
-      <ContainerLogsViewer serviceName={service.name} projectId={activeProjectId} enabled={service.ready} />
+      {/* ログ */}
+      <Typography variant="h5" sx={{ mb: 1.5 }}>ログ</Typography>
+      <Box sx={{ mb: 4 }}>
+        <ContainerLogsViewer serviceName={service.name} projectId={activeProjectId} enabled={service.ready} />
+      </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+      {/* 危険操作 */}
+      <Typography variant="h5" sx={{ mb: 1.5, color: "error.main" }}>危険操作</Typography>
+      <Paper variant="outlined" sx={{ p: 2, borderColor: "error.main", bgcolor: alpha("#c5221f", 0.02), display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+        <Box>
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>サービスを削除</Typography>
+          <Typography variant="caption" color="text.secondary">この操作は取り消せません。関連するリビジョンとルートも削除されます。</Typography>
+        </Box>
         <Button
           variant="outlined" color="error"
           startIcon={deleting ? <CircularProgress size={14} sx={{ color: "inherit" }} /> : <DeleteOutlinedIcon />}
           onClick={onDelete} disabled={deleting}
         >
-          {deleting ? "削除中..." : "サービスを削除"}
+          {deleting ? "削除中..." : "削除"}
         </Button>
-      </Box>
+      </Paper>
     </Box>
   );
 }
