@@ -31,7 +31,6 @@ export function DeploySection({ error, form, onBack, onChange, onSubmit, submitt
     <Box>
       <PageHeader
         title="コンテナをデプロイ"
-        subtitle="Knative サービスを作成します"
         actions={<Button startIcon={<ArrowBackIcon />} onClick={onBack}>一覧に戻る</Button>}
       />
 

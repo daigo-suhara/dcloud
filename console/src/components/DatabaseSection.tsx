@@ -176,7 +176,6 @@ export function DatabaseSection({
     <Box>
       <PageHeader
         title="データベース"
-        subtitle="マネージド DB (PostgreSQL / MySQL / Redis) を作成・管理します"
         actions={
           <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
             作成

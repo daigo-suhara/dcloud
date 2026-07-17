@@ -68,7 +68,6 @@ export function ComputeCreateSection({ error, form, onBack, onChange, onSubmit, 
     <Box>
       <PageHeader
         title="仮想マシンを作成"
-        subtitle="OS イメージとサイズを選んで KubeVirt VM を起動します"
         actions={<Button startIcon={<ArrowBackIcon />} onClick={onBack}>一覧に戻る</Button>}
       />
 

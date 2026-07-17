@@ -150,7 +150,6 @@ export function ComputeDetailSection({
     <Box>
       <PageHeader
         title={machine?.name ?? machineName}
-        subtitle="KubeVirt virtual machine"
         actions={
           <Button startIcon={<ArrowBackIcon />} onClick={onBack}>一覧に戻る</Button>
         }

@@ -226,7 +226,6 @@ export function StorageSection({
     <Box>
       <PageHeader
         title="オブジェクトストレージ"
-        subtitle="S3 互換バケットを作成・管理します"
         actions={
           <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
             作成

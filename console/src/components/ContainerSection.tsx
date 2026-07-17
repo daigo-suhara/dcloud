@@ -87,7 +87,6 @@ function ServiceDetail({
     <Box>
       <PageHeader
         title={service.name}
-        subtitle="Knative service"
         actions={
           <Button startIcon={<ArrowBackIcon />} onClick={onBack}>一覧に戻る</Button>
         }
@@ -303,7 +302,6 @@ export function ContainerSection({
     <Box>
       <PageHeader
         title="コンテナ"
-        subtitle="Knative サービスを作成・管理します"
         actions={
           <>
             <Button

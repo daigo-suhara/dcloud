@@ -23,7 +23,6 @@ export function ProjectCreateSection({
     <Box sx={{ maxWidth: 720, mx: "auto" }}>
       <PageHeader
         title="プロジェクトを作成"
-        subtitle="操作対象となる論理境界を作ります"
         actions={hasProjects ? (
           <Button startIcon={<ArrowBackIcon />} onClick={onBack}>戻る</Button>
         ) : undefined}

@@ -80,7 +80,6 @@ export function HomeSection({
     <Box>
       <PageHeader
         title="プロジェクト"
-        subtitle="操作対象のプロジェクトを選択・作成・削除します"
         actions={
           <Button variant="contained" startIcon={<AddIcon />} onClick={onOpenProjectCreate}>
             作成

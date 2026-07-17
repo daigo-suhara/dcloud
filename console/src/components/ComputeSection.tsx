@@ -73,7 +73,6 @@ export function ComputeSection({
     <Box>
       <PageHeader
         title="仮想マシン"
-        subtitle="KubeVirt 上で動く VM を作成・管理します"
         actions={
           <Button variant="contained" startIcon={<AddIcon />} onClick={onOpenCreate}>
             作成

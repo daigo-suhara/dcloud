@@ -3,18 +3,17 @@ import type { ReactNode } from "react";
 
 export type PageHeaderProps = {
   title: string;
-  subtitle?: string;
   actions?: ReactNode;
 };
 
-// GCP-style page header: large title on the left, primary action(s) on
-// the right. Sits above the section content and never inside a card.
-export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
+// Large title on the left, primary action(s) on the right. Sits above
+// the section content and never inside a card.
+export function PageHeader({ title, actions }: PageHeaderProps) {
   return (
     <Box
       sx={{
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         justifyContent: "space-between",
         gap: 2,
         pb: 2,
@@ -23,14 +22,7 @@ export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
         borderColor: "divider"
       }}
     >
-      <Box>
-        <Typography variant="h4">{title}</Typography>
-        {subtitle && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {subtitle}
-          </Typography>
-        )}
-      </Box>
+      <Typography variant="h4">{title}</Typography>
       {actions && <Box sx={{ display: "flex", gap: 1 }}>{actions}</Box>}
     </Box>
   );

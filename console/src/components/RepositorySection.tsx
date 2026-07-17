@@ -38,7 +38,6 @@ export function RepositorySection({
     <Box sx={{ maxWidth: 880, mx: "auto" }}>
       <PageHeader
         title="リポジトリを接続"
-        subtitle="プロジェクトに GitHub リポジトリを紐付けます"
         actions={<Button startIcon={<ArrowBackIcon />} onClick={onBack}>戻る</Button>}
       />
 

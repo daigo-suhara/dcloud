@@ -161,7 +161,6 @@ export function DatabaseDetailSection({
     <Box>
       <PageHeader
         title={databaseName}
-        subtitle="マネージド DB"
         actions={<Button startIcon={<ArrowBackIcon />} onClick={onBack}>一覧に戻る</Button>}
       />
 
