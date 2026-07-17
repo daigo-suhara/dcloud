@@ -94,7 +94,7 @@ func (s *Server) ListBuckets(ctx context.Context, req *storagepb.ListBucketsRequ
 	if !exists {
 		return nil, status.Error(codes.NotFound, "project not found")
 	}
-	records, err := s.Rook.ListOBCs(ctx, s.Namespace, userID, projectID)
+	records, err := s.Rook.ListOBCs(ctx, projectID, userID, projectID)
 	if err != nil {
 		if errors.Is(err, rook.ErrUnavailable) {
 			return nil, status.Error(codes.FailedPrecondition, err.Error())
@@ -132,7 +132,7 @@ func (s *Server) CreateBucket(ctx context.Context, req *storagepb.CreateBucketRe
 	if !exists {
 		return nil, status.Error(codes.NotFound, "project not found")
 	}
-	record, err := s.Rook.CreateOBC(ctx, s.Namespace, userID, projectID, name, s.StorageClass)
+	record, err := s.Rook.CreateOBC(ctx, projectID, userID, projectID, name, s.StorageClass)
 	if err != nil {
 		if errors.Is(err, rook.ErrUnavailable) {
 			return nil, status.Error(codes.FailedPrecondition, err.Error())
@@ -187,7 +187,7 @@ func (s *Server) DeleteBucket(ctx context.Context, req *storagepb.DeleteBucketRe
 	go func() {
 		bgCtx := context.Background()
 		resourceName := rook.BucketResourceName(userID, projectID, name)
-		if err := s.Rook.DeleteOBC(bgCtx, s.Namespace, resourceName); err != nil {
+		if err := s.Rook.DeleteOBC(bgCtx, projectID, resourceName); err != nil {
 			_ = s.Queries.UpdateOperation(bgCtx, dbsqlc.UpdateOperationParams{
 				ID:        opID,
 				Status:    "error",
@@ -214,7 +214,7 @@ func (s *Server) GetBucketCredentials(ctx context.Context, req *storagepb.GetBuc
 		return nil, status.Error(codes.NotFound, "project not found")
 	}
 	resourceName := rook.BucketResourceName(userID, projectID, name)
-	creds, err := s.Rook.GetBucketCredentials(ctx, s.Namespace, resourceName, s.RGWEndpoint)
+	creds, err := s.Rook.GetBucketCredentials(ctx, projectID, resourceName, s.RGWEndpoint)
 	if err != nil {
 		if errors.Is(err, rook.ErrNotFound) {
 			return nil, status.Error(codes.NotFound, "bucket or credentials not found")
@@ -258,7 +258,7 @@ func (s *Server) reconcileDeletions(ctx context.Context) {
 				if !op.UserID.Valid || !op.ProjectID.Valid || !op.ResourceName.Valid {
 					return false
 				}
-				records, err := s.Rook.ListOBCs(ctx, s.Namespace, op.UserID.String, op.ProjectID.String)
+				records, err := s.Rook.ListOBCs(ctx, op.ProjectID.String, op.UserID.String, op.ProjectID.String)
 				if err != nil {
 					return false
 				}

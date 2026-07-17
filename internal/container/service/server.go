@@ -150,7 +150,7 @@ func (s *Server) ListServices(ctx context.Context, req *containerpb.ListServices
 			Env:                internalEnvToProto(envVars[record.Name]),
 		})
 	}
-	return &containerpb.ListServicesResponse{UserId: userID, ProjectId: projectID, Namespace: s.Namespace, Containers: items}, nil
+	return &containerpb.ListServicesResponse{UserId: userID, ProjectId: projectID, Namespace: projectID, Containers: items}, nil
 }
 
 func (s *Server) DeployService(ctx context.Context, req *containerpb.DeployServiceRequest) (*containerpb.DeployServiceResponse, error) {
