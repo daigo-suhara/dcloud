@@ -720,24 +720,20 @@ func (c *kubeClient) deleteDatabase(ctx context.Context, namespace, resourceName
 	return c.doJSON(ctx, http.MethodDelete, fmt.Sprintf("/apis/apps.kubeblocks.io/v1alpha1/namespaces/%s/clusters/%s", namespace, resourceName), nil, nil)
 }
 
-// getConnectionString reads the KubeBlocks-generated conn-credential Secret.
-// KubeBlocks creates "{cluster-name}-conn-credential" with keys: username, password, host, port, endpoint.
+// getConnectionString reads the KubeBlocks 1.x per-account root Secret.
+// KubeBlocks creates "{cluster}-{component}-account-root" with keys username/password;
+// host and port are constructed from the cluster's headless Service.
 func (c *kubeClient) getConnectionString(ctx context.Context, namespace string, r *dbRecord, schemaName string) (*GetConnectionStringResponse, error) {
-	secretName := r.ResourceName + "-conn-credential"
+	componentName := componentNames[r.Type]
+	secretName := fmt.Sprintf("%s-%s-account-root", r.ResourceName, componentName)
 	var secret kubeSecret
 	if err := c.doJSON(ctx, http.MethodGet, fmt.Sprintf("/api/v1/namespaces/%s/secrets/%s", namespace, secretName), nil, &secret); err != nil {
 		return nil, err
 	}
 	username := decodeBase64(secret.Data["username"])
 	password := decodeBase64(secret.Data["password"])
-	host := decodeBase64(secret.Data["host"])
-	port := decodeBase64(secret.Data["port"])
-	if host == "" {
-		host = fmt.Sprintf("%s-%s.%s.svc.cluster.local", r.ResourceName, componentNames[r.Type], namespace)
-	}
-	if port == "" {
-		port = dbPorts[r.Type]
-	}
+	host := fmt.Sprintf("%s-%s.%s.svc.cluster.local", r.ResourceName, componentName, namespace)
+	port := dbPorts[r.Type]
 	dbName := strings.TrimSpace(schemaName)
 	if dbName == "" {
 		dbName = r.ResourceName

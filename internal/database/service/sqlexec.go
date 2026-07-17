@@ -18,26 +18,21 @@ type rootCreds struct {
 	Port     string
 }
 
-// fetchRootCreds reads the KubeBlocks conn-credential Secret for the cluster.
+// fetchRootCreds reads the KubeBlocks 1.x per-account Secret for the cluster's
+// root user. The secret name is "{cluster}-{component}-account-root".
 func (c *kubeClient) fetchRootCreds(ctx context.Context, namespace string, r *dbRecord) (*rootCreds, error) {
-	secretName := r.ResourceName + "-conn-credential"
+	componentName := componentNames[r.Type]
+	secretName := fmt.Sprintf("%s-%s-account-root", r.ResourceName, componentName)
 	var secret kubeSecret
 	if err := c.doJSON(ctx, "GET", fmt.Sprintf("/api/v1/namespaces/%s/secrets/%s", namespace, secretName), nil, &secret); err != nil {
 		return nil, err
 	}
-	creds := &rootCreds{
+	return &rootCreds{
 		Username: decodeBase64(secret.Data["username"]),
 		Password: decodeBase64(secret.Data["password"]),
-		Host:     decodeBase64(secret.Data["host"]),
-		Port:     decodeBase64(secret.Data["port"]),
-	}
-	if creds.Host == "" {
-		creds.Host = fmt.Sprintf("%s-%s.%s.svc.cluster.local", r.ResourceName, componentNames[r.Type], namespace)
-	}
-	if creds.Port == "" {
-		creds.Port = dbPorts[r.Type]
-	}
-	return creds, nil
+		Host:     fmt.Sprintf("%s-%s.%s.svc.cluster.local", r.ResourceName, componentName, namespace),
+		Port:     dbPorts[r.Type],
+	}, nil
 }
 
 // openSQLConn opens a *sql.DB to the instance using root credentials. The
