@@ -21,8 +21,11 @@ export function Header({
       position="sticky" color="transparent" elevation={0}
       sx={{ bgcolor: "background.paper", borderBottom: 1, borderColor: "divider" }}
     >
-      <Toolbar sx={{ display: "flex", alignItems: "center", gap: 1.5, minHeight: 56 }}>
-        <IconButton onClick={onToggleSidebar} aria-label="navigation" size="small" sx={{ mr: 0.5 }}>
+      <Toolbar
+        disableGutters
+        sx={{ display: "flex", alignItems: "center", gap: 1, minHeight: 56, px: 2 }}
+      >
+        <IconButton onClick={onToggleSidebar} aria-label="navigation">
           <MenuIcon />
         </IconButton>
         <Brand />

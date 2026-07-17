@@ -43,7 +43,7 @@ export function DrawerNav({ onCloseSidebar, onNavigate, route, sidebarOpen }: Dr
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, minHeight: 56, px: 2, borderBottom: 1, borderColor: "divider" }}>
-        <IconButton onClick={onCloseSidebar} size="small" aria-label="close navigation">
+        <IconButton onClick={onCloseSidebar} aria-label="close navigation">
           <CloseIcon />
         </IconButton>
         <Brand />
