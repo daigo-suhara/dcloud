@@ -26,3 +26,8 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- define "dcloud.image" -}}
 {{- printf "%s/%s/%s:%s" .root.Values.image.registry .root.Values.image.repositoryOwner .repository .root.Values.image.tag -}}
 {{- end -}}
+
+{{- /* JWKS URL every backend service uses to verify identity-issued JWTs. */ -}}
+{{- define "dcloud.jwksURL" -}}
+{{- printf "http://%s-identity:%v/.well-known/jwks.json" (include "dcloud.fullname" .) .Values.identity.service.httpPort -}}
+{{- end -}}

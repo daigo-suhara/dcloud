@@ -30,6 +30,8 @@ spec:
               value: :{{ .Values.database.service.port }}
             - name: DCLD_DATABASE_STORAGE_CLASS
               value: {{ .Values.database.storageClass }}
+            - name: DCLD_IDENTITY_JWKS_URL
+              value: {{ include "dcloud.jwksURL" . | quote }}
           ports:
             - name: grpc
               containerPort: {{ .Values.database.service.port }}

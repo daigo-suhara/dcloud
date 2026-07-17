@@ -32,6 +32,8 @@ spec:
               value: {{ .Values.storage.bucketStorageClass }}
             - name: DCLD_RGW_ENDPOINT
               value: {{ .Values.storage.rgwEndpoint }}
+            - name: DCLD_IDENTITY_JWKS_URL
+              value: {{ include "dcloud.jwksURL" . | quote }}
           ports:
             - name: grpc
               containerPort: {{ .Values.storage.service.port }}

@@ -24,6 +24,9 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ include "dcloud.fullname" . }}-database
+          env:
+            - name: DCLD_IDENTITY_JWKS_URL
+              value: {{ include "dcloud.jwksURL" . | quote }}
           ports:
             - name: grpc
               containerPort: {{ .Values.project.service.port }}

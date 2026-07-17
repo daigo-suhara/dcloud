@@ -28,6 +28,8 @@ spec:
           env:
             - name: DCLD_PUBLIC_SERVICE_DOMAIN
               value: {{ .Values.publicServiceDomain | quote }}
+            - name: DCLD_IDENTITY_JWKS_URL
+              value: {{ include "dcloud.jwksURL" . | quote }}
           ports:
             - name: grpc
               containerPort: {{ .Values.container.service.port }}
