@@ -227,6 +227,18 @@ func (s *Server) CreateProjectDeleteOperation(ctx context.Context, req *projectp
 	}); err != nil {
 		return nil, status.Error(codes.Internal, "failed to create operation")
 	}
+	if _, err := s.Queries.DeleteProject(ctx, dbsqlc.DeleteProjectParams{UserID: userID, ID: projectID}); err != nil {
+		_ = s.Queries.UpdateOperation(ctx, dbsqlc.UpdateOperationParams{
+			ID: opID, Status: "error",
+			Error:     sql.NullString{String: err.Error(), Valid: true},
+			UpdatedAt: time.Now().UTC().Format(time.RFC3339Nano),
+		})
+		return nil, status.Error(codes.Internal, "failed to delete project")
+	}
+	_ = s.Queries.UpdateOperation(ctx, dbsqlc.UpdateOperationParams{
+		ID: opID, Status: "done",
+		UpdatedAt: time.Now().UTC().Format(time.RFC3339Nano),
+	})
 	return &projectpb.CreateProjectDeleteOperationResponse{OperationId: opID}, nil
 }
 
