@@ -182,7 +182,7 @@ func (s *Server) DeployService(ctx context.Context, req *containerpb.DeployServi
 		Env:           protoEnvToInternal(req.Env),
 	})
 	if err != nil {
-		return nil, status.Error(codes.Internal, "failed to deploy service")
+		return nil, status.Errorf(codes.Internal, "failed to deploy service: %v", err)
 	}
 	createdAt := created.CreatedAt
 	if createdAt == "" {
