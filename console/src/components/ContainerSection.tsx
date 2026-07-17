@@ -45,6 +45,31 @@ function svcStatusVariant(status: ReturnType<typeof getServiceStatus> | null, is
   return { v: "error", spin: false };
 }
 
+// Left-label form row: label + optional hint on the left column,
+// input on the right. Matches the overview definition-list layout so
+// the whole detail page reads as one connected form.
+function FormRow({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: { xs: "1fr", sm: "200px 1fr" },
+        gap: { xs: 1, sm: 3 },
+        px: { xs: 2, sm: 3 }, py: 2.5,
+        borderTop: "1px solid",
+        borderColor: "divider",
+        "&:first-of-type": { borderTop: "none" }
+      }}
+    >
+      <Box sx={{ pt: 1 }}>
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>{label}</Typography>
+        {hint && <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>{hint}</Typography>}
+      </Box>
+      <Box sx={{ minWidth: 0 }}>{children}</Box>
+    </Box>
+  );
+}
+
 // ---- Detail (when a service is selected) --------------------------------
 function ServiceDetail({
   service, status, updating, deleting,
@@ -123,70 +148,64 @@ function ServiceDetail({
 
       {/* 設定を更新 */}
       <Typography variant="h5" sx={{ mb: 1.5 }}>設定</Typography>
-      <Paper variant="outlined" sx={{ p: 3, mb: 4 }}>
-        <Box
-          component="form"
-          onSubmit={async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); await onUpdate(form); }}
-          sx={{ display: "grid", gap: 2.5 }}
-        >
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.75, fontWeight: 500 }}>
-              コンテナイメージ
-            </Typography>
-            <TextField
-              value={form.image}
-              onChange={(e) => setForm(f => ({ ...f, image: e.target.value }))}
-              disabled={updating} placeholder="ghcr.io/org/app:tag" fullWidth
-              slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false } }}
-            />
-          </Box>
+      <Paper
+        variant="outlined"
+        component="form"
+        onSubmit={async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); await onUpdate(form); }}
+        sx={{ mb: 4 }}
+      >
+        <FormRow label="コンテナイメージ" hint="デプロイするイメージ (registry/name:tag)">
+          <TextField
+            value={form.image}
+            onChange={(e) => setForm(f => ({ ...f, image: e.target.value }))}
+            disabled={updating} placeholder="ghcr.io/org/app:tag" fullWidth
+            slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false } }}
+          />
+        </FormRow>
 
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.75, fontWeight: 500 }}>
-              ポート・スケール
-            </Typography>
-            <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" } }}>
-              <TextField label="Port" type="number"
-                slotProps={{ htmlInput: { min: 1, max: 65535 } }}
-                value={form.port} onChange={(e) => setForm(f => ({ ...f, port: e.target.value }))} disabled={updating} />
-              <TextField label="最小スケール" type="number"
-                slotProps={{ htmlInput: { min: 0, max: 20 } }}
-                value={form.minScale} onChange={(e) => setForm(f => ({ ...f, minScale: e.target.value }))} disabled={updating} />
-              <TextField label="最大スケール" type="number"
-                slotProps={{ htmlInput: { min: 1, max: 20 } }}
-                value={form.maxScale} onChange={(e) => setForm(f => ({ ...f, maxScale: e.target.value }))} disabled={updating} />
-            </Box>
-          </Box>
+        <FormRow label="ポート" hint="コンテナがリッスンする TCP ポート">
+          <TextField type="number"
+            slotProps={{ htmlInput: { min: 1, max: 65535 } }}
+            value={form.port} onChange={(e) => setForm(f => ({ ...f, port: e.target.value }))}
+            disabled={updating} sx={{ maxWidth: 160 }} />
+        </FormRow>
 
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.75, fontWeight: 500 }}>
-              環境変数
-            </Typography>
-            <EnvVarEditor value={form.env} onChange={(env) => setForm(f => ({ ...f, env }))} disabled={updating} size="small" />
+        <FormRow label="スケール" hint="オートスケールの下限と上限">
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <TextField label="最小" type="number"
+              slotProps={{ htmlInput: { min: 0, max: 20 } }}
+              value={form.minScale} onChange={(e) => setForm(f => ({ ...f, minScale: e.target.value }))}
+              disabled={updating} sx={{ width: 140 }} />
+            <Typography color="text.secondary" variant="body2">〜</Typography>
+            <TextField label="最大" type="number"
+              slotProps={{ htmlInput: { min: 1, max: 20 } }}
+              value={form.maxScale} onChange={(e) => setForm(f => ({ ...f, maxScale: e.target.value }))}
+              disabled={updating} sx={{ width: 140 }} />
           </Box>
+        </FormRow>
 
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.75, fontWeight: 500 }}>
-              起動スクリプト（任意）
-            </Typography>
-            <TextField
-              value={form.startupScript}
-              onChange={(e) => setForm(f => ({ ...f, startupScript: e.target.value }))} disabled={updating}
-              placeholder={"#!/bin/sh\nexec code-server --bind-addr 0.0.0.0:8080 --auth none ."}
-              multiline minRows={3} fullWidth
-              slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false, style: { fontFamily: monoFontFamily, fontSize: 13 } } }}
-            />
-          </Box>
+        <FormRow label="環境変数" hint="コンテナに渡す KEY=value ペア">
+          <EnvVarEditor value={form.env} onChange={(env) => setForm(f => ({ ...f, env }))} disabled={updating} size="small" />
+        </FormRow>
 
-          <Box sx={{ display: "flex", justifyContent: "flex-end", borderTop: 1, borderColor: "divider", pt: 2 }}>
-            <Button
-              type="submit" variant="contained"
-              disabled={updating || !form.image.trim()}
-              startIcon={updating ? <CircularProgress size={14} sx={{ color: "inherit" }} /> : undefined}
-            >
-              {updating ? "更新中..." : "更新を適用"}
-            </Button>
-          </Box>
+        <FormRow label="起動スクリプト" hint="任意。指定するとイメージの ENTRYPOINT を上書き">
+          <TextField
+            value={form.startupScript}
+            onChange={(e) => setForm(f => ({ ...f, startupScript: e.target.value }))} disabled={updating}
+            placeholder={"#!/bin/sh\nexec code-server --bind-addr 0.0.0.0:8080 --auth none ."}
+            multiline minRows={3} fullWidth
+            slotProps={{ htmlInput: { autoComplete: "off", autoCorrect: "off", autoCapitalize: "none", spellCheck: false, style: { fontFamily: monoFontFamily, fontSize: 13 } } }}
+          />
+        </FormRow>
+
+        <Box sx={{ display: "flex", justifyContent: "flex-end", borderTop: 1, borderColor: "divider", p: 2 }}>
+          <Button
+            type="submit" variant="contained"
+            disabled={updating || !form.image.trim()}
+            startIcon={updating ? <CircularProgress size={14} sx={{ color: "inherit" }} /> : undefined}
+          >
+            {updating ? "更新中..." : "更新を適用"}
+          </Button>
         </Box>
       </Paper>
 
