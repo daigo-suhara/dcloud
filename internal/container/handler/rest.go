@@ -245,6 +245,22 @@ func deployRequestFromBody(userID, projectID, name string, body map[string]any) 
 			}
 		}
 	}
+	var buckets []*containerpb.BucketVolume
+	if rawBV, ok := body["bucketVolumes"].([]any); ok {
+		for _, item := range rawBV {
+			m, ok := item.(map[string]any)
+			if !ok {
+				continue
+			}
+			b := &containerpb.BucketVolume{
+				BucketName: apihelp.StrVal(m["bucketName"]),
+				MountPath:  apihelp.StrVal(m["mountPath"]),
+			}
+			if b.BucketName != "" && b.MountPath != "" {
+				buckets = append(buckets, b)
+			}
+		}
+	}
 	return &containerpb.DeployServiceRequest{
 		UserId: userID, ProjectId: projectID, Name: name,
 		Image:         apihelp.StrVal(body["image"]),
@@ -253,6 +269,7 @@ func deployRequestFromBody(userID, projectID, name string, body map[string]any) 
 		MaxScale:      int32(apihelp.IntVal(body["maxScale"], 20)),
 		StartupScript: apihelp.StrVal(body["startupScript"]),
 		Env:           env,
+		BucketVolumes: buckets,
 	}
 }
 

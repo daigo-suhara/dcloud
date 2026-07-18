@@ -76,6 +76,8 @@ export type ComputeMachine = {
 
 export type EnvVarEntry = { name: string; value: string };
 
+export type BucketVolumeEntry = { bucketName: string; mountPath: string };
+
 export type DeployForm = {
   name: string;
   image: string;
@@ -84,6 +86,7 @@ export type DeployForm = {
   maxScale: string;
   startupScript: string;
   env: EnvVarEntry[];
+  bucketVolumes: BucketVolumeEntry[];
 };
 
 export type UpdateForm = {
@@ -174,7 +177,8 @@ export const initialForm: DeployForm = {
   minScale: "0",
   maxScale: "20",
   startupScript: "",
-  env: []
+  env: [],
+  bucketVolumes: []
 };
 
 export const initialAuthForm: AuthForm = {

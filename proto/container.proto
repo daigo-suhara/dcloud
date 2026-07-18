@@ -21,6 +21,11 @@ message EnvVar {
   string value = 2;
 }
 
+message BucketVolume {
+  string bucket_name = 1;
+  string mount_path = 2;
+}
+
 message HealthRequest {}
 
 message HealthResponse {
@@ -49,6 +54,7 @@ message Service {
   int32 max_scale = 17;
   string startup_script = 18;
   repeated EnvVar env = 19;
+  repeated BucketVolume bucket_volumes = 20;
 }
 
 message ListServicesRequest {
@@ -73,6 +79,7 @@ message DeployServiceRequest {
   int32 max_scale = 7;
   string startup_script = 8;
   repeated EnvVar env = 9;
+  repeated BucketVolume bucket_volumes = 10;
 }
 
 message DeployServiceResponse {

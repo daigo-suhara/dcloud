@@ -180,6 +180,7 @@ func (s *Server) DeployService(ctx context.Context, req *containerpb.DeployServi
 		MaxScale:      req.MaxScale,
 		StartupScript: strings.TrimSpace(req.StartupScript),
 		Env:           protoEnvToInternal(req.Env),
+		BucketVolumes: protoBucketsToInternal(req.BucketVolumes),
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to deploy service: %v", err)
@@ -443,6 +444,16 @@ func internalEnvToProto(vars []domain.EnvVar) []*containerpb.EnvVar {
 	out := make([]*containerpb.EnvVar, len(vars))
 	for i, v := range vars {
 		out[i] = &containerpb.EnvVar{Name: v.Name, Value: v.Value}
+	}
+	return out
+}
+
+func protoBucketsToInternal(vs []*containerpb.BucketVolume) []domain.BucketVolume {
+	out := make([]domain.BucketVolume, 0, len(vs))
+	for _, v := range vs {
+		if strings.TrimSpace(v.BucketName) != "" && strings.TrimSpace(v.MountPath) != "" {
+			out = append(out, domain.BucketVolume{BucketName: v.BucketName, MountPath: v.MountPath})
+		}
 	}
 	return out
 }

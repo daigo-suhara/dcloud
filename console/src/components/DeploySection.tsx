@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import type { DeployForm } from "../types";
 import { actionLinkButtonSx, monoFontFamily } from "../theme";
 import { EnvVarEditor } from "./EnvVarEditor";
+import { BucketVolumesEditor } from "./BucketVolumesEditor";
 import { PageHeader, FormRow } from "./primitives";
 
 function isDnsLabel(value: string) {
@@ -17,9 +18,10 @@ type DeploySectionProps = {
   onChange: (patch: Partial<DeployForm>) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   submitting: boolean;
+  activeProjectId: string;
 };
 
-export function DeploySection({ error, form, onBack, onChange, onSubmit, submitting }: DeploySectionProps) {
+export function DeploySection({ error, form, onBack, onChange, onSubmit, submitting, activeProjectId }: DeploySectionProps) {
   const serviceName = form.name.trim();
   const serviceNameError = serviceName.length > 0 && !isDnsLabel(serviceName);
 
@@ -86,6 +88,14 @@ export function DeploySection({ error, form, onBack, onChange, onSubmit, submitt
 
         <FormRow label="環境変数">
           <EnvVarEditor value={form.env} onChange={(env) => onChange({ env })} size="small" />
+        </FormRow>
+
+        <FormRow label="ボリューム">
+          <BucketVolumesEditor
+            value={form.bucketVolumes}
+            onChange={(bucketVolumes) => onChange({ bucketVolumes })}
+            projectId={activeProjectId}
+          />
         </FormRow>
 
         <FormRow label="起動スクリプト">

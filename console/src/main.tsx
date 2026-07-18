@@ -224,6 +224,7 @@ function AppContent() {
             onChange={controller.handleFormChange}
             onSubmit={controller.handleSubmit}
             submitting={controller.submitting}
+            activeProjectId={controller.activeProjectId}
           />
         ) : visibleSection === "repository" ? (
           <RepositorySection

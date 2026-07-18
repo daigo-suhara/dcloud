@@ -431,7 +431,40 @@ func (m *Manager) Deploy(ctx context.Context, scope domain.ProjectScope, req dom
 	noTimeout := int64(0)
 	manifest.Spec.Template.Spec.TimeoutSeconds = &noTimeout
 	manifest.Spec.Template.Spec.RuntimeClassName = env("DCLD_CONTAINER_RUNTIME_CLASS", "")
-	manifest.Spec.Template.Spec.Containers = []knativeContainer{container}
+
+	// Bucket volumes: inject an s3fs sidecar per mount and share an emptyDir
+	// between it and the user container.
+	sidecars := []knativeContainer{}
+	for i, v := range req.BucketVolumes {
+		volName := fmt.Sprintf("bucket-%d", i)
+		credsName := fmt.Sprintf("bucket-creds-%d", i)
+		container.VolumeMounts = append(container.VolumeMounts, knativeVolumeMount{
+			Name: volName, MountPath: v.MountPath, MountPropagation: "HostToContainer",
+		})
+		manifest.Spec.Template.Spec.Volumes = append(manifest.Spec.Template.Spec.Volumes,
+			knativeVolume{Name: volName, EmptyDir: &struct{}{}},
+			knativeVolume{Name: credsName, Secret: &knativeVolumeSecretSource{SecretName: v.BucketName}},
+		)
+		privileged := false
+		sidecars = append(sidecars, knativeContainer{
+			Name:  fmt.Sprintf("s3fs-%d", i),
+			Image: env("DCLD_S3FS_IMAGE", "ghcr.io/efrecon/s3fs:1.94"),
+			Env: []knativeEnvVar{
+				{Name: "AWS_S3_BUCKET", Value: v.BucketName},
+				{Name: "AWS_S3_URL", Value: env("DCLD_S3_ENDPOINT", "http://rook-ceph-rgw-default.rook-ceph.svc.cluster.local:80")},
+				{Name: "S3FS_ARGS", Value: "use_path_request_style,allow_other"},
+			},
+			VolumeMounts: []knativeVolumeMount{
+				{Name: volName, MountPath: "/opt/s3fs/bucket", MountPropagation: "Bidirectional"},
+				{Name: credsName, MountPath: "/opt/s3fs/creds", ReadOnly: true},
+			},
+			SecurityContext: &knativeSecurityContext{
+				Capabilities: &knativeCapabilities{Add: []string{"SYS_ADMIN"}},
+				Privileged:   &privileged,
+			},
+		})
+	}
+	manifest.Spec.Template.Spec.Containers = append([]knativeContainer{container}, sidecars...)
 
 	body, err := json.Marshal(manifest)
 	if err != nil {
@@ -632,6 +665,7 @@ type knativeServiceManifest struct {
 				TimeoutSeconds   *int64             `json:"timeoutSeconds,omitempty"`
 				RuntimeClassName string             `json:"runtimeClassName,omitempty"`
 				Containers       []knativeContainer `json:"containers"`
+				Volumes          []knativeVolume    `json:"volumes,omitempty"`
 			} `json:"spec"`
 		} `json:"template"`
 	} `json:"spec"`
@@ -643,12 +677,40 @@ type knativeEnvVar struct {
 }
 
 type knativeContainer struct {
-	Name    string                 `json:"name"`
-	Image   string                 `json:"image"`
-	Ports   []knativeContainerPort `json:"ports"`
-	Command []string               `json:"command,omitempty"`
-	Args    []string               `json:"args,omitempty"`
-	Env     []knativeEnvVar        `json:"env,omitempty"`
+	Name            string                    `json:"name"`
+	Image           string                    `json:"image"`
+	Ports           []knativeContainerPort    `json:"ports,omitempty"`
+	Command         []string                  `json:"command,omitempty"`
+	Args            []string                  `json:"args,omitempty"`
+	Env             []knativeEnvVar           `json:"env,omitempty"`
+	VolumeMounts    []knativeVolumeMount      `json:"volumeMounts,omitempty"`
+	SecurityContext *knativeSecurityContext   `json:"securityContext,omitempty"`
+}
+
+type knativeVolumeMount struct {
+	Name             string `json:"name"`
+	MountPath        string `json:"mountPath"`
+	MountPropagation string `json:"mountPropagation,omitempty"`
+	ReadOnly         bool   `json:"readOnly,omitempty"`
+}
+
+type knativeVolume struct {
+	Name     string                     `json:"name"`
+	EmptyDir *struct{}                  `json:"emptyDir,omitempty"`
+	Secret   *knativeVolumeSecretSource `json:"secret,omitempty"`
+}
+
+type knativeVolumeSecretSource struct {
+	SecretName string `json:"secretName"`
+}
+
+type knativeSecurityContext struct {
+	Capabilities *knativeCapabilities `json:"capabilities,omitempty"`
+	Privileged   *bool                `json:"privileged,omitempty"`
+}
+
+type knativeCapabilities struct {
+	Add []string `json:"add,omitempty"`
 }
 
 type knativeContainerPort struct {

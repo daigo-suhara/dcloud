@@ -16,6 +16,13 @@ type EnvVar struct {
 	Value string
 }
 
+// BucketVolume mounts an S3 bucket into the pod at MountPath via an s3fs
+// sidecar injected by the Knative manager.
+type BucketVolume struct {
+	BucketName string
+	MountPath  string
+}
+
 // DeployRequest captures the user-facing shape of a service deployment
 // (independent of the Knative Service CRD schema).
 type DeployRequest struct {
@@ -26,6 +33,7 @@ type DeployRequest struct {
 	MaxScale      int32
 	StartupScript string
 	Env           []EnvVar
+	BucketVolumes []BucketVolume
 }
 
 // DeployedService is the repository's view of a running service. The
@@ -49,4 +57,5 @@ type DeployedService struct {
 	MaxScale      int32
 	StartupScript string
 	Env           []EnvVar
+	BucketVolumes []BucketVolume
 }

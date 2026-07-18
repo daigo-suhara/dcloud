@@ -478,7 +478,8 @@ export function useConsoleController() {
           minScale: Number(form.minScale || "0"),
           maxScale: Number(form.maxScale || "1"),
           startupScript: form.startupScript.trim(),
-          env: form.env.filter((e) => e.name.trim() !== "")
+          env: form.env.filter((e) => e.name.trim() !== ""),
+          bucketVolumes: form.bucketVolumes.filter((v) => v.bucketName.trim() !== "" && v.mountPath.trim() !== "")
         })
       });
 
