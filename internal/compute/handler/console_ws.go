@@ -81,7 +81,7 @@ func (h *ConsoleWSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	upstreamURL := fmt.Sprintf(
 		"wss://%s/apis/subresources.kubevirt.io/v1/namespaces/%s/virtualmachineinstances/%s/console",
 		strings.TrimPrefix(strings.TrimPrefix(h.kubeBaseURL, "https://"), "http://"),
-		url.PathEscape(h.svc.Namespace),
+		url.PathEscape(projectID),
 		url.PathEscape(resourceName),
 	)
 
