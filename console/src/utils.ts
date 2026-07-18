@@ -147,6 +147,18 @@ export function formatComputeStatus(machine: ComputeMachine) {
   return machine.reason?.trim() || "処理中";
 }
 
+export function formatDatabasePlan(storage?: string): string {
+  switch ((storage ?? "").trim()) {
+    case "10Gi":   return "10GB プラン";
+    case "30Gi":   return "30GB プラン";
+    case "90Gi":   return "90GB プラン";
+    case "240Gi":  return "240GB プラン";
+    case "500Gi":  return "500GB プラン";
+    case "1024Gi": return "1TB プラン";
+    default:       return "カスタム";
+  }
+}
+
 const STATUS_LABEL_MAP: Record<string, string> = {
   Running:      "実行中",
   Ready:        "準備完了",

@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import type { DatabaseConnectionInfo, DatabaseInstance, DatabaseSchema } from "../types";
-import { formatComputeTimestamp, formatStatus } from "../utils";
+import { formatComputeTimestamp, formatDatabasePlan, formatStatus } from "../utils";
 import { monoFontFamily } from "../theme";
 import { PageHeader, DataTable, StatusBadge, FormDialog } from "./primitives";
 import type { Column, StatusVariant } from "./primitives";
@@ -184,9 +184,9 @@ export function DatabaseDetailSection({
           <Typography variant="body2" sx={{ mt: 0.5 }}>{database?.version ?? "-"}</Typography>
         </Paper>
         <Paper variant="outlined" sx={{ p: 1.5 }}>
-          <Typography variant="caption" color="text.secondary">リソース</Typography>
+          <Typography variant="caption" color="text.secondary">プラン</Typography>
           <Typography variant="body2" sx={{ mt: 0.5 }}>
-            CPU {database?.cpu ?? "-"} / Mem {database?.memory ?? "-"}
+            {formatDatabasePlan(database?.storage)}
           </Typography>
         </Paper>
         <Paper variant="outlined" sx={{ p: 1.5 }}>
