@@ -1,6 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { Box, Button, IconButton, MenuItem, TextField } from "@mui/material";
+import { Box, Button, IconButton, MenuItem, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import type { Bucket, BucketVolumeEntry } from "../types";
 
@@ -31,8 +31,15 @@ export function BucketVolumesEditor({ value, onChange, projectId, disabled }: Pr
     onChange([...value, { bucketName: buckets[0]?.name ?? "", mountPath: "" }]);
   }
 
+  const noBuckets = buckets.length === 0;
+
   return (
     <Box sx={{ display: "grid", gap: 1 }}>
+      {noBuckets && value.length === 0 && (
+        <Typography variant="caption" color="text.secondary">
+          バケットがまだありません。ストレージ画面で作成してください。
+        </Typography>
+      )}
       {value.map((entry, i) => (
         <Box key={i} sx={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 1, alignItems: "center" }}>
           <TextField
@@ -54,7 +61,7 @@ export function BucketVolumesEditor({ value, onChange, projectId, disabled }: Pr
         </Box>
       ))}
       <Box>
-        <Button size="small" startIcon={<AddIcon />} onClick={add} disabled={disabled || buckets.length === 0} variant="outlined">
+        <Button size="small" startIcon={<AddIcon />} onClick={add} disabled={disabled || noBuckets} variant="outlined">
           追加
         </Button>
       </Box>
