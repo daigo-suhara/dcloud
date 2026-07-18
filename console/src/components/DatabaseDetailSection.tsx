@@ -168,7 +168,7 @@ export function DatabaseDetailSection({
       {/* Summary */}
       <Box sx={{ display: "grid", gap: 1, gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(5, minmax(0, 1fr))" }, mb: 3 }}>
         <Paper variant="outlined" sx={{ p: 1.5 }}>
-          <Typography variant="caption" color="text.secondary">状態</Typography>
+          <Typography variant="caption" color="text.secondary">ステータス</Typography>
           <Box sx={{ mt: 0.5 }}>
             <StatusBadge variant={s.v} label={s.label} showSpinner={s.spin} />
           </Box>
