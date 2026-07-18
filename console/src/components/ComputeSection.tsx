@@ -3,7 +3,7 @@ import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import { Box, Button, IconButton, Tooltip, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import type { ComputeMachine } from "../types";
-import { formatComputeTimestamp } from "../utils";
+import { formatComputeTimestamp, formatStatus } from "../utils";
 import { PageHeader, DataTable, StatusBadge } from "./primitives";
 import type { Column, StatusVariant } from "./primitives";
 
@@ -16,9 +16,9 @@ type ComputeSectionProps = {
 };
 
 function statusOf(m: ComputeMachine, isDeleting: boolean): { v: StatusVariant; label: string; spin: boolean } {
-  if (isDeleting) return { v: "error", label: "Deleting", spin: true };
-  if (!m.ready) return { v: "progress", label: m.status || "Provisioning", spin: true };
-  return { v: "ready", label: m.status || "Running", spin: false };
+  if (isDeleting) return { v: "error", label: "削除中", spin: true };
+  if (!m.ready) return { v: "progress", label: formatStatus(m.status, "準備中"), spin: true };
+  return { v: "ready", label: formatStatus(m.status, "実行中"), spin: false };
 }
 
 export function ComputeSection({

@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { useRef, useState } from "react";
 import type { Bucket, BucketCreateForm } from "../types";
-import { formatComputeTimestamp } from "../utils";
+import { formatComputeTimestamp, formatStatus } from "../utils";
 import { monoFontFamily } from "../theme";
 import { PageHeader, DataTable, StatusBadge, FormDialog } from "./primitives";
 import type { Column, StatusVariant } from "./primitives";
@@ -39,9 +39,9 @@ function formatFileSize(bytes: number): string {
 }
 
 function statusOf(b: Bucket, isDeleting: boolean): { v: StatusVariant; label: string; spin: boolean } {
-  if (isDeleting) return { v: "error", label: "Deleting", spin: true };
-  if (!b.ready) return { v: "progress", label: b.status || "Pending", spin: true };
-  return { v: "ready", label: b.status || "Bound", spin: false };
+  if (isDeleting) return { v: "error", label: "削除中", spin: true };
+  if (!b.ready) return { v: "progress", label: formatStatus(b.status, "待機中"), spin: true };
+  return { v: "ready", label: formatStatus(b.status, "接続済"), spin: false };
 }
 
 export function StorageSection({

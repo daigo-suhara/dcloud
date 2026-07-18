@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import type { DatabaseConnectionInfo, DatabaseInstance, DatabaseSchema } from "../types";
-import { formatComputeTimestamp } from "../utils";
+import { formatComputeTimestamp, formatStatus } from "../utils";
 import { monoFontFamily } from "../theme";
 import { PageHeader, DataTable, StatusBadge, FormDialog } from "./primitives";
 import type { Column, StatusVariant } from "./primitives";
@@ -28,8 +28,8 @@ type DatabaseDetailSectionProps = {
 
 function detailStatus(db: DatabaseInstance | null, loading: boolean): { v: StatusVariant; label: string; spin: boolean } {
   if (!db) return { v: "unknown", label: loading ? "読み込み中" : "未検出", spin: loading };
-  if (db.ready) return { v: "ready", label: db.status || "Running", spin: false };
-  return { v: "progress", label: db.status || "Provisioning", spin: true };
+  if (db.ready) return { v: "ready", label: formatStatus(db.status, "実行中"), spin: false };
+  return { v: "progress", label: formatStatus(db.status, "準備中"), spin: true };
 }
 
 export function DatabaseDetailSection({

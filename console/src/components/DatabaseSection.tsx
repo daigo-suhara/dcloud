@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import type { DatabaseCreateForm, DatabaseInstance } from "../types";
-import { formatComputeTimestamp } from "../utils";
+import { formatComputeTimestamp, formatStatus } from "../utils";
 import { monoFontFamily } from "../theme";
 import { PageHeader, DataTable, StatusBadge, FormDialog } from "./primitives";
 import type { Column, StatusVariant } from "./primitives";
@@ -64,9 +64,9 @@ type DatabaseSectionProps = {
 };
 
 function statusVariant(db: DatabaseInstance, isDeleting: boolean): { v: StatusVariant; label: string; spin: boolean } {
-  if (isDeleting) return { v: "error", label: "Deleting", spin: true };
-  if (!db.ready) return { v: "progress", label: db.status || "Provisioning", spin: true };
-  return { v: "ready", label: db.status || "Running", spin: false };
+  if (isDeleting) return { v: "error", label: "削除中", spin: true };
+  if (!db.ready) return { v: "progress", label: formatStatus(db.status, "準備中"), spin: true };
+  return { v: "ready", label: formatStatus(db.status, "実行中"), spin: false };
 }
 
 function dbTypeLabel(type: string) {

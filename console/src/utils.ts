@@ -147,6 +147,29 @@ export function formatComputeStatus(machine: ComputeMachine) {
   return machine.reason?.trim() || "処理中";
 }
 
+const STATUS_LABEL_MAP: Record<string, string> = {
+  Running:      "実行中",
+  Ready:        "準備完了",
+  Creating:     "作成中",
+  Provisioning: "準備中",
+  Pending:      "待機中",
+  Bound:        "接続済",
+  Updating:     "更新中",
+  Deleting:     "削除中",
+  Terminating:  "削除中",
+  Stopping:     "停止中",
+  Stopped:      "停止中",
+  Failed:       "エラー",
+  Error:        "エラー",
+  Unknown:      "不明",
+};
+
+export function formatStatus(status?: string, fallback = "処理中"): string {
+  const s = (status ?? "").trim();
+  if (!s) return fallback;
+  return STATUS_LABEL_MAP[s] ?? s;
+}
+
 export function formatComputeTimestamp(value?: string) {
   if (!value) {
     return "-";

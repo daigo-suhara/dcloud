@@ -22,7 +22,7 @@ type ComputeDetailSectionProps = {
 };
 
 function detailStatus(machine: ComputeMachine | null, isDeleting: boolean, loading: boolean): { v: StatusVariant; label: string; spin: boolean } {
-  if (isDeleting) return { v: "error", label: "Deleting", spin: true };
+  if (isDeleting) return { v: "error", label: "削除中", spin: true };
   if (!machine) return { v: "unknown", label: loading ? "読み込み中" : "未検出", spin: loading };
   if (machine.ready) return { v: "ready", label: formatComputeStatus(machine), spin: false };
   return { v: "progress", label: formatComputeStatus(machine), spin: true };
