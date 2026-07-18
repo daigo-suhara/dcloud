@@ -35,6 +35,9 @@ rules:
   - apiGroups: ["apps.kubeblocks.io"]
     resources: ["clusters", "clusters/status"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["dataprotection.kubeblocks.io"]
+    resources: ["backups", "backups/status", "backuppolicies", "backupschedules", "restores"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   - apiGroups: [""]
     resources: ["secrets", "configmaps"]
     verbs: ["get", "list", "watch"]
@@ -92,6 +95,9 @@ rules:
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   - apiGroups: ["apps.kubeblocks.io"]
     resources: ["clusters", "clusters/status"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["dataprotection.kubeblocks.io"]
+    resources: ["backups", "backups/status", "backuppolicies", "backupschedules", "restores"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
