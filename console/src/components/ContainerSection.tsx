@@ -87,7 +87,7 @@ function ServiceDetail({
   const summaryItems: { label: string; value: React.ReactNode }[] = [
     { label: "ステータス", value: <StatusBadge variant={s.v} label={formatServiceStatus(service)} showSpinner={s.spin} /> },
     { label: "公開 URL", value: service.url
-      ? <Button component="a" href={service.url} target="_blank" rel="noreferrer" variant="text" size="small" sx={{ ...actionLinkButtonSx, px: 0, minWidth: 0 }}>{service.url}</Button>
+      ? <Typography variant="body2" component="a" href={service.url} target="_blank" rel="noreferrer" sx={{ ...actionLinkButtonSx, wordBreak: "break-all" }}>{service.url}</Typography>
       : <Typography variant="body2" color="text.secondary">-</Typography> },
     { label: "イメージ", value: <Typography variant="body2" sx={{ fontFamily: monoFontFamily, wordBreak: "break-all" }}>{service.image}</Typography> },
     { label: "作成時刻", value: <Typography variant="body2">{formatServiceTimestamp(service.createdAt || "")}</Typography> },
