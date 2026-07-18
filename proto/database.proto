@@ -17,6 +17,11 @@ service DatabaseService {
   rpc ListSchemas(ListSchemasRequest) returns (ListSchemasResponse);
   rpc CreateSchema(CreateSchemaRequest) returns (CreateSchemaResponse);
   rpc DeleteSchema(DeleteSchemaRequest) returns (DeleteSchemaResponse);
+
+  // Backups
+  rpc ListBackups(ListBackupsRequest) returns (ListBackupsResponse);
+  rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse);
+  rpc DeleteBackup(DeleteBackupRequest) returns (DeleteBackupResponse);
 }
 
 message HealthRequest {}
@@ -153,3 +158,43 @@ message DeleteSchemaRequest {
 }
 
 message DeleteSchemaResponse {}
+
+// ---- Backups ----
+
+message Backup {
+  string name = 1;
+  string status = 2;
+  string method = 3;
+  string total_size = 4;
+  string created_at = 5;
+  string completed_at = 6;
+}
+
+message ListBackupsRequest {
+  string user_id = 1;
+  string project_id = 2;
+  string name = 3;
+}
+
+message ListBackupsResponse {
+  repeated Backup backups = 1;
+}
+
+message CreateBackupRequest {
+  string user_id = 1;
+  string project_id = 2;
+  string name = 3;
+}
+
+message CreateBackupResponse {
+  Backup backup = 1;
+}
+
+message DeleteBackupRequest {
+  string user_id = 1;
+  string project_id = 2;
+  string name = 3;
+  string backup_name = 4;
+}
+
+message DeleteBackupResponse {}

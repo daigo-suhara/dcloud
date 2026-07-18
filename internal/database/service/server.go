@@ -50,6 +50,13 @@ type CreateSchemaResponse = databasepb.CreateSchemaResponse
 type DeleteSchemaRequest = databasepb.DeleteSchemaRequest
 type DeleteSchemaResponse = databasepb.DeleteSchemaResponse
 type Schema = databasepb.Schema
+type ListBackupsRequest = databasepb.ListBackupsRequest
+type ListBackupsResponse = databasepb.ListBackupsResponse
+type CreateBackupRequest = databasepb.CreateBackupRequest
+type CreateBackupResponse = databasepb.CreateBackupResponse
+type DeleteBackupRequest = databasepb.DeleteBackupRequest
+type DeleteBackupResponse = databasepb.DeleteBackupResponse
+type Backup = databasepb.Backup
 type DatabaseServer = databasepb.DatabaseServiceServer
 
 var (
@@ -415,6 +422,45 @@ func (s *Server) DeleteSchema(ctx context.Context, req *DeleteSchemaRequest) (*D
 		return nil, status.Error(codes.Internal, "failed to delete schema: "+err.Error())
 	}
 	return &DeleteSchemaResponse{}, nil
+}
+
+func (s *Server) ListBackups(ctx context.Context, req *ListBackupsRequest) (*ListBackupsResponse, error) {
+	rec, err := s.lookupInstance(ctx, req.UserId, req.ProjectId, req.Name)
+	if err != nil {
+		return nil, err
+	}
+	backups, err := s.Kube.listBackups(ctx, rec.ProjectID, rec)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to list backups: "+err.Error())
+	}
+	return &ListBackupsResponse{Backups: backups}, nil
+}
+
+func (s *Server) CreateBackup(ctx context.Context, req *CreateBackupRequest) (*CreateBackupResponse, error) {
+	rec, err := s.lookupInstance(ctx, req.UserId, req.ProjectId, req.Name)
+	if err != nil {
+		return nil, err
+	}
+	backup, err := s.Kube.createBackup(ctx, rec.ProjectID, rec)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to create backup: "+err.Error())
+	}
+	return &CreateBackupResponse{Backup: backup}, nil
+}
+
+func (s *Server) DeleteBackup(ctx context.Context, req *DeleteBackupRequest) (*DeleteBackupResponse, error) {
+	rec, err := s.lookupInstance(ctx, req.UserId, req.ProjectId, req.Name)
+	if err != nil {
+		return nil, err
+	}
+	backupName := strings.TrimSpace(req.BackupName)
+	if backupName == "" {
+		return nil, status.Error(codes.InvalidArgument, "backupName is required")
+	}
+	if err := s.Kube.deleteBackup(ctx, rec.ProjectID, backupName); err != nil {
+		return nil, status.Error(codes.Internal, "failed to delete backup: "+err.Error())
+	}
+	return &DeleteBackupResponse{}, nil
 }
 
 func (s *Server) lookupInstance(ctx context.Context, userID, projectID, name string) (*dbRecord, error) {

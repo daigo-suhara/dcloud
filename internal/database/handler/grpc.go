@@ -44,3 +44,12 @@ func (h *GRPC) CreateSchema(ctx context.Context, req *databasepb.CreateSchemaReq
 func (h *GRPC) DeleteSchema(ctx context.Context, req *databasepb.DeleteSchemaRequest) (*databasepb.DeleteSchemaResponse, error) {
 	return h.svc.DeleteSchema(ctx, req)
 }
+func (h *GRPC) ListBackups(ctx context.Context, req *databasepb.ListBackupsRequest) (*databasepb.ListBackupsResponse, error) {
+	return h.svc.ListBackups(ctx, req)
+}
+func (h *GRPC) CreateBackup(ctx context.Context, req *databasepb.CreateBackupRequest) (*databasepb.CreateBackupResponse, error) {
+	return h.svc.CreateBackup(ctx, req)
+}
+func (h *GRPC) DeleteBackup(ctx context.Context, req *databasepb.DeleteBackupRequest) (*databasepb.DeleteBackupResponse, error) {
+	return h.svc.DeleteBackup(ctx, req)
+}

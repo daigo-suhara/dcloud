@@ -1337,6 +1337,402 @@ func (*DeleteSchemaResponse) Descriptor() ([]byte, []int) {
 	return file_database_proto_rawDescGZIP(), []int{21}
 }
 
+type Backup struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	Method        string                 `protobuf:"bytes,3,opt,name=method,proto3" json:"method,omitempty"`
+	TotalSize     string                 `protobuf:"bytes,4,opt,name=total_size,json=totalSize,proto3" json:"total_size,omitempty"`
+	CreatedAt     string                 `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CompletedAt   string                 `protobuf:"bytes,6,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Backup) Reset() {
+	*x = Backup{}
+	mi := &file_database_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Backup) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Backup) ProtoMessage() {}
+
+func (x *Backup) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Backup.ProtoReflect.Descriptor instead.
+func (*Backup) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *Backup) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Backup) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *Backup) GetMethod() string {
+	if x != nil {
+		return x.Method
+	}
+	return ""
+}
+
+func (x *Backup) GetTotalSize() string {
+	if x != nil {
+		return x.TotalSize
+	}
+	return ""
+}
+
+func (x *Backup) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
+func (x *Backup) GetCompletedAt() string {
+	if x != nil {
+		return x.CompletedAt
+	}
+	return ""
+}
+
+type ListBackupsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ProjectId     string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListBackupsRequest) Reset() {
+	*x = ListBackupsRequest{}
+	mi := &file_database_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListBackupsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListBackupsRequest) ProtoMessage() {}
+
+func (x *ListBackupsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListBackupsRequest.ProtoReflect.Descriptor instead.
+func (*ListBackupsRequest) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *ListBackupsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *ListBackupsRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *ListBackupsRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type ListBackupsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Backups       []*Backup              `protobuf:"bytes,1,rep,name=backups,proto3" json:"backups,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListBackupsResponse) Reset() {
+	*x = ListBackupsResponse{}
+	mi := &file_database_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListBackupsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListBackupsResponse) ProtoMessage() {}
+
+func (x *ListBackupsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListBackupsResponse.ProtoReflect.Descriptor instead.
+func (*ListBackupsResponse) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *ListBackupsResponse) GetBackups() []*Backup {
+	if x != nil {
+		return x.Backups
+	}
+	return nil
+}
+
+type CreateBackupRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ProjectId     string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateBackupRequest) Reset() {
+	*x = CreateBackupRequest{}
+	mi := &file_database_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateBackupRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateBackupRequest) ProtoMessage() {}
+
+func (x *CreateBackupRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateBackupRequest.ProtoReflect.Descriptor instead.
+func (*CreateBackupRequest) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *CreateBackupRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *CreateBackupRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *CreateBackupRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type CreateBackupResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Backup        *Backup                `protobuf:"bytes,1,opt,name=backup,proto3" json:"backup,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateBackupResponse) Reset() {
+	*x = CreateBackupResponse{}
+	mi := &file_database_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateBackupResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateBackupResponse) ProtoMessage() {}
+
+func (x *CreateBackupResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateBackupResponse.ProtoReflect.Descriptor instead.
+func (*CreateBackupResponse) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *CreateBackupResponse) GetBackup() *Backup {
+	if x != nil {
+		return x.Backup
+	}
+	return nil
+}
+
+type DeleteBackupRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	ProjectId     string                 `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	BackupName    string                 `protobuf:"bytes,4,opt,name=backup_name,json=backupName,proto3" json:"backup_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteBackupRequest) Reset() {
+	*x = DeleteBackupRequest{}
+	mi := &file_database_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteBackupRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteBackupRequest) ProtoMessage() {}
+
+func (x *DeleteBackupRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteBackupRequest.ProtoReflect.Descriptor instead.
+func (*DeleteBackupRequest) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *DeleteBackupRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *DeleteBackupRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *DeleteBackupRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *DeleteBackupRequest) GetBackupName() string {
+	if x != nil {
+		return x.BackupName
+	}
+	return ""
+}
+
+type DeleteBackupResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteBackupResponse) Reset() {
+	*x = DeleteBackupResponse{}
+	mi := &file_database_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteBackupResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteBackupResponse) ProtoMessage() {}
+
+func (x *DeleteBackupResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteBackupResponse.ProtoReflect.Descriptor instead.
+func (*DeleteBackupResponse) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{28}
+}
+
 var File_database_proto protoreflect.FileDescriptor
 
 const file_database_proto_rawDesc = "" +
@@ -1443,7 +1839,39 @@ const file_database_proto_rawDesc = "" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1f\n" +
 	"\vschema_name\x18\x04 \x01(\tR\n" +
 	"schemaName\"\x16\n" +
-	"\x14DeleteSchemaResponse2\xfb\a\n" +
+	"\x14DeleteSchemaResponse\"\xad\x01\n" +
+	"\x06Backup\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12\x16\n" +
+	"\x06method\x18\x03 \x01(\tR\x06method\x12\x1d\n" +
+	"\n" +
+	"total_size\x18\x04 \x01(\tR\ttotalSize\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x05 \x01(\tR\tcreatedAt\x12!\n" +
+	"\fcompleted_at\x18\x06 \x01(\tR\vcompletedAt\"`\n" +
+	"\x12ListBackupsRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\"K\n" +
+	"\x13ListBackupsResponse\x124\n" +
+	"\abackups\x18\x01 \x03(\v2\x1a.dcloud.database.v1.BackupR\abackups\"a\n" +
+	"\x13CreateBackupRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\"J\n" +
+	"\x14CreateBackupResponse\x122\n" +
+	"\x06backup\x18\x01 \x01(\v2\x1a.dcloud.database.v1.BackupR\x06backup\"\x82\x01\n" +
+	"\x13DeleteBackupRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tR\tprojectId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1f\n" +
+	"\vbackup_name\x18\x04 \x01(\tR\n" +
+	"backupName\"\x16\n" +
+	"\x14DeleteBackupResponse2\xa1\n" +
+	"\n" +
 	"\x0fDatabaseService\x12O\n" +
 	"\x06Health\x12!.dcloud.database.v1.HealthRequest\x1a\".dcloud.database.v1.HealthResponse\x12d\n" +
 	"\rListDatabases\x12(.dcloud.database.v1.ListDatabasesRequest\x1a).dcloud.database.v1.ListDatabasesResponse\x12g\n" +
@@ -1454,7 +1882,10 @@ const file_database_proto_rawDesc = "" +
 	"\fGetOperation\x12'.dcloud.database.v1.GetOperationRequest\x1a(.dcloud.database.v1.GetOperationResponse\x12^\n" +
 	"\vListSchemas\x12&.dcloud.database.v1.ListSchemasRequest\x1a'.dcloud.database.v1.ListSchemasResponse\x12a\n" +
 	"\fCreateSchema\x12'.dcloud.database.v1.CreateSchemaRequest\x1a(.dcloud.database.v1.CreateSchemaResponse\x12a\n" +
-	"\fDeleteSchema\x12'.dcloud.database.v1.DeleteSchemaRequest\x1a(.dcloud.database.v1.DeleteSchemaResponseBBZ@github.com/daigo-suhara/dcloud/internal/pb/databasepb;databasepbb\x06proto3"
+	"\fDeleteSchema\x12'.dcloud.database.v1.DeleteSchemaRequest\x1a(.dcloud.database.v1.DeleteSchemaResponse\x12^\n" +
+	"\vListBackups\x12&.dcloud.database.v1.ListBackupsRequest\x1a'.dcloud.database.v1.ListBackupsResponse\x12a\n" +
+	"\fCreateBackup\x12'.dcloud.database.v1.CreateBackupRequest\x1a(.dcloud.database.v1.CreateBackupResponse\x12a\n" +
+	"\fDeleteBackup\x12'.dcloud.database.v1.DeleteBackupRequest\x1a(.dcloud.database.v1.DeleteBackupResponseBBZ@github.com/daigo-suhara/dcloud/internal/pb/databasepb;databasepbb\x06proto3"
 
 var (
 	file_database_proto_rawDescOnce sync.Once
@@ -1468,7 +1899,7 @@ func file_database_proto_rawDescGZIP() []byte {
 	return file_database_proto_rawDescData
 }
 
-var file_database_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_database_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
 var file_database_proto_goTypes = []any{
 	(*HealthRequest)(nil),               // 0: dcloud.database.v1.HealthRequest
 	(*HealthResponse)(nil),              // 1: dcloud.database.v1.HealthResponse
@@ -1492,6 +1923,13 @@ var file_database_proto_goTypes = []any{
 	(*CreateSchemaResponse)(nil),        // 19: dcloud.database.v1.CreateSchemaResponse
 	(*DeleteSchemaRequest)(nil),         // 20: dcloud.database.v1.DeleteSchemaRequest
 	(*DeleteSchemaResponse)(nil),        // 21: dcloud.database.v1.DeleteSchemaResponse
+	(*Backup)(nil),                      // 22: dcloud.database.v1.Backup
+	(*ListBackupsRequest)(nil),          // 23: dcloud.database.v1.ListBackupsRequest
+	(*ListBackupsResponse)(nil),         // 24: dcloud.database.v1.ListBackupsResponse
+	(*CreateBackupRequest)(nil),         // 25: dcloud.database.v1.CreateBackupRequest
+	(*CreateBackupResponse)(nil),        // 26: dcloud.database.v1.CreateBackupResponse
+	(*DeleteBackupRequest)(nil),         // 27: dcloud.database.v1.DeleteBackupRequest
+	(*DeleteBackupResponse)(nil),        // 28: dcloud.database.v1.DeleteBackupResponse
 }
 var file_database_proto_depIdxs = []int32{
 	2,  // 0: dcloud.database.v1.ListDatabasesResponse.databases:type_name -> dcloud.database.v1.Database
@@ -1499,31 +1937,39 @@ var file_database_proto_depIdxs = []int32{
 	2,  // 2: dcloud.database.v1.GetDatabaseResponse.database:type_name -> dcloud.database.v1.Database
 	15, // 3: dcloud.database.v1.ListSchemasResponse.schemas:type_name -> dcloud.database.v1.Schema
 	15, // 4: dcloud.database.v1.CreateSchemaResponse.schema:type_name -> dcloud.database.v1.Schema
-	0,  // 5: dcloud.database.v1.DatabaseService.Health:input_type -> dcloud.database.v1.HealthRequest
-	3,  // 6: dcloud.database.v1.DatabaseService.ListDatabases:input_type -> dcloud.database.v1.ListDatabasesRequest
-	5,  // 7: dcloud.database.v1.DatabaseService.CreateDatabase:input_type -> dcloud.database.v1.CreateDatabaseRequest
-	7,  // 8: dcloud.database.v1.DatabaseService.DeleteDatabase:input_type -> dcloud.database.v1.DeleteDatabaseRequest
-	9,  // 9: dcloud.database.v1.DatabaseService.GetDatabase:input_type -> dcloud.database.v1.GetDatabaseRequest
-	11, // 10: dcloud.database.v1.DatabaseService.GetConnectionString:input_type -> dcloud.database.v1.GetConnectionStringRequest
-	13, // 11: dcloud.database.v1.DatabaseService.GetOperation:input_type -> dcloud.database.v1.GetOperationRequest
-	16, // 12: dcloud.database.v1.DatabaseService.ListSchemas:input_type -> dcloud.database.v1.ListSchemasRequest
-	18, // 13: dcloud.database.v1.DatabaseService.CreateSchema:input_type -> dcloud.database.v1.CreateSchemaRequest
-	20, // 14: dcloud.database.v1.DatabaseService.DeleteSchema:input_type -> dcloud.database.v1.DeleteSchemaRequest
-	1,  // 15: dcloud.database.v1.DatabaseService.Health:output_type -> dcloud.database.v1.HealthResponse
-	4,  // 16: dcloud.database.v1.DatabaseService.ListDatabases:output_type -> dcloud.database.v1.ListDatabasesResponse
-	6,  // 17: dcloud.database.v1.DatabaseService.CreateDatabase:output_type -> dcloud.database.v1.CreateDatabaseResponse
-	8,  // 18: dcloud.database.v1.DatabaseService.DeleteDatabase:output_type -> dcloud.database.v1.DeleteDatabaseResponse
-	10, // 19: dcloud.database.v1.DatabaseService.GetDatabase:output_type -> dcloud.database.v1.GetDatabaseResponse
-	12, // 20: dcloud.database.v1.DatabaseService.GetConnectionString:output_type -> dcloud.database.v1.GetConnectionStringResponse
-	14, // 21: dcloud.database.v1.DatabaseService.GetOperation:output_type -> dcloud.database.v1.GetOperationResponse
-	17, // 22: dcloud.database.v1.DatabaseService.ListSchemas:output_type -> dcloud.database.v1.ListSchemasResponse
-	19, // 23: dcloud.database.v1.DatabaseService.CreateSchema:output_type -> dcloud.database.v1.CreateSchemaResponse
-	21, // 24: dcloud.database.v1.DatabaseService.DeleteSchema:output_type -> dcloud.database.v1.DeleteSchemaResponse
-	15, // [15:25] is the sub-list for method output_type
-	5,  // [5:15] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	22, // 5: dcloud.database.v1.ListBackupsResponse.backups:type_name -> dcloud.database.v1.Backup
+	22, // 6: dcloud.database.v1.CreateBackupResponse.backup:type_name -> dcloud.database.v1.Backup
+	0,  // 7: dcloud.database.v1.DatabaseService.Health:input_type -> dcloud.database.v1.HealthRequest
+	3,  // 8: dcloud.database.v1.DatabaseService.ListDatabases:input_type -> dcloud.database.v1.ListDatabasesRequest
+	5,  // 9: dcloud.database.v1.DatabaseService.CreateDatabase:input_type -> dcloud.database.v1.CreateDatabaseRequest
+	7,  // 10: dcloud.database.v1.DatabaseService.DeleteDatabase:input_type -> dcloud.database.v1.DeleteDatabaseRequest
+	9,  // 11: dcloud.database.v1.DatabaseService.GetDatabase:input_type -> dcloud.database.v1.GetDatabaseRequest
+	11, // 12: dcloud.database.v1.DatabaseService.GetConnectionString:input_type -> dcloud.database.v1.GetConnectionStringRequest
+	13, // 13: dcloud.database.v1.DatabaseService.GetOperation:input_type -> dcloud.database.v1.GetOperationRequest
+	16, // 14: dcloud.database.v1.DatabaseService.ListSchemas:input_type -> dcloud.database.v1.ListSchemasRequest
+	18, // 15: dcloud.database.v1.DatabaseService.CreateSchema:input_type -> dcloud.database.v1.CreateSchemaRequest
+	20, // 16: dcloud.database.v1.DatabaseService.DeleteSchema:input_type -> dcloud.database.v1.DeleteSchemaRequest
+	23, // 17: dcloud.database.v1.DatabaseService.ListBackups:input_type -> dcloud.database.v1.ListBackupsRequest
+	25, // 18: dcloud.database.v1.DatabaseService.CreateBackup:input_type -> dcloud.database.v1.CreateBackupRequest
+	27, // 19: dcloud.database.v1.DatabaseService.DeleteBackup:input_type -> dcloud.database.v1.DeleteBackupRequest
+	1,  // 20: dcloud.database.v1.DatabaseService.Health:output_type -> dcloud.database.v1.HealthResponse
+	4,  // 21: dcloud.database.v1.DatabaseService.ListDatabases:output_type -> dcloud.database.v1.ListDatabasesResponse
+	6,  // 22: dcloud.database.v1.DatabaseService.CreateDatabase:output_type -> dcloud.database.v1.CreateDatabaseResponse
+	8,  // 23: dcloud.database.v1.DatabaseService.DeleteDatabase:output_type -> dcloud.database.v1.DeleteDatabaseResponse
+	10, // 24: dcloud.database.v1.DatabaseService.GetDatabase:output_type -> dcloud.database.v1.GetDatabaseResponse
+	12, // 25: dcloud.database.v1.DatabaseService.GetConnectionString:output_type -> dcloud.database.v1.GetConnectionStringResponse
+	14, // 26: dcloud.database.v1.DatabaseService.GetOperation:output_type -> dcloud.database.v1.GetOperationResponse
+	17, // 27: dcloud.database.v1.DatabaseService.ListSchemas:output_type -> dcloud.database.v1.ListSchemasResponse
+	19, // 28: dcloud.database.v1.DatabaseService.CreateSchema:output_type -> dcloud.database.v1.CreateSchemaResponse
+	21, // 29: dcloud.database.v1.DatabaseService.DeleteSchema:output_type -> dcloud.database.v1.DeleteSchemaResponse
+	24, // 30: dcloud.database.v1.DatabaseService.ListBackups:output_type -> dcloud.database.v1.ListBackupsResponse
+	26, // 31: dcloud.database.v1.DatabaseService.CreateBackup:output_type -> dcloud.database.v1.CreateBackupResponse
+	28, // 32: dcloud.database.v1.DatabaseService.DeleteBackup:output_type -> dcloud.database.v1.DeleteBackupResponse
+	20, // [20:33] is the sub-list for method output_type
+	7,  // [7:20] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_database_proto_init() }
@@ -1537,7 +1983,7 @@ func file_database_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_database_proto_rawDesc), len(file_database_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   22,
+			NumMessages:   29,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

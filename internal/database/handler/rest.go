@@ -156,6 +156,61 @@ func RegisterRESTRoutes(mux *http.ServeMux, server *service.Server, verifier *jw
 		apihelp.WriteJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 	})
 
+	mux.HandleFunc("GET /api/v1/database/{name}/backups", func(w http.ResponseWriter, r *http.Request) {
+		claims, projectID := auth(w, r)
+		if claims == nil {
+			return
+		}
+		resp, err := server.ListBackups(r.Context(), &databasepb.ListBackupsRequest{
+			UserId: claims.Subject, ProjectId: projectID, Name: r.PathValue("name"),
+		})
+		if err != nil {
+			apihelp.WriteRPCError(w, err, "バックアップを取得できません")
+			return
+		}
+		backups := make([]map[string]any, 0, len(resp.Backups))
+		for _, b := range resp.Backups {
+			backups = append(backups, map[string]any{
+				"name": b.Name, "status": b.Status, "method": b.Method,
+				"totalSize": b.TotalSize, "createdAt": b.CreatedAt, "completedAt": b.CompletedAt,
+			})
+		}
+		apihelp.WriteJSON(w, http.StatusOK, map[string]any{"backups": backups})
+	})
+
+	mux.HandleFunc("POST /api/v1/database/{name}/backups", func(w http.ResponseWriter, r *http.Request) {
+		claims, projectID := auth(w, r)
+		if claims == nil {
+			return
+		}
+		resp, err := server.CreateBackup(r.Context(), &databasepb.CreateBackupRequest{
+			UserId: claims.Subject, ProjectId: projectID, Name: r.PathValue("name"),
+		})
+		if err != nil {
+			apihelp.WriteRPCError(w, err, "バックアップを作成できません")
+			return
+		}
+		apihelp.WriteJSON(w, http.StatusOK, map[string]any{
+			"name": resp.Backup.Name, "status": resp.Backup.Status,
+		})
+	})
+
+	mux.HandleFunc("DELETE /api/v1/database/{name}/backups/{backupName}", func(w http.ResponseWriter, r *http.Request) {
+		claims, projectID := auth(w, r)
+		if claims == nil {
+			return
+		}
+		_, err := server.DeleteBackup(r.Context(), &databasepb.DeleteBackupRequest{
+			UserId: claims.Subject, ProjectId: projectID,
+			Name: r.PathValue("name"), BackupName: r.PathValue("backupName"),
+		})
+		if err != nil {
+			apihelp.WriteRPCError(w, err, "バックアップを削除できません")
+			return
+		}
+		apihelp.WriteJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+	})
+
 	mux.HandleFunc("GET /api/v1/operations/{id}", func(w http.ResponseWriter, r *http.Request) {
 		if _, _, err := verifier.VerifyCookieOrBearer(r, cookie); err != nil {
 			http.Error(w, "ログインが必要です", http.StatusUnauthorized)

@@ -10,6 +10,7 @@ import type { DatabaseConnectionInfo, DatabaseInstance, DatabaseSchema } from ".
 import { formatComputeTimestamp, formatDatabasePlan, formatStatus } from "../utils";
 import { monoFontFamily } from "../theme";
 import { PageHeader, DataTable, StatusBadge, FormDialog } from "./primitives";
+import { BackupsPanel } from "./BackupsPanel";
 import type { Column, StatusVariant } from "./primitives";
 
 const DB_TYPE_LABELS: Record<string, string> = {
@@ -256,6 +257,10 @@ export function DatabaseDetailSection({
             </Collapse>
           ))}
         </>
+      )}
+
+      {isReady && (
+        <BackupsPanel dbName={databaseName} projectId={activeProjectId} enabled={isManagedType} />
       )}
 
       <FormDialog

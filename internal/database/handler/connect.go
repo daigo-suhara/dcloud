@@ -95,3 +95,27 @@ func (a *Connect) DeleteSchema(ctx context.Context, req *connect.Request[databas
 	}
 	return connect.NewResponse(resp), nil
 }
+
+func (a *Connect) ListBackups(ctx context.Context, req *connect.Request[databasepb.ListBackupsRequest]) (*connect.Response[databasepb.ListBackupsResponse], error) {
+	resp, err := a.inner.ListBackups(ctx, req.Msg)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (a *Connect) CreateBackup(ctx context.Context, req *connect.Request[databasepb.CreateBackupRequest]) (*connect.Response[databasepb.CreateBackupResponse], error) {
+	resp, err := a.inner.CreateBackup(ctx, req.Msg)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (a *Connect) DeleteBackup(ctx context.Context, req *connect.Request[databasepb.DeleteBackupRequest]) (*connect.Response[databasepb.DeleteBackupResponse], error) {
+	resp, err := a.inner.DeleteBackup(ctx, req.Msg)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}

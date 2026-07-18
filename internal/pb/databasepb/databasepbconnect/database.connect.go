@@ -62,6 +62,15 @@ const (
 	// DatabaseServiceDeleteSchemaProcedure is the fully-qualified name of the DatabaseService's
 	// DeleteSchema RPC.
 	DatabaseServiceDeleteSchemaProcedure = "/dcloud.database.v1.DatabaseService/DeleteSchema"
+	// DatabaseServiceListBackupsProcedure is the fully-qualified name of the DatabaseService's
+	// ListBackups RPC.
+	DatabaseServiceListBackupsProcedure = "/dcloud.database.v1.DatabaseService/ListBackups"
+	// DatabaseServiceCreateBackupProcedure is the fully-qualified name of the DatabaseService's
+	// CreateBackup RPC.
+	DatabaseServiceCreateBackupProcedure = "/dcloud.database.v1.DatabaseService/CreateBackup"
+	// DatabaseServiceDeleteBackupProcedure is the fully-qualified name of the DatabaseService's
+	// DeleteBackup RPC.
+	DatabaseServiceDeleteBackupProcedure = "/dcloud.database.v1.DatabaseService/DeleteBackup"
 )
 
 // DatabaseServiceClient is a client for the dcloud.database.v1.DatabaseService service.
@@ -77,6 +86,10 @@ type DatabaseServiceClient interface {
 	ListSchemas(context.Context, *connect.Request[databasepb.ListSchemasRequest]) (*connect.Response[databasepb.ListSchemasResponse], error)
 	CreateSchema(context.Context, *connect.Request[databasepb.CreateSchemaRequest]) (*connect.Response[databasepb.CreateSchemaResponse], error)
 	DeleteSchema(context.Context, *connect.Request[databasepb.DeleteSchemaRequest]) (*connect.Response[databasepb.DeleteSchemaResponse], error)
+	// Backups
+	ListBackups(context.Context, *connect.Request[databasepb.ListBackupsRequest]) (*connect.Response[databasepb.ListBackupsResponse], error)
+	CreateBackup(context.Context, *connect.Request[databasepb.CreateBackupRequest]) (*connect.Response[databasepb.CreateBackupResponse], error)
+	DeleteBackup(context.Context, *connect.Request[databasepb.DeleteBackupRequest]) (*connect.Response[databasepb.DeleteBackupResponse], error)
 }
 
 // NewDatabaseServiceClient constructs a client for the dcloud.database.v1.DatabaseService service.
@@ -150,6 +163,24 @@ func NewDatabaseServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(databaseServiceMethods.ByName("DeleteSchema")),
 			connect.WithClientOptions(opts...),
 		),
+		listBackups: connect.NewClient[databasepb.ListBackupsRequest, databasepb.ListBackupsResponse](
+			httpClient,
+			baseURL+DatabaseServiceListBackupsProcedure,
+			connect.WithSchema(databaseServiceMethods.ByName("ListBackups")),
+			connect.WithClientOptions(opts...),
+		),
+		createBackup: connect.NewClient[databasepb.CreateBackupRequest, databasepb.CreateBackupResponse](
+			httpClient,
+			baseURL+DatabaseServiceCreateBackupProcedure,
+			connect.WithSchema(databaseServiceMethods.ByName("CreateBackup")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteBackup: connect.NewClient[databasepb.DeleteBackupRequest, databasepb.DeleteBackupResponse](
+			httpClient,
+			baseURL+DatabaseServiceDeleteBackupProcedure,
+			connect.WithSchema(databaseServiceMethods.ByName("DeleteBackup")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -165,6 +196,9 @@ type databaseServiceClient struct {
 	listSchemas         *connect.Client[databasepb.ListSchemasRequest, databasepb.ListSchemasResponse]
 	createSchema        *connect.Client[databasepb.CreateSchemaRequest, databasepb.CreateSchemaResponse]
 	deleteSchema        *connect.Client[databasepb.DeleteSchemaRequest, databasepb.DeleteSchemaResponse]
+	listBackups         *connect.Client[databasepb.ListBackupsRequest, databasepb.ListBackupsResponse]
+	createBackup        *connect.Client[databasepb.CreateBackupRequest, databasepb.CreateBackupResponse]
+	deleteBackup        *connect.Client[databasepb.DeleteBackupRequest, databasepb.DeleteBackupResponse]
 }
 
 // Health calls dcloud.database.v1.DatabaseService.Health.
@@ -217,6 +251,21 @@ func (c *databaseServiceClient) DeleteSchema(ctx context.Context, req *connect.R
 	return c.deleteSchema.CallUnary(ctx, req)
 }
 
+// ListBackups calls dcloud.database.v1.DatabaseService.ListBackups.
+func (c *databaseServiceClient) ListBackups(ctx context.Context, req *connect.Request[databasepb.ListBackupsRequest]) (*connect.Response[databasepb.ListBackupsResponse], error) {
+	return c.listBackups.CallUnary(ctx, req)
+}
+
+// CreateBackup calls dcloud.database.v1.DatabaseService.CreateBackup.
+func (c *databaseServiceClient) CreateBackup(ctx context.Context, req *connect.Request[databasepb.CreateBackupRequest]) (*connect.Response[databasepb.CreateBackupResponse], error) {
+	return c.createBackup.CallUnary(ctx, req)
+}
+
+// DeleteBackup calls dcloud.database.v1.DatabaseService.DeleteBackup.
+func (c *databaseServiceClient) DeleteBackup(ctx context.Context, req *connect.Request[databasepb.DeleteBackupRequest]) (*connect.Response[databasepb.DeleteBackupResponse], error) {
+	return c.deleteBackup.CallUnary(ctx, req)
+}
+
 // DatabaseServiceHandler is an implementation of the dcloud.database.v1.DatabaseService service.
 type DatabaseServiceHandler interface {
 	Health(context.Context, *connect.Request[databasepb.HealthRequest]) (*connect.Response[databasepb.HealthResponse], error)
@@ -230,6 +279,10 @@ type DatabaseServiceHandler interface {
 	ListSchemas(context.Context, *connect.Request[databasepb.ListSchemasRequest]) (*connect.Response[databasepb.ListSchemasResponse], error)
 	CreateSchema(context.Context, *connect.Request[databasepb.CreateSchemaRequest]) (*connect.Response[databasepb.CreateSchemaResponse], error)
 	DeleteSchema(context.Context, *connect.Request[databasepb.DeleteSchemaRequest]) (*connect.Response[databasepb.DeleteSchemaResponse], error)
+	// Backups
+	ListBackups(context.Context, *connect.Request[databasepb.ListBackupsRequest]) (*connect.Response[databasepb.ListBackupsResponse], error)
+	CreateBackup(context.Context, *connect.Request[databasepb.CreateBackupRequest]) (*connect.Response[databasepb.CreateBackupResponse], error)
+	DeleteBackup(context.Context, *connect.Request[databasepb.DeleteBackupRequest]) (*connect.Response[databasepb.DeleteBackupResponse], error)
 }
 
 // NewDatabaseServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -299,6 +352,24 @@ func NewDatabaseServiceHandler(svc DatabaseServiceHandler, opts ...connect.Handl
 		connect.WithSchema(databaseServiceMethods.ByName("DeleteSchema")),
 		connect.WithHandlerOptions(opts...),
 	)
+	databaseServiceListBackupsHandler := connect.NewUnaryHandler(
+		DatabaseServiceListBackupsProcedure,
+		svc.ListBackups,
+		connect.WithSchema(databaseServiceMethods.ByName("ListBackups")),
+		connect.WithHandlerOptions(opts...),
+	)
+	databaseServiceCreateBackupHandler := connect.NewUnaryHandler(
+		DatabaseServiceCreateBackupProcedure,
+		svc.CreateBackup,
+		connect.WithSchema(databaseServiceMethods.ByName("CreateBackup")),
+		connect.WithHandlerOptions(opts...),
+	)
+	databaseServiceDeleteBackupHandler := connect.NewUnaryHandler(
+		DatabaseServiceDeleteBackupProcedure,
+		svc.DeleteBackup,
+		connect.WithSchema(databaseServiceMethods.ByName("DeleteBackup")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/dcloud.database.v1.DatabaseService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case DatabaseServiceHealthProcedure:
@@ -321,6 +392,12 @@ func NewDatabaseServiceHandler(svc DatabaseServiceHandler, opts ...connect.Handl
 			databaseServiceCreateSchemaHandler.ServeHTTP(w, r)
 		case DatabaseServiceDeleteSchemaProcedure:
 			databaseServiceDeleteSchemaHandler.ServeHTTP(w, r)
+		case DatabaseServiceListBackupsProcedure:
+			databaseServiceListBackupsHandler.ServeHTTP(w, r)
+		case DatabaseServiceCreateBackupProcedure:
+			databaseServiceCreateBackupHandler.ServeHTTP(w, r)
+		case DatabaseServiceDeleteBackupProcedure:
+			databaseServiceDeleteBackupHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -368,4 +445,16 @@ func (UnimplementedDatabaseServiceHandler) CreateSchema(context.Context, *connec
 
 func (UnimplementedDatabaseServiceHandler) DeleteSchema(context.Context, *connect.Request[databasepb.DeleteSchemaRequest]) (*connect.Response[databasepb.DeleteSchemaResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dcloud.database.v1.DatabaseService.DeleteSchema is not implemented"))
+}
+
+func (UnimplementedDatabaseServiceHandler) ListBackups(context.Context, *connect.Request[databasepb.ListBackupsRequest]) (*connect.Response[databasepb.ListBackupsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dcloud.database.v1.DatabaseService.ListBackups is not implemented"))
+}
+
+func (UnimplementedDatabaseServiceHandler) CreateBackup(context.Context, *connect.Request[databasepb.CreateBackupRequest]) (*connect.Response[databasepb.CreateBackupResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dcloud.database.v1.DatabaseService.CreateBackup is not implemented"))
+}
+
+func (UnimplementedDatabaseServiceHandler) DeleteBackup(context.Context, *connect.Request[databasepb.DeleteBackupRequest]) (*connect.Response[databasepb.DeleteBackupResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dcloud.database.v1.DatabaseService.DeleteBackup is not implemented"))
 }
