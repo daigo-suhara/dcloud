@@ -2,10 +2,49 @@ apiVersion: v2
 name: dcloud
 description: A GCP-like cloud platform running on Kubernetes.
 type: application
-version: 0.1.0
-appVersion: "0.1.0"
+version: 0.2.0
+appVersion: "0.2.0"
 
+# Umbrella chart pattern: platform-level dependencies ship with dcloud so
+# `helm install dcloud` reaches a working state without asking operators
+# to pre-provision six other charts. Every dependency is gated by a
+# `<name>.enabled` value so a bring-your-own deployment can turn each
+# piece off (e.g. `istio.enabled: false` to reuse a cluster's existing
+# istio installation).
 dependencies:
   - name: postgresql-ha
     version: 16.3.2
     repository: oci://registry-1.docker.io/bitnamicharts
+
+  - name: base
+    alias: istio-base
+    version: 1.30.3
+    repository: https://istio-release.storage.googleapis.com/charts
+    condition: istio.enabled
+
+  - name: istiod
+    version: 1.30.3
+    repository: https://istio-release.storage.googleapis.com/charts
+    condition: istio.enabled
+
+  - name: gateway
+    alias: istio-ingressgateway
+    version: 1.30.3
+    repository: https://istio-release.storage.googleapis.com/charts
+    condition: istio.enabled
+
+  - name: knative-operator
+    version: 1.16.2
+    repository: https://knative.github.io/operator
+    condition: knative.enabled
+
+  - name: kubeblocks
+    version: 1.0.2
+    repository: https://apecloud.github.io/helm-charts
+    condition: kubeblocks.enabled
+
+  - name: gateway-helm
+    alias: envoy-gateway
+    version: 1.7.4
+    repository: oci://docker.io/envoyproxy
+    condition: envoyGateway.enabled

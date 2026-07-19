@@ -11,6 +11,39 @@ image:
 # your own zone.
 publicServiceDomain: example.com
 
+# --- Platform dependency toggles --------------------------------------------
+# Each block below controls a bundled sub-chart (see Chart.yaml `dependencies`).
+# Set `enabled: false` to bring your own installation of that component; the
+# corresponding sub-chart is skipped by Helm and dcloud assumes the component
+# already exists in the cluster.
+istio:
+  enabled: true
+
+knative:
+  enabled: true
+  # kubectl-apply'd inline manifest (charts/dcloud/manifests/knative-serving.yaml)
+  # that provisions the Serving CR the knative-operator watches.
+  serving:
+    version: 1.16.1
+
+kubevirt:
+  enabled: true
+  # kubectl-apply'd inline manifests (charts/dcloud/manifests/kubevirt-*.yaml)
+  # since KubeVirt does not ship an official Helm chart.
+  version: 1.4.0
+
+kubeblocks:
+  enabled: true
+  # CRDs ship as a separate release asset; rendered from
+  # charts/dcloud/manifests/kubeblocks-crds.yaml.
+  crdsVersion: 1.0.2
+
+envoyGateway:
+  enabled: false  # dcloud's console goes through istio-ingressgateway; opt in
+                  # only when Gateway API is preferred over the istio Gateway.
+# --- End platform dependency toggles ---------------------------------------
+
+
 identity:
   replicaCount: 2
   image:
