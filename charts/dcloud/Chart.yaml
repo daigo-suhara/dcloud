@@ -7,10 +7,10 @@ appVersion: "0.2.0"
 
 # Umbrella chart pattern: platform-level dependencies ship with dcloud so
 # `helm install dcloud` reaches a working state without asking operators
-# to pre-provision six other charts. Every dependency is gated by a
-# `<name>.enabled` value so a bring-your-own deployment can turn each
-# piece off (e.g. `istio.enabled: false` to reuse a cluster's existing
-# istio installation).
+# to pre-provision separate charts. Only the minimum set required for
+# dcloud's container feature (istio + knative) is bundled by default.
+# Adding kubevirt (compute), kubeblocks (managed DB), or envoy-gateway
+# is out of scope for the umbrella and remains a bring-your-own step.
 dependencies:
   - name: postgresql-ha
     version: 16.3.2
@@ -37,14 +37,3 @@ dependencies:
     version: 1.16.2
     repository: https://knative.github.io/operator
     condition: knative.enabled
-
-  - name: kubeblocks
-    version: 1.0.2
-    repository: https://apecloud.github.io/helm-charts
-    condition: kubeblocks.enabled
-
-  - name: gateway-helm
-    alias: envoy-gateway
-    version: 1.7.4
-    repository: oci://docker.io/envoyproxy
-    condition: envoyGateway.enabled

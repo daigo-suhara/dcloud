@@ -2,5 +2,17 @@ dependencies:
 - name: postgresql-ha
   repository: oci://registry-1.docker.io/bitnamicharts
   version: 16.3.2
-digest: sha256:1bd9cc102dfc5151f2f3fb7c3ae1210c938bf8a767640b46f4a62733647a857d
-generated: "2026-06-07T11:22:05.504443+09:00"
+- name: base
+  repository: https://istio-release.storage.googleapis.com/charts
+  version: 1.30.3
+- name: istiod
+  repository: https://istio-release.storage.googleapis.com/charts
+  version: 1.30.3
+- name: gateway
+  repository: https://istio-release.storage.googleapis.com/charts
+  version: 1.30.3
+- name: knative-operator
+  repository: https://knative.github.io/operator
+  version: v1.16.2
+digest: sha256:c10c8fd40620227968286a607d08447e5f93041ba9fcd476e336e27f09236aa5
+generated: "2026-07-19T16:50:45.704823+09:00"

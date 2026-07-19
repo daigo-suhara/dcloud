@@ -1,0 +1,9 @@
+{{- /*
+Bundled static manifests that upstream components do not publish as
+Helm charts. Each block is gated on the matching platform toggle so
+BYO installs skip the include and manage the resource themselves.
+*/ -}}
+{{- if .Values.knative.enabled }}
+---
+{{ .Files.Get "manifests/knative-serving.yaml" }}
+{{- end }}

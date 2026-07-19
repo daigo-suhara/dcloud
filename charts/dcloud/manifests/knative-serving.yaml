@@ -1,0 +1,17 @@
+apiVersion: operator.knative.dev/v1beta1
+kind: KnativeServing
+metadata:
+  name: knative-serving
+  namespace: knative-serving
+spec:
+  ingress:
+    istio:
+      enabled: true
+  config:
+    network:
+      autocreate-cluster-domain-claims: "true"
+    features:
+      kubernetes.podspec-securitycontext: enabled
+      kubernetes.podspec-volumes-emptydir: enabled
+      kubernetes.podspec-fieldref: enabled
+      kubernetes.containerspec-addcapabilities: enabled
