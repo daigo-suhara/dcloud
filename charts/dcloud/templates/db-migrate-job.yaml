@@ -8,11 +8,14 @@ metadata:
     {{- include "dcloud.labels" . | nindent 4 }}
     app.kubernetes.io/component: db-migrate
   annotations:
-    # Helm-style post-install hooks do not fire under ArgoCD, so we use
-    # the argocd-native PostSync hook: it fires after the Sync phase
-    # applies (and creates) the bundled postgresql-ha StatefulSet, which
-    # PreSync would race with when the umbrella chart owns Postgres too.
-    argocd.argoproj.io/hook: PostSync
+    # sync-wave puts the migration between the bundled postgres install
+    # (wave 0, from the sub-chart) and the dcloud services (wave 2).
+    # PostSync would block on the dcloud service Deployments becoming
+    # Healthy, but those Deployments can't be Healthy until this
+    # migration runs — classic circular wait. Sync-wave lets the Job
+    # run mid-Sync as soon as postgres is Applied.
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   backoffLimit: 1
