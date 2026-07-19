@@ -8,10 +8,11 @@ metadata:
     {{- include "dcloud.labels" . | nindent 4 }}
     app.kubernetes.io/component: db-migrate
   annotations:
-    # Helm-style post-install hooks do not fire under ArgoCD. Use
-    # argocd-native PreSync so the migration runs on every sync
-    # (initial + upgrade), including the first-ever install.
-    argocd.argoproj.io/hook: PreSync
+    # Helm-style post-install hooks do not fire under ArgoCD, so we use
+    # the argocd-native PostSync hook: it fires after the Sync phase
+    # applies (and creates) the bundled postgresql-ha StatefulSet, which
+    # PreSync would race with when the umbrella chart owns Postgres too.
+    argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   backoffLimit: 1
