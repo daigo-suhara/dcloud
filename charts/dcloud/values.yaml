@@ -16,14 +16,16 @@ publicServiceDomain: example.com
 # and any static manifests rendered under templates/inline-manifests.yaml.
 # Set `enabled: false` to bring your own installation of that component;
 # dcloud then assumes it already exists in the cluster.
-istio:
-  enabled: true
-
 knative:
   enabled: true
   # KnativeServing CR rendered from manifests/knative-serving.yaml so the
   # knative-operator has a Serving instance to reconcile once the operator
   # sub-chart lands.
+
+kourier:
+  enabled: true
+  # Kourier is Knative Serving's default ingress. Rendered from
+  # manifests/kourier.yaml since net-kourier has no official Helm chart.
 # --- End platform dependency toggles ---------------------------------------
 
 
@@ -160,10 +162,10 @@ ingress:
     enabled: true
     # cert-manager ClusterIssuer to request certs from.
     clusterIssuer: letsencrypt-prod
-  # Tenant *.<publicServiceDomain> traffic is forwarded to istio-ingressgateway
-  # so Knative can match Routes by Host. Set enabled: false if you serve
-  # tenants some other way.
+  # Tenant *.<publicServiceDomain> traffic is forwarded to Knative's
+  # kourier ingress so Knative can match Routes by Host. Set
+  # enabled: false if you serve tenants some other way.
   tenantWildcard:
     enabled: true
-    upstreamService: istio-ingressgateway.istio-system.svc.cluster.local
+    upstreamService: kourier.kourier-system.svc.cluster.local
     upstreamPort: 80

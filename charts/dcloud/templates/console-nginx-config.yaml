@@ -15,7 +15,7 @@ data:
     #
     # Tenant `*.<publicServiceDomain>` routing is intentionally not
     # done here anymore. The outer Ingress (see console-ingress.yaml)
-    # sends that traffic straight to istio-ingressgateway.
+    # sends that traffic straight to Knative's kourier ingress.
     server {
       listen 8080 default_server;
       server_name _;

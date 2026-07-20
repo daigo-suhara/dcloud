@@ -1,18 +1,8 @@
 {{- /*
-Namespaces the bundled platform sub-charts install into. Split from the
-sub-charts because istio-base / knative-operator do not create their own
-target namespaces, and Kubernetes applies namespaces before other kinds
-in the same manifest bundle so ordering is safe.
+knative-operator does not create knative-serving on its own; declaring
+it here keeps the sync-wave ordering deterministic. Kourier's own
+namespace ships inside manifests/kourier.yaml.
 */ -}}
-{{- if .Values.istio.enabled }}
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: istio-system
-  labels:
-    istio-injection: disabled
----
-{{- end }}
 {{- if .Values.knative.enabled }}
 apiVersion: v1
 kind: Namespace

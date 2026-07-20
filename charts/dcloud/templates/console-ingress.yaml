@@ -9,7 +9,7 @@ container catch-all.
 
 - Rule 2 (*.publicServiceDomain): only rendered when
   ingress.tenantWildcard.enabled is true. Forwards every subdomain to
-  istio-ingressgateway so Knative can match Routes by Host header.
+  Knative's kourier ingress so Knative can match Routes by Host header.
 */}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
