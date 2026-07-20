@@ -120,7 +120,7 @@ export function ComputeDetailSection({
 
       socket.onopen = () => {
         if (disposedRef.current) return;
-        setTerminalStatus("接続中");
+        setTerminalStatus("接続完了");
         terminal.writeln("[connected]");
       };
       socket.onmessage = (event) => {
