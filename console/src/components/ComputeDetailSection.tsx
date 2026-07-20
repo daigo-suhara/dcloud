@@ -64,23 +64,10 @@ export function ComputeDetailSection({
     const terminal = new Terminal({
       cursorBlink: true,
       fontFamily: monoFontFamily,
-      fontSize: 15,
-      lineHeight: 1.25,
-      letterSpacing: 0.2,
-      scrollback: 5000,
-      convertEol: true,
+      fontSize: 13, scrollback: 1000, convertEol: true,
       theme: {
-        background: "#1e1e2e", foreground: "#cdd6f4",
-        cursor: "#f5c2e7", cursorAccent: "#1e1e2e",
-        selectionBackground: alpha("#89b4fa", 0.35),
-        black:   "#45475a", red:     "#f38ba8",
-        green:   "#a6e3a1", yellow:  "#f9e2af",
-        blue:    "#89b4fa", magenta: "#f5c2e7",
-        cyan:    "#94e2d5", white:   "#bac2de",
-        brightBlack:   "#585b70", brightRed:     "#f38ba8",
-        brightGreen:   "#a6e3a1", brightYellow:  "#f9e2af",
-        brightBlue:    "#89b4fa", brightMagenta: "#f5c2e7",
-        brightCyan:    "#94e2d5", brightWhite:   "#a6adc8"
+        background: "#202124", foreground: "#e8eaed",
+        cursor: "#e8eaed", selectionBackground: alpha("#1a73e8", 0.35)
       }
     });
     terminalRef.current = terminal;
@@ -91,9 +78,8 @@ export function ComputeDetailSection({
     const resize = () => {
       if (disposedRef.current) return;
       const rect = container.getBoundingClientRect();
-      // Rough per-char width/height for fontSize 15 * lineHeight 1.25.
-      const cols = Math.max(60, Math.floor(rect.width / 9.5));
-      const rows = Math.max(20, Math.floor(rect.height / 21));
+      const cols = Math.max(40, Math.floor(rect.width / 8.5));
+      const rows = Math.max(12, Math.floor(rect.height / 17));
       terminal.resize(cols, rows);
     };
     resize();
@@ -205,14 +191,14 @@ export function ComputeDetailSection({
       <Box sx={{ mb: 2 }}>
         <Typography variant="h6" sx={{ mb: 1 }}>コンソール <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>{terminalStatus}</Typography></Typography>
         {terminalHint ? <Alert severity="info" sx={{ mb: 1 }}>{terminalHint}</Alert> : null}
-        <Paper variant="outlined" sx={{ overflow: "hidden", bgcolor: "#1e1e2e", borderColor: "#dadce0" }}>
+        <Paper variant="outlined" sx={{ overflow: "hidden", bgcolor: "#202124", borderColor: "#dadce0" }}>
           {isReady ? (
-            <Box sx={{ p: 1.5, bgcolor: "#1e1e2e", height: { xs: 420, md: 640 } }}>
+            <Box sx={{ p: 1.5, bgcolor: "#202124", height: { xs: 360, md: 520 } }}>
               <Box ref={terminalContainerRef} sx={{ height: "100%", width: "100%" }} />
             </Box>
           ) : (
             <Box sx={{
-              height: { xs: 420, md: 640 }, width: "100%",
+              height: { xs: 360, md: 520 }, width: "100%",
               display: "grid", placeItems: "center",
               color: "#e8eaed",
               fontFamily: monoFontFamily
