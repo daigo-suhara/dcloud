@@ -53,12 +53,9 @@ func NewConsoleWSHandler(svc *service.Server, verifier *jwtverify.Verifier) (*Co
 		saToken:     strings.TrimSpace(string(tokenBytes)),
 		kubeBaseURL: strings.TrimRight(envOrDefault("DCLD_KUBERNETES_API_URL", "https://kubernetes.default.svc"), "/"),
 		cookieName:  envOrDefault("DCLD_SESSION_COOKIE_NAME", "dcloud_session"),
-		// KubeVirt's console subresource expects a WebSocket
-		// subprotocol; plain.kubevirt.io is the raw bidirectional
-		// byte stream (no channel framing). Omitting the negotiation
-		// silently ignores the write direction on some virt-api
-		// versions.
-		subprotocols: []string{"plain.kubevirt.io"},
+		// KubeVirt's console subresource is a raw bidirectional byte
+		// stream over WebSocket with no subprotocol negotiation.
+		subprotocols: nil,
 	}, nil
 }
 

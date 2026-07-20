@@ -86,11 +86,13 @@ export function ComputeDetailSection({
     const observer = new ResizeObserver(() => resize());
     observer.observe(container);
     const decoder = new TextDecoder();
-    // KubeVirt's console subresource speaks raw bidirectional bytes over
-    // WebSocket; no channel.k8s.io framing.
+    const encoder = new TextEncoder();
+    // Send keystrokes as BINARY frames; virt-api routes stdin from
+    // BINARY frames to the VM and silently drops TEXT frames.
     const dataDisposable = terminal.onData((data) => {
       const socket = socketRef.current;
-      if (socket?.readyState === WebSocket.OPEN) socket.send(data);
+      if (socket?.readyState !== WebSocket.OPEN) return;
+      socket.send(encoder.encode(data));
     });
 
     const clearRetryTimer = () => {
