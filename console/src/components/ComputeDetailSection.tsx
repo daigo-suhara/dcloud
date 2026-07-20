@@ -205,9 +205,11 @@ export function ComputeDetailSection({
       <Box sx={{ mb: 2 }}>
         <Typography variant="h6" sx={{ mb: 1 }}>コンソール <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>{terminalStatus}</Typography></Typography>
         {terminalHint ? <Alert severity="info" sx={{ mb: 1 }}>{terminalHint}</Alert> : null}
-        <Paper variant="outlined" sx={{ overflow: "hidden", bgcolor: "#202124", borderColor: "#dadce0" }}>
+        <Paper variant="outlined" sx={{ overflow: "hidden", bgcolor: "#1e1e2e", borderColor: "#dadce0" }}>
           {isReady ? (
-            <Box ref={terminalContainerRef} sx={{ height: { xs: 420, md: 640 }, width: "100%" }} />
+            <Box sx={{ p: 1.5, bgcolor: "#1e1e2e", height: { xs: 420, md: 640 } }}>
+              <Box ref={terminalContainerRef} sx={{ height: "100%", width: "100%" }} />
+            </Box>
           ) : (
             <Box sx={{
               height: { xs: 420, md: 640 }, width: "100%",
