@@ -53,10 +53,11 @@ func NewConsoleWSHandler(svc *service.Server, verifier *jwtverify.Verifier) (*Co
 		saToken:     strings.TrimSpace(string(tokenBytes)),
 		kubeBaseURL: strings.TrimRight(envOrDefault("DCLD_KUBERNETES_API_URL", "https://kubernetes.default.svc"), "/"),
 		cookieName:  envOrDefault("DCLD_SESSION_COOKIE_NAME", "dcloud_session"),
-		subprotocols: []string{
-			"v5.channel.k8s.io", "v4.channel.k8s.io",
-			"v3.channel.k8s.io", "v2.channel.k8s.io", "channel.k8s.io",
-		},
+		// KubeVirt's console subresource is a raw bidirectional byte
+		// stream; no channel.k8s.io framing is needed and requesting
+		// one causes the upstream to add a channel-id byte to every
+		// frame that the browser has no reason to know about.
+		subprotocols: nil,
 	}, nil
 }
 

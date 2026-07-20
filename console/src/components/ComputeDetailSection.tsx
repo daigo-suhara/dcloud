@@ -86,19 +86,11 @@ export function ComputeDetailSection({
     const observer = new ResizeObserver(() => resize());
     observer.observe(container);
     const decoder = new TextDecoder();
-    const encoder = new TextEncoder();
-    // KubeVirt's console subresource uses the channel.k8s.io streaming
-    // protocol: every WS message is prefixed with a channel ID byte
-    // (0=stdin, 1=stdout, 2=stderr). Frames without the prefix are
-    // dropped as "unknown channel" so keyboard input is silently lost.
+    // KubeVirt's console subresource speaks raw bidirectional bytes over
+    // WebSocket; no channel.k8s.io framing.
     const dataDisposable = terminal.onData((data) => {
       const socket = socketRef.current;
-      if (!socket || socket.readyState !== WebSocket.OPEN) return;
-      const payload = encoder.encode(data);
-      const framed = new Uint8Array(payload.length + 1);
-      framed[0] = 0;
-      framed.set(payload, 1);
-      socket.send(framed);
+      if (socket?.readyState === WebSocket.OPEN) socket.send(data);
     });
 
     const clearRetryTimer = () => {
@@ -127,10 +119,8 @@ export function ComputeDetailSection({
         if (disposedRef.current) return;
         if (typeof event.data === "string") { terminal.write(event.data); return; }
         const payload = event.data instanceof ArrayBuffer ? new Uint8Array(event.data) : new Uint8Array();
-        if (payload.length < 2) return;
-        const channel = payload[0];
-        if (channel !== 1 && channel !== 2) return;
-        terminal.write(decoder.decode(payload.subarray(1), { stream: true }));
+        if (payload.length === 0) return;
+        terminal.write(decoder.decode(payload, { stream: true }));
       };
       socket.onerror = () => {
         if (disposedRef.current) return;
