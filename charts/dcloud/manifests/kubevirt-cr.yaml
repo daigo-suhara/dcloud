@@ -1,0 +1,12 @@
+apiVersion: kubevirt.io/v1
+kind: KubeVirt
+metadata:
+  name: kubevirt
+  namespace: kubevirt
+spec:
+  configuration:
+    developerConfiguration:
+      # Bare metal nodes have hardware virt; leave software-emulation off.
+      useEmulation: false
+  workloadUpdateStrategy:
+    workloadUpdateMethods: [LiveMigrate]

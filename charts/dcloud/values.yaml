@@ -18,11 +18,9 @@ publicServiceDomain: example.com
 # dcloud then assumes it already exists in the cluster.
 knative:
   enabled: true
-  # KnativeServing CR rendered from manifests/knative-serving.yaml so the
-  # knative-operator has a Serving instance to reconcile once the operator
-  # sub-chart lands. The CR asks for kourier ingress; the knative-operator
-  # installs the kourier Deployment and Services automatically, so we do
-  # NOT bundle kourier YAML directly.
+
+kubevirt:
+  enabled: true
 # --- End platform dependency toggles ---------------------------------------
 
 

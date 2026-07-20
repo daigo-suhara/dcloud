@@ -1,9 +1,10 @@
-{{- /*
-Bundled static manifests that upstream components do not publish as
-Helm charts. Each block is gated on the matching platform toggle so
-BYO installs skip the include.
-*/ -}}
 {{- if .Values.knative.enabled }}
 ---
 {{ .Files.Get "manifests/knative-serving.yaml" }}
+{{- end }}
+{{- if .Values.kubevirt.enabled }}
+---
+{{ .Files.Get "manifests/kubevirt-operator.yaml" }}
+---
+{{ .Files.Get "manifests/kubevirt-cr.yaml" }}
 {{- end }}
