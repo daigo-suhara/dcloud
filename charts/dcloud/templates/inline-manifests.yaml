@@ -7,7 +7,3 @@ BYO installs skip the include.
 ---
 {{ .Files.Get "manifests/knative-serving.yaml" }}
 {{- end }}
-{{- if .Values.kourier.enabled }}
----
-{{ .Files.Get "manifests/kourier.yaml" }}
-{{- end }}
