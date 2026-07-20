@@ -29,6 +29,8 @@ jobs:
         working-directory: console
       - uses: azure/setup-helm@v4
       - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       - run: buf lint
       - run: helm template dcloud charts/dcloud
 
