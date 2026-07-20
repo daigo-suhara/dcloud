@@ -160,9 +160,11 @@ ingress:
     # cert-manager ClusterIssuer to request certs from.
     clusterIssuer: letsencrypt-prod
   # Tenant *.<publicServiceDomain> traffic is forwarded to Knative's
-  # kourier ingress so Knative can match Routes by Host. Set
-  # enabled: false if you serve tenants some other way.
+  # kourier ingress so Knative can match Routes by Host. knative-operator
+  # installs kourier into the knative-serving namespace (not kourier-system
+  # like the raw kourier YAML would). Set enabled: false if you serve
+  # tenants some other way.
   tenantWildcard:
     enabled: true
-    upstreamService: kourier.kourier-system.svc.cluster.local
+    upstreamService: kourier.knative-serving.svc.cluster.local
     upstreamPort: 80
