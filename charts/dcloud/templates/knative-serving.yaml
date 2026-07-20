@@ -1,3 +1,4 @@
+{{- if .Values.knative.enabled }}
 apiVersion: operator.knative.dev/v1beta1
 kind: KnativeServing
 metadata:
@@ -8,6 +9,8 @@ spec:
     kourier:
       enabled: true
   config:
+    domain:
+      {{ .Values.publicServiceDomain }}: ""
     network:
       autocreate-cluster-domain-claims: "true"
       ingress-class: "kourier.ingress.networking.knative.dev"
@@ -16,3 +19,4 @@ spec:
       kubernetes.podspec-volumes-emptydir: enabled
       kubernetes.podspec-fieldref: enabled
       kubernetes.containerspec-addcapabilities: enabled
+{{- end }}

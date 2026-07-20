@@ -1,7 +1,3 @@
-{{- if .Values.knative.enabled }}
----
-{{ .Files.Get "manifests/knative-serving.yaml" }}
-{{- end }}
 {{- if .Values.kubevirt.enabled }}
 ---
 {{ .Files.Get "manifests/kubevirt-operator.yaml" }}
