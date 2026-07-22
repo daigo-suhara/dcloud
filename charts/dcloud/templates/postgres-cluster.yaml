@@ -1,0 +1,19 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: dcloud-db
+  labels:
+    {{- include "dcloud.labels" . | nindent 4 }}
+spec:
+  instances: {{ .Values.database.postgres.replicaCount }}
+  storage:
+    size: {{ .Values.database.postgres.storageSize }}
+    {{- with .Values.database.postgres.storageClass }}
+    storageClass: {{ . }}
+    {{- end }}
+  bootstrap:
+    initdb:
+      database: dcloud
+      owner: dcloud
+      secret:
+        name: dcloud-database

@@ -104,47 +104,15 @@ database:
   storageClass: ""
   # Set to a pre-created Secret name to bring your own DB credentials
   # instead of the auto-generated dcloud-database secret. The secret
-  # must contain the same keys (password/postgres-password/repmgr-password
-  # /sr-check-password/admin-password/DCLD_DATABASE_URL/DCLD_DATABASE_MIGRATION_URL).
+  # must be type kubernetes.io/basic-auth with username/password plus
+  # DCLD_DATABASE_URL and DCLD_DATABASE_MIGRATION_URL keys.
   externalSecret: ""
-
-postgresql-ha:
-  global:
-    security:
-      allowInsecureImages: true
-    # Empty means "use the cluster's default StorageClass" - see also
-    # storageClass.className at the top of this file.
-    defaultStorageClass: ""
-    postgresql:
-      username: dcloud
-      database: dcloud
-      # References the secret rendered by templates/database-secret.yaml
-      # (or the user-supplied one when database.externalSecret is set).
-      existingSecret: dcloud-database
-      repmgrUsername: repmgr
-    pgpool:
-      existingSecret: dcloud-database
-  postgresql:
-    image:
-      repository: soldevelo/postgresql-repmgr
-      tag: 17.6.0-debian-12-r0
-    database: dcloud
-    username: dcloud
-    replicaCount: 2
-    existingSecret: dcloud-database
-    persistence:
-      storageClass: ""
-  pgpool:
-    image:
-      repository: soldevelo/pgpool
-      tag: 4.6.3-debian-12-r0
-    resources:
-      requests:
-        memory: 256Mi
-        cpu: 250m
-      limits:
-        memory: 512Mi
-        cpu: 375m
+  # CloudNativePG-managed postgres cluster (see templates/postgres-cluster.yaml).
+  postgres:
+    replicaCount: 1
+    storageSize: 20Gi
+    # Empty means "use the cluster's default StorageClass".
+    storageClass: ""
 
 # Console publishing options. Set ingress.enabled: true to render an
 # Ingress in addition to the Service. In that mode the browser reaches

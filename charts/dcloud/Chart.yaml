@@ -9,15 +9,16 @@ appVersion: "0.3.0"
 # `helm install dcloud` reaches a working state without asking operators
 # to pre-provision separate charts.
 #
-# Only knative-operator is a Helm sub-chart. Kourier ships as raw YAML
-# (Knative net-kourier has no official chart) and lands via
-# templates/inline-manifests.yaml. Istio is intentionally not bundled;
-# Kourier is Knative Serving's default ingress and drops the whole
-# service-mesh footprint dcloud does not use.
+# cloudnative-pg is the CNPG operator that manages the dcloud Cluster
+# defined in templates/postgres-cluster.yaml.
+# knative-operator installs Knative Serving. Kourier (Knative's default
+# ingress) ships as raw YAML via templates/inline-manifests.yaml because
+# net-kourier has no official Helm chart.
+# Istio is intentionally not bundled.
 dependencies:
-  - name: postgresql-ha
-    version: 16.3.2
-    repository: oci://registry-1.docker.io/bitnamicharts
+  - name: cloudnative-pg
+    version: 0.28.0
+    repository: https://cloudnative-pg.github.io/charts
 
   - name: knative-operator
     version: 1.16.2
