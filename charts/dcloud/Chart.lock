@@ -1,9 +1,9 @@
 dependencies:
-- name: postgresql-ha
-  repository: oci://registry-1.docker.io/bitnamicharts
-  version: 16.3.2
+- name: cloudnative-pg
+  repository: https://cloudnative-pg.github.io/charts
+  version: 0.28.0
 - name: knative-operator
   repository: https://knative.github.io/operator
   version: v1.16.2
-digest: sha256:eae0dfc78a89dbfcb59641d0e98516867943841dc855fccfc409dee072ba0e41
-generated: "2026-07-20T11:07:30.645541+09:00"
+digest: sha256:d1ed18fe0bb84da9a4d9cb20dabe8ad9f99410c9635a2996b9aadc1eb8edd35e
+generated: "2026-07-22T22:27:27.524099+09:00"
