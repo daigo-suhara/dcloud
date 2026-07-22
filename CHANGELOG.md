@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/daigo-suhara/dcloud/compare/v0.2.0...v0.3.0) (2026-07-22)
+
+
+### Features
+
+* **chart:** switch database from bitnami postgresql-ha to CloudNativePG ([#5](https://github.com/daigo-suhara/dcloud/issues/5)) ([0f0a241](https://github.com/daigo-suhara/dcloud/commit/0f0a24105c3dcf27707f911e631bdd4904075ee1))
+
 ## [0.2.0](https://github.com/daigo-suhara/dcloud/compare/v0.1.0...v0.2.0) (2026-07-20)
 
 
