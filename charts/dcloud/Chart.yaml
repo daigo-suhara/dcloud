@@ -24,3 +24,8 @@ dependencies:
     version: 1.16.2
     repository: https://knative.github.io/operator
     condition: knative.enabled
+
+  - name: kubeblocks
+    version: 1.0.2
+    repository: https://apecloud.github.io/helm-charts
+    condition: kubeblocks.enabled
