@@ -5,5 +5,8 @@ dependencies:
 - name: knative-operator
   repository: https://knative.github.io/operator
   version: v1.16.2
-digest: sha256:d1ed18fe0bb84da9a4d9cb20dabe8ad9f99410c9635a2996b9aadc1eb8edd35e
-generated: "2026-07-22T22:27:27.524099+09:00"
+- name: kubeblocks
+  repository: https://apecloud.github.io/helm-charts
+  version: 1.0.2
+digest: sha256:5af25740dd85571bd5fcf6bfa8b3235b65e13df9ad6d84e7af5ac47b350f1878
+generated: "2026-07-28T19:23:39.993969+09:00"

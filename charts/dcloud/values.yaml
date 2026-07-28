@@ -134,3 +134,10 @@ ingress:
     enabled: true
     upstreamService: kourier.knative-serving.svc.cluster.local
     upstreamPort: 80
+
+# KubeBlocks operator (backs the dcloud database service PaaS feature).
+# CRDs (~9.7MB) are applied by a PreSync Job that fetches them from the
+# KubeBlocks release matching kubeblocks.version.
+kubeblocks:
+  enabled: true
+  version: 1.0.2
