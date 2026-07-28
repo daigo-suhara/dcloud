@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/daigo-suhara/dcloud/compare/v0.3.0...v0.4.0) (2026-07-28)
+
+
+### Features
+
+* **chart:** bundle KubeBlocks operator for the database PaaS ([#6](https://github.com/daigo-suhara/dcloud/issues/6)) ([e4ec6a5](https://github.com/daigo-suhara/dcloud/commit/e4ec6a549085442c232eda6d0b28776ed0e42733))
+
+
+### Bug Fixes
+
+* **chart:** use bitnami/kubectl:1.34 (1.36.2 tag missing) ([#8](https://github.com/daigo-suhara/dcloud/issues/8)) ([113abc7](https://github.com/daigo-suhara/dcloud/commit/113abc7d276380cc1c08e18cfc0d1d1872c7f4ec))
+
 ## [0.3.0](https://github.com/daigo-suhara/dcloud/compare/v0.2.0...v0.3.0) (2026-07-22)
 
 
